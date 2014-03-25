@@ -99,7 +99,7 @@ public:
    */
   virtual void incrementStepOrReject();
 
-  virtual void endStep();
+  virtual void endStep(Real input_time = -1.0);
 
   /**
    * Can be used to set the next "target time" which is a time to nail perfectly.
@@ -270,6 +270,8 @@ protected:
   bool _use_multiapp_dt;
 
   bool _allow_output;
+
+  Real _picard_iterations;
 
   ///should detailed diagnostic output be printed
   bool _verbose;

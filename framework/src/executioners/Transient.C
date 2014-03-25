@@ -66,6 +66,8 @@ InputParameters validParams<Transient>()
 
   params.addParam<bool>("use_multiapp_dt", false, "If true then the dt for the simulation will be chosen by the MultiApps.  If false (the default) then the minimum over the master dt and the MultiApps is used");
 
+  params.addParam<unsigned int>("picard_iterations", 1, "Number of times each timestep will be solved.  Mainly used when wanting to do Picard iterations with MultiApps that are set to execute_on timestep or timestep_begin");
+
   params.addParamNamesToGroup("start_time dtmin dtmax n_startup_steps trans_ss_check ss_check_tol ss_tmin sync_times time_t time_dt growth_factor predictor_scale use_AB2 use_littlef abort_on_solve_fail output_to_file file_name estimate_time_error timestep_tolerance use_multiapp_dt", "Advanced");
 
   params.addParamNamesToGroup("time_periods time_period_starts time_period_ends", "Time Periods");
@@ -106,6 +108,7 @@ Transient::Transient(const std::string & name, InputParameters parameters) :
     _target_time(declareRestartableData<Real>("target_time", -1)),
     _use_multiapp_dt(getParam<bool>("use_multiapp_dt")),
     _allow_output(true),
+    _picard_iterations(getParam<unsigned int>("picard_iterations")),
     _verbose(getParam<bool>("verbose"))
 {
   _problem.getNonlinearSystem().setDecomposition(_splitting);
@@ -233,7 +236,10 @@ Transient::execute()
     }
 
     computeDT();
-    takeStep();
+
+    for (unsigned int i=0; i<_picard_iterations; i++)
+      takeStep();
+
     endStep();
 
     _steps_taken++;
@@ -258,7 +264,8 @@ Transient::incrementStepOrReject()
     if (_problem.adaptivity().isOn())
       _problem.adaptMesh();
 #endif
-    _time_old = _time;
+
+    _time_old = _time; // = _time_old + _dt;
     _t_step++;
 
     _problem.copyOldSolutions();
@@ -292,7 +299,7 @@ Transient::takeStep(Real input_dt)
   _time = _time_old + _dt;
 
   _problem.execTransfers(EXEC_TIMESTEP_BEGIN);
-  _problem.execMultiApps(EXEC_TIMESTEP_BEGIN);
+  _problem.execMultiApps(EXEC_TIMESTEP_BEGIN, _picard_iterations == 1);
 
   // Only print this if the 'Output' block exists
   /// \todo{Remove when old output system is removed}
@@ -388,7 +395,7 @@ Transient::takeStep(Real input_dt)
     _problem.computeAuxiliaryKernels(EXEC_TIMESTEP);
     _problem.computeUserObjects(EXEC_TIMESTEP, UserObjectWarehouse::POST_AUX);
     _problem.execTransfers(EXEC_TIMESTEP);
-    _problem.execMultiApps(EXEC_TIMESTEP);
+    _problem.execMultiApps(EXEC_TIMESTEP, _picard_iterations == 1);
   }
   else
   {
@@ -400,11 +407,20 @@ Transient::takeStep(Real input_dt)
 
   postSolve();
   _time_stepper->postSolve();
+
+  // Reset time in case we solve again
+  _dt = _time - _time_old; // Compute the total _dt (_dt might be smaller than this at this point for multistep methods)
+  _time = _time_old;
 }
 
 void
-Transient::endStep()
+Transient::endStep(Real input_time)
 {
+  if(input_time == -1.0)
+    _time = _time_old + _dt;
+  else
+    _time = input_time;
+
   _last_solve_converged = lastSolveConverged();
 
   if (_last_solve_converged)
@@ -414,6 +430,13 @@ Transient::endStep()
 
     // Perform the output of the current time step
     _output_warehouse.outputStep();
+
+    // Output MultiApps if we were doing Picard iterations
+    if (_picard_iterations > 1)
+    {
+      _problem.advanceMultiApps(EXEC_TIMESTEP_BEGIN);
+      _problem.advanceMultiApps(EXEC_TIMESTEP);
+    }
 
     //output \todo{Remove after old output system is removed}
     if (_time_interval)

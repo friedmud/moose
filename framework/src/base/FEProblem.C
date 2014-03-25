@@ -2629,7 +2629,7 @@ FEProblem::getMultiApp(const std::string & multi_app_name)
 }
 
 void
-FEProblem::execMultiApps(ExecFlagType type)
+FEProblem::execMultiApps(ExecFlagType type, bool auto_advance)
 {
   std::vector<MultiApp *> multi_apps = _multi_apps(type)[0].all();
 
@@ -2650,7 +2650,7 @@ FEProblem::execMultiApps(ExecFlagType type)
     Moose::out << "--Executing MultiApps--" << std::endl;
 
     for(unsigned int i=0; i<multi_apps.size(); i++)
-      multi_apps[i]->solveStep(_dt, _time);
+      multi_apps[i]->solveStep(_dt, _time, auto_advance);
 
     Moose::out << "--Waiting For Other Processors To Finish--" << std::endl;
     MooseUtils::parallelBarrierNotify();
@@ -2672,6 +2672,25 @@ FEProblem::execMultiApps(ExecFlagType type)
 
       Moose::out << "--Transfers To Finished--" << std::endl;
     }
+  }
+}
+
+void
+FEProblem::advanceMultiApps(ExecFlagType type)
+{
+  std::vector<MultiApp *> multi_apps = _multi_apps(type)[0].all();
+
+  if (multi_apps.size())
+  {
+    Moose::out << "--Advancing MultiApps--" << std::endl;
+
+    for(unsigned int i=0; i<multi_apps.size(); i++)
+      multi_apps[i]->advanceStep();
+
+    Moose::out << "--Waiting For Other Processors To Finish--" << std::endl;
+    MooseUtils::parallelBarrierNotify();
+
+    Moose::out << "--Finished Advancing MultiApps--" << std::endl;
   }
 }
 

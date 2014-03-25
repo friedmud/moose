@@ -482,7 +482,12 @@ public:
   /**
    * Execute the MultiApps associated with the ExecFlagType
    */
-  void execMultiApps(ExecFlagType type);
+  void execMultiApps(ExecFlagType type, bool auto_advance = true);
+
+  /**
+   * Advance the MultiApps associated with the ExecFlagType
+   */
+  void advanceMultiApps(ExecFlagType type);
 
   /**
    * Find the smallest timestep over all MultiApps
