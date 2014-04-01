@@ -73,8 +73,5 @@
     perf_log = true
     nonlinear_residuals = true
     linear_residuals = true
-    start_time = 1
-    end_time = 1.5
   [../]
 []
-
