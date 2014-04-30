@@ -94,11 +94,6 @@ Output::Output(const std::string & name, InputParameters & parameters) :
     _transient(_problem_ptr->isTransient()),
     _use_displaced(getParam<bool>("use_displaced")),
     _es_ptr(_use_displaced ? &_problem_ptr->getDisplacedProblem()->es() : &_problem_ptr->es()),
-    _time(_problem_ptr->time()),
-    _time_old(_problem_ptr->timeOld()),
-    _t_step(_problem_ptr->timeStep()),
-    _dt(_problem_ptr->dt()),
-    _dt_old(_problem_ptr->dtOld()),
     _output_initial(isParamValid("output_initial") ? getParam<bool>("output_initial") : false),
     _output_intermediate(isParamValid("output_intermediate") ? getParam<bool>("output_intermediate") : false),
     _output_final(isParamValid("output_final") ? getParam<bool>("output_final") : false),
@@ -108,6 +103,11 @@ Output::Output(const std::string & name, InputParameters & parameters) :
     _system_information(getParam<bool>("output_system_information")),
     _mesh_changed(declareRestartableData<bool>("mesh_changed", false)),
     _sequence(declareRestartableData<bool>("sequence", isParamValid("sequence") ? getParam<bool>("sequence") : false)),
+    _time(_problem_ptr->time()),
+    _time_old(_problem_ptr->timeOld()),
+    _t_step(_problem_ptr->timeStep()),
+    _dt(_problem_ptr->dt()),
+    _dt_old(_problem_ptr->dtOld()),
     _num(declareRestartableData<unsigned int>("num", 0)),
     _interval(isParamValid("interval") ? getParam<unsigned int>("interval") : 1),
     _sync_times(isParamValid("sync_times") ?
@@ -636,4 +636,46 @@ Output::initOutputList(OutputData & data)
     // Define the output variable list
     output.assign(show.begin(), show.end());
   }
+}
+
+Real
+Output::time()
+{
+  if (_transient)
+    return _time;
+  else
+    return _t_step;
+}
+
+Real
+Output::timeOld()
+{
+  if (_transient)
+    return _time_old;
+  else
+    return _t_step - 1;
+}
+
+Real
+Output::dt()
+{
+  if (_transient)
+    return _dt;
+  else
+    return 1;
+}
+
+Real
+Output::dtOld()
+{
+  if (_transient)
+    return _dt_old;
+  else
+    return 1;
+}
+
+int
+Output::timeStep()
+{
+  return _t_step;
 }
