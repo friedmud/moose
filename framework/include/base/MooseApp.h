@@ -243,6 +243,16 @@ public:
   bool isRecovering() { return _recover; }
 
   /**
+   * Whether or not this is a "restart" calculation.
+   */
+  bool isRestarting() { return _restart; }
+
+  /**
+   * Set whether or not this is a "restart" calculation.
+   */
+  void setRestarting(bool restarting) { _restart = restarting; }
+
+  /**
    * Return true if the recovery file base is set
    */
   bool hasRecoverFileBase() { return !_recover_base.empty(); }
@@ -382,6 +392,9 @@ protected:
 
   /// Whether or not this is a recovery run
   bool _recover;
+
+  /// Whether or not this is a restart run
+  bool _restart;
 
   /// The base name to recover from.  If blank then we will find the newest recovery file.
   std::string _recover_base;

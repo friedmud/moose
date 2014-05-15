@@ -92,7 +92,7 @@ Transient::Transient(const std::string & name, InputParameters parameters) :
     _dt_old(_problem.dtOld()),
     _unconstrained_dt(declareRestartableData<Real>("unconstrained_dt", -1)),
     _at_sync_point(declareRestartableData<bool>("at_sync_point", false)),
-    _first(declareRestartableData<bool>("first", true)),
+    _first(declareRecoverableData<bool>("first", true)),
     _last_solve_converged(declareRestartableData<bool>("last_solve_converged", true)),
     _end_time(getParam<Real>("end_time")),
     _dtmin(getParam<Real>("dtmin")),
@@ -206,11 +206,14 @@ Transient::init()
 //  _dt = computeConstrainedDT();
     _dt = getDT();
   }
+
+  std::cout<<"Transient::init() t_step: "<<_t_step<<std::endl;
 }
 
 void
 Transient::execute()
 {
+  std::cout<<"Transient::execute() t_step: "<<_t_step<<std::endl;
   preExecute();
 
   // NOTE: if you remove this line, you will see a subset of tests failing. Those tests might have a wrong answer and might need to be regolded.
@@ -310,6 +313,10 @@ Transient::solveStep(Real input_dt)
 
   _problem.execTransfers(EXEC_TIMESTEP_BEGIN);
   _problem.execMultiApps(EXEC_TIMESTEP_BEGIN, _picard_max_its == 1);
+
+  std::cerr<<"t_step: "<<_t_step<<std::endl;
+  std::cerr<<"t: "<<_time<<std::endl;
+
 
   preSolve();
   _time_stepper->preSolve();

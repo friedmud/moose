@@ -724,6 +724,9 @@ public:
   unsigned int subspaceDim(const std::string& prefix) const {if (_subspace_dim.count(prefix)) return _subspace_dim.find(prefix)->second; else return 0;}
 
 protected:
+  /// Data names that will only be read from the restart file during RECOVERY
+  std::set<std::string> _recoverable_data;
+
   MooseMesh & _mesh;
   EquationSystems _eq;
   bool _initialized;
@@ -886,9 +889,6 @@ private:
    * @param name The full (unique) name.
    */
   virtual void registerRecoverableData(std::string name);
-
-  /// Data names that will only be read from the restart file during RECOVERY
-  std::set<std::string> _recoverable_data;
 
   friend class AuxiliarySystem;
   friend class NonlinearSystem;
