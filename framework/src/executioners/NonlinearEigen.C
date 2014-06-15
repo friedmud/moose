@@ -85,9 +85,29 @@ NonlinearEigen::execute()
 {
   preExecute();
 
-  takeStep();
+  for(unsigned int step=0; step < 3; step++)
+  {
+    Real multi_app_dt = _problem.computeMultiAppsDT(EXEC_TIMESTEP_BEGIN);
+    _problem.dt() = multi_app_dt; // This means that we are going
 
-  postExecute();
+    multi_app_dt = _problem.computeMultiAppsDT(EXEC_TIMESTEP);
+    if(multi_app_dt < _problem.dt())
+      _problem.dt() = multi_app_dt;
+
+    //_problem.dt() *= _dt_modulating_function->value(_problem.time(), Point());
+
+    _problem.time() += _problem.dt();
+
+    takeStep();
+    _output_warehouse.outputStep();
+
+    // Solve BISON
+    _problem.execTransfers(EXEC_TIMESTEP_BEGIN);
+    _problem.execMultiApps(EXEC_TIMESTEP_BEGIN);
+
+
+//    postExecute();
+  }
 }
 
 void

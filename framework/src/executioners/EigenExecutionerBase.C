@@ -392,7 +392,7 @@ EigenExecutionerBase::postExecute()
   {
     _problem.timeStep()++;
     Real t = _problem.time();
-    _problem.time() = _problem.timeStep();
+//    _problem.time() = _problem.timeStep();
     _output_warehouse.outputStep();
     _problem.time() = t;
   }
