@@ -13,6 +13,8 @@
 /****************************************************************/
 
 #include "NonlinearEigen.h"
+#include "EigenSystem.h"
+#include "Function.h"
 
 template<>
 InputParameters validParams<NonlinearEigen>()
@@ -24,6 +26,7 @@ InputParameters validParams<NonlinearEigen>()
   params.addParam<Real>("pfactor", 1e-2, "The factor of residual to be reduced per power iteration");
   params.addParam<Real>("k0", 1.0, "Initial guess of the eigenvalue");
   params.addParam<bool>("output_pi_history", false, "True to output solutions durint PI");
+  params.addRequiredParam<FunctionName>("power_modulating_function", "A Function of time with values between 0 and 1 that will 'modulate' the max power over time");
   return params;
 }
 
@@ -34,7 +37,8 @@ NonlinearEigen::NonlinearEigen(const std::string & name, InputParameters paramet
      _abs_tol(getParam<Real>("source_abs_tol")),
      _rel_tol(getParam<Real>("source_rel_tol")),
      _pfactor(getParam<Real>("pfactor")),
-     _output_pi(getParam<bool>("output_pi_history"))
+     _output_pi(getParam<bool>("output_pi_history")),
+     _power_modulating_function(NULL)
 {
   _eigenvalue = getParam<Real>("k0");
   addRealParameterReporter("eigenvalue");
@@ -83,9 +87,11 @@ NonlinearEigen::init()
 void
 NonlinearEigen::execute()
 {
+  _power_modulating_function = &_problem.getFunction(getParam<FunctionName>("power_modulating_function"));
+
   preExecute();
 
-  for(unsigned int step=0; step < 3; step++)
+  for(unsigned int step=0; step < 40; step++)
   {
     Real multi_app_dt = _problem.computeMultiAppsDT(EXEC_TIMESTEP_BEGIN);
     _problem.dt() = multi_app_dt; // This means that we are going
@@ -99,12 +105,33 @@ NonlinearEigen::execute()
     _problem.time() += _problem.dt();
 
     takeStep();
+
+    Real scaling = _power_modulating_function->value(_problem.time(), Point()) * getParam<Real>("normal_factor");
+
+    // Scale the solution to get the correct power
+    _eigen_sys.scaleSystemSolution(EigenSystem::EIGEN, scaling);
+    Moose::out << " Solution is rescaled with factor " << scaling << " for normalization!" << std::endl;
+
+
+    // update all aux variables and user objects
+    for (unsigned int i=0; i<Moose::exec_types.size(); i++)
+    {
+      // EXEC_CUSTOM is special, should be treated only by specifically designed executioners.
+      if (Moose::exec_types[i]==EXEC_CUSTOM) continue;
+      _problem.computeUserObjects(Moose::exec_types[i], UserObjectWarehouse::PRE_AUX);
+      _problem.computeAuxiliaryKernels(Moose::exec_types[i]);
+      _problem.computeUserObjects(Moose::exec_types[i], UserObjectWarehouse::POST_AUX);
+    }
+
+
     _output_warehouse.outputStep();
 
     // Solve BISON
     _problem.execTransfers(EXEC_TIMESTEP_BEGIN);
     _problem.execMultiApps(EXEC_TIMESTEP_BEGIN);
 
+    // Scale back
+    _eigen_sys.scaleSystemSolution(EigenSystem::EIGEN, 1.0/scaling);
 
 //    postExecute();
   }

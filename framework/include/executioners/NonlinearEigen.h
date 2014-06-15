@@ -40,6 +40,8 @@ protected:
   const Real & _rel_tol;
   const Real & _pfactor;
   bool _output_pi;
+
+  Function * _power_modulating_function;
 };
 
 #endif //NONLINEAREIGEN_H
