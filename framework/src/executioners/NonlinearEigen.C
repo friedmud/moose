@@ -130,6 +130,10 @@ NonlinearEigen::execute()
     _problem.execTransfers(EXEC_TIMESTEP_BEGIN);
     _problem.execMultiApps(EXEC_TIMESTEP_BEGIN);
 
+    // Solve R7
+    _problem.execTransfers(EXEC_TIMESTEP);
+    _problem.execMultiApps(EXEC_TIMESTEP);
+
     // Scale back
     _eigen_sys.scaleSystemSolution(EigenSystem::EIGEN, 1.0/scaling);
 
