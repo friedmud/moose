@@ -18,12 +18,4 @@ ExceptionSteady::~ExceptionSteady()
 void
 ExceptionSteady::execute()
 {
-  try
-  {
-    Steady::execute();
-  }
-  catch (MooseException & e)
-  {
-    Moose::err << "Caught exception " << e << std::endl;
-  }
 }

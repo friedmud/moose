@@ -33,8 +33,8 @@
 
 AuxiliarySystem::AuxiliarySystem(FEProblem & subproblem, const std::string & name) :
     SystemTempl<TransientExplicitSystem>(subproblem, name, Moose::VAR_AUXILIARY),
-    _mproblem(subproblem),
-    _serialized_solution(*NumericVector<Number>::build(_mproblem.comm()).release()),
+    _fe_problem(subproblem),
+    _serialized_solution(*NumericVector<Number>::build(_fe_problem.comm()).release()),
     _time_integrator(NULL),
     _u_dot(addVector("u_dot", true, GHOSTED)),
     _du_dot_du(addVector("du_dot_du", true, GHOSTED)),
@@ -139,7 +139,7 @@ AuxiliarySystem::addKernel(const std::string & kernel_name, const std::string & 
     for (unsigned int i=0; i<exec_flags.size(); ++i)
       _auxs(exec_flags[i])[tid].addAuxKernel(kernel);
 
-    _mproblem._objects_by_name[tid][name].push_back(kernel.get());
+    _fe_problem._objects_by_name[tid][name].push_back(kernel.get());
 
     if (kernel->boundaryRestricted())
     {
@@ -164,7 +164,7 @@ AuxiliarySystem::addScalarKernel(const std::string & kernel_name, const std::str
     for (unsigned int i=0; i<exec_flags.size(); ++i)
       _auxs(exec_flags[i])[tid].addScalarKernel(kernel);
 
-    _mproblem._objects_by_name[tid][name].push_back(kernel.get());
+    _fe_problem._objects_by_name[tid][name].push_back(kernel.get());
   }
 }
 
@@ -246,7 +246,7 @@ AuxiliarySystem::compute(ExecFlagType type/* = EXEC_RESIDUAL*/)
 
   // can compute time derivatives _after_ the current values were updated
   // also, at the very beginning, avoid division by dt which might be zero.
-  if (_mproblem.dt() > 0.)
+  if (_fe_problem.dt() > 0.)
     _time_integrator->computeTimeDerivatives();
 }
 
@@ -286,7 +286,7 @@ AuxiliarySystem::computeScalarVars(ExecFlagType type)
     THREAD_ID tid = 0;
     if (auxs[tid].scalars().size() > 0)
     {
-      _mproblem.reinitScalars(tid);
+      _fe_problem.reinitScalars(tid);
 
       const std::vector<AuxScalarKernel *> & scalars = auxs[tid].scalars();
       for (std::vector<AuxScalarKernel *>::const_iterator it = scalars.begin(); it != scalars.end(); ++it)
@@ -329,7 +329,7 @@ AuxiliarySystem::computeNodalVars(ExecFlagType type)
     if (have_block_kernels)
     {
       ConstNodeRange & range = *_mesh.getLocalNodeRange();
-      ComputeNodalAuxVarsThread navt(_mproblem, *this, auxs);
+      ComputeNodalAuxVarsThread navt(_fe_problem, *this, auxs);
       Threads::parallel_reduce(range, navt);
 
       solution().close();
@@ -344,7 +344,7 @@ AuxiliarySystem::computeNodalVars(ExecFlagType type)
   PARALLEL_TRY {
     // after converting this into NodeRange, we can run it in parallel
     ConstBndNodeRange & bnd_nodes = *_mesh.getBoundaryNodeRange();
-    ComputeNodalAuxBcsThread nabt(_mproblem, *this, auxs);
+    ComputeNodalAuxBcsThread nabt(_fe_problem, *this, auxs);
     Threads::parallel_reduce(bnd_nodes, nabt);
 
     solution().close();
@@ -371,7 +371,7 @@ AuxiliarySystem::computeElementalVars(ExecFlagType type)
     if (element_auxs_to_compute)
     {
       ConstElemRange & range = *_mesh.getActiveLocalElementRange();
-      ComputeElemAuxVarsThread eavt(_mproblem, *this, auxs, need_materials);
+      ComputeElemAuxVarsThread eavt(_fe_problem, *this, auxs, need_materials);
       Threads::parallel_reduce(range, eavt);
 
       solution().close();
@@ -384,7 +384,7 @@ AuxiliarySystem::computeElementalVars(ExecFlagType type)
     if (bnd_auxs_to_compute)
     {
       ConstBndElemRange & bnd_elems = *_mesh.getBoundaryElementRange();
-      ComputeElemAuxBcsThread eabt(_mproblem, *this, auxs, need_materials);
+      ComputeElemAuxBcsThread eabt(_fe_problem, *this, auxs, need_materials);
       Threads::parallel_reduce(bnd_elems, eabt);
 
       solution().close();
