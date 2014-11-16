@@ -1362,6 +1362,48 @@ NonlinearSystem::addImplicitGeometricCouplingEntries(SparseMatrix<Number> & jaco
       jacobian.add(dof, coupled_dof, 0);
     }
   }
+
+  /*
+  {
+    DofMap & dof_map = dofMap();
+
+    const dof_id_type first_dof_on_proc = dof_map.first_dof(processor_id());
+    const dof_id_type end_dof_on_proc   = dof_map.end_dof(processor_id());
+
+    dof_id_type dofs_on_proc = end_dof_on_proc - first_dof_on_proc;
+
+    // Grab all of the ScalarVariable's DoFs:
+    const std::vector<MooseVariableScalar *> & scalar_vars = getScalarVariables(0);
+
+    for (unsigned int i=0; i<scalar_vars.size(); i++)
+    {
+      MooseVariableScalar & scalar_var = *scalar_vars[i];
+
+      std::vector<dof_id_type> dofs;
+
+      dof_map.SCALAR_dof_indices(dofs, scalar_var.number());
+
+      for (unsigned int j=0; j<dofs.size(); j++)
+      {
+        dof_id_type scalar_dof = dofs[j];
+        dof_id_type local_scalar_dof = scalar_dof - first_dof_on_proc;
+
+        // Add in a dense column
+        for (unsigned int local_dof=0; local_dof<dofs_on_proc; local_dof++)
+          jacobian.add(first_dof_on_proc + local_dof, scalar_dof, 0);
+
+        // Add in a dense row
+        if (scalar_dof >= first_dof_on_proc && scalar_dof < end_dof_on_proc)
+        {
+          dof_id_type n_dofs = dof_map.n_dofs();
+
+          for (dof_id_type adof=0; adof<n_dofs; adof++)
+            jacobian.add(scalar_dof, adof, 0);
+        }
+      }
+    }
+  }
+  */
 }
 
 void
@@ -1990,7 +2032,6 @@ NonlinearSystem::augmentSparsity(SparsityPattern::Graph & sparsity,
                                  std::vector<unsigned int> & n_nz,
                                  std::vector<unsigned int> & n_oz)
 {
-
   if (_add_implicit_geometric_coupling_entries_to_jacobian)
   {
     _fe_problem.updateGeomSearch();
@@ -2035,6 +2076,76 @@ NonlinearSystem::augmentSparsity(SparsityPattern::Graph & sparsity,
       }
     }
   }
+/*
+  // Add entries for ScalarDofs
+  {
+    DofMap & dof_map = dofMap();
+
+    const dof_id_type first_dof_on_proc = dof_map.first_dof(processor_id());
+    const dof_id_type end_dof_on_proc   = dof_map.end_dof(processor_id());
+
+    dof_id_type non_scalar_dofs_on_proc = end_dof_on_proc - first_dof_on_proc;
+
+    // If we're on the last processor subtract off the scalar dofs (we're going to fix them up manually later)
+    if (processor_id() == n_processors() - 1)
+      non_scalar_dofs_on_proc -= dof_map.n_SCALAR_dofs();
+
+    // Grab all of the ScalarVariable's DoFs:
+    const std::vector<MooseVariableScalar *> & scalar_vars = getScalarVariables(0);
+
+    for (unsigned int i=0; i<scalar_vars.size(); i++)
+    {
+      MooseVariableScalar & scalar_var = *scalar_vars[i];
+
+      std::vector<dof_id_type> dofs;
+
+      dof_map.SCALAR_dof_indices(dofs, scalar_var.number());
+
+      for (unsigned int j=0; j<dofs.size(); j++)
+      {
+        dof_id_type scalar_dof = dofs[j];
+        dof_id_type local_scalar_dof = scalar_dof - first_dof_on_proc;
+
+        // Add in a dense column
+        for (unsigned int local_dof=0; local_dof<non_scalar_dofs_on_proc; local_dof++)
+        {
+          SparsityPattern::Row & sparsity_row = sparsity[local_dof];
+
+          unsigned int original_row_length = sparsity_row.size();
+
+          sparsity_row.push_back(scalar_dof);
+
+          SparsityPattern::sort_row(sparsity_row.begin(), sparsity_row.begin()+1, sparsity_row.end());
+
+          if (scalar_dof < first_dof_on_proc || scalar_dof >= end_dof_on_proc)
+            n_oz[local_dof]++;
+          else
+            n_nz[local_dof]++;
+        }
+
+        if (scalar_dof >= first_dof_on_proc && scalar_dof < end_dof_on_proc)
+        {
+          std::cout<<"n_nz: "<<n_nz[local_scalar_dof]<<std::endl;
+
+          // Add in a dense row
+          dof_id_type n_dofs = dof_map.n_dofs();
+
+          dof_id_type n_local_dofs = dof_map.n_local_dofs();
+
+          SparsityPattern::Row & sparsity_row = sparsity[local_scalar_dof];
+
+          sparsity_row.resize(n_dofs);
+
+          for (dof_id_type adof=0; adof<n_dofs; adof++)
+            sparsity_row[adof] = adof;
+
+          n_oz[local_scalar_dof] = n_dofs - n_local_dofs;
+          n_nz[local_scalar_dof] = n_local_dofs;
+        }
+      }
+    }
+  }
+*/
 }
 
 void
