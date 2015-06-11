@@ -84,7 +84,8 @@ TransientMultiApp::~TransientMultiApp()
   {
     Transient * ex = _transient_executioners[i];
 
-    ex->postExecute();
+    // ExecutionerTODO: Fix this!
+    //ex->postExecute();
   }
 
   // Swap back
@@ -477,7 +478,8 @@ TransientMultiApp::setupApp(unsigned int i, Real /*time*/)  // FIXME: Should we 
     libmesh_aux_system.add_vector("transfer", false);
   }
 
-  ex->preExecute();
+  // ExecutionerTODO: fix this
+  // ex->preExecute();
   problem->advanceState();
   _transient_executioners[i] = ex;
 }

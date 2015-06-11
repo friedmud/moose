@@ -86,16 +86,19 @@ NonlinearEigen::init()
 void
 NonlinearEigen::execute()
 {
+  /*
   preExecute();
 
   takeStep();
 
   postExecute();
+  */
 }
 
 void
 NonlinearEigen::takeStep()
 {
+  /*
   _console << " Nonlinear iteration starts"  << std::endl;
 
   // nonlinear solve
@@ -114,5 +117,6 @@ NonlinearEigen::takeStep()
   _problem.onTimestepEnd();
   _problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
   _problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
+  */
 }
 

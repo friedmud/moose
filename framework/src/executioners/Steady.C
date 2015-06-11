@@ -26,20 +26,16 @@ InputParameters validParams<Steady>()
 
 
 Steady::Steady(const InputParameters & parameters) :
-    Executioner(parameters),
-    _problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem", "This might happen if you don't have a mesh")),
-    _time_step(_problem.timeStep()),
-    _time(_problem.time())
+    Executioner(parameters)
 {
-  _problem.getNonlinearSystem().setDecomposition(_splitting);
+  _fe_problem.getNonlinearSystem().setDecomposition(_splitting);
 
   if (!_restart_file_base.empty())
-    _problem.setRestartFile(_restart_file_base);
-
+    _fe_problem.setRestartFile(_restart_file_base);
   {
     std::string ti_str = "SteadyState";
     InputParameters params = _app.getFactory().getValidParams(ti_str);
-    _problem.addTimeIntegrator(ti_str, "ti", params);
+    _fe_problem.addTimeIntegrator(ti_str, "ti", params);
   }
 }
 
@@ -47,14 +43,8 @@ Steady::~Steady()
 {
 }
 
-Problem &
-Steady::problem()
-{
-  return _problem;
-}
-
 void
-Steady::init()
+Steady::_init()
 {
   if (_app.isRecovering())
   {
@@ -62,77 +52,46 @@ Steady::init()
     return;
   }
 
-  checkIntegrity();
-  _problem.initialSetup();
+  // Everything else defaults to 1
+  setCycles(_fe_problem.adaptivity().getSteps()+1);
 
-  Moose::setup_perf_log.push("Output Initial Condition","Setup");
-  _problem.outputStep(EXEC_INITIAL);
-  Moose::setup_perf_log.pop("Output Initial Condition","Setup");
+  setTimeScheme(PSEUDO_TIME);
+}
+
+bool
+Steady::keepStepping()
+{
+  if (_app.isRecovering())
+    return false;
+
+  return true;
+}
+
+bool
+Steady::keepCycling()
+{
+  if (currentCycle() > 1)
+    return _fe_problem.converged();
+  else
+    return true;
+}
+
+void
+Steady::beginStep()
+{
+  _console << "Step: " << currentStep() << "\n";
 }
 
 void
 Steady::execute()
 {
-  if (_app.isRecovering())
-    return;
-
-  preExecute();
-
-  _problem.advanceState();
-
-  // first step in any steady state solve is always 1 (preserving backwards compatibility)
-  _time_step = 1;
-  _time = _time_step;                 // need to keep _time in sync with _time_step to get correct output
-
-#ifdef LIBMESH_ENABLE_AMR
-
-  // Define the refinement loop
-  unsigned int steps = _problem.adaptivity().getSteps();
-  for (unsigned int r_step=0; r_step<=steps; r_step++)
-  {
-#endif //LIBMESH_ENABLE_AMR
-    _problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);
-    preSolve();
-    _problem.timestepSetup();
-    _problem.computeAuxiliaryKernels(EXEC_TIMESTEP_BEGIN);
-    _problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::POST_AUX);
-    _problem.solve();
-    postSolve();
-
-    if (!_problem.converged())
-    {
-      _console << "Aborting as solve did not converge\n";
-      break;
-    }
-
-    _problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::PRE_AUX);
-    _problem.onTimestepEnd();
-
-    _problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
-    _problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
-    _problem.computeIndicatorsAndMarkers();
-
-    _problem.outputStep(EXEC_TIMESTEP_END);
-
-#ifdef LIBMESH_ENABLE_AMR
-    if (r_step != steps)
-    {
-      _problem.adaptMesh();
-    }
-
-    _time_step++;
-    _time = _time_step;                 // need to keep _time in sync with _time_step to get correct output
-  }
-#endif
-
-  postExecute();
+  _fe_problem.solve();
 }
 
 void
 Steady::checkIntegrity()
 {
   // check to make sure that we don't have any time kernels in this simulation (Steady State)
-  if (_problem.getNonlinearSystem().containsTimeKernel())
+  if (_fe_problem.getNonlinearSystem().containsTimeKernel())
     mooseError("You have specified time kernels in your steady state simulation");
 }
-

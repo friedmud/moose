@@ -45,22 +45,33 @@ public:
 
   virtual ~Steady();
 
-  virtual void init();
-
   /**
    * This will call solve() on the NonlinearSystem.
    */
   virtual void execute();
 
-  virtual Problem & problem();
-
   virtual void checkIntegrity();
 
 protected:
-  FEProblem & _problem;
+  /**
+   * Called from init()
+   */
+  virtual void _init();
 
-  int & _time_step;
-  Real & _time;
+  /**
+   * Whether or not to continue the Steps loop
+   */
+  virtual bool keepStepping();
+
+  /**
+   * Whether or not to continue the Cycles loop
+   */
+  virtual bool keepCycling();
+
+  /**
+   * Called at the beginning of each Step
+   */
+  virtual void beginStep();
 };
 
 #endif //STEADY_H

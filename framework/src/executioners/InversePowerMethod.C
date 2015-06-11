@@ -64,16 +64,19 @@ InversePowerMethod::init()
 void
 InversePowerMethod::execute()
 {
+  /*
   preExecute();
 
   takeStep();
 
   postExecute();
+  */
 }
 
 void
 InversePowerMethod::takeStep()
 {
+  /*
   // save the initial guess and mark a new time step
   _problem.advanceState();
 
@@ -89,5 +92,6 @@ InversePowerMethod::takeStep()
   _problem.onTimestepEnd();
   _problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
   _problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
+  */
 }
 

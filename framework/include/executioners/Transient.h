@@ -88,9 +88,9 @@ public:
    */
   virtual bool lastSolveConverged();
 
-  virtual void preExecute();
+  virtual void beginLoop();
 
-  virtual void postExecute();
+  virtual void endLoop();
 
   virtual void computeDT();
 

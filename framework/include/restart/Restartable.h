@@ -205,6 +205,7 @@ private:
   friend class FEProblem;
   friend class Transient;
   friend class TableOutput;
+  friend class Executioner;
 };
 
 template<typename T>

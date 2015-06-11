@@ -227,15 +227,8 @@ Transient::init()
 void
 Transient::execute()
 {
-
+/*
   preExecute();
-
-  // NOTE: if you remove this line, you will see a subset of tests failing. Those tests might have a wrong answer and might need to be regolded.
-  // The reason is that we actually move the solution back in time before we actually start solving (which I think is wrong).  So this call here
-  // is to maintain backward compatibility and so that MOOSE is giving the same answer.  However, we might remove this call and regold the test
-  // in the future eventually.
-  if (!_app.isRecovering())
-    _problem.advanceState();
 
   // Start time loop...
   while (true)
@@ -260,6 +253,7 @@ Transient::execute()
   if (!_app.halfTransient())
     _problem.outputStep(EXEC_FINAL);
   postExecute();
+*/
 }
 
 void
@@ -353,6 +347,7 @@ Transient::takeStep(Real input_dt)
 void
 Transient::solveStep(Real input_dt)
 {
+  /*
   _dt_old = _dt;
 
   if (input_dt == -1.0)
@@ -438,6 +433,7 @@ Transient::solveStep(Real input_dt)
   _time_stepper->postSolve();
   _dt = current_dt; // _dt might be smaller than this at this point for multistep methods
   _time = _time_old;
+  */
 }
 
 void
@@ -662,17 +658,8 @@ Transient::lastSolveConverged()
 }
 
 void
-Transient::preExecute()
+Transient::beginLoop()
 {
-  /*
-  if (_problem.out().useTimeInterval())
-  {
-    _time_interval = true;
-    _time_interval_output_interval = _problem.out().timeinterval();
-    _next_interval_output_time = _time + _time_interval_output_interval;
-  }
-  */
-
   // Add time period start times to sync times
   const std::vector<TimePeriod *> time_periods = _problem.getTimePeriods();
   for (unsigned int i = 0; i < time_periods.size(); ++i)
@@ -682,7 +669,7 @@ Transient::preExecute()
 }
 
 void
-Transient::postExecute()
+Transient::endLoop()
 {
   _time_stepper->postExecute();
 }

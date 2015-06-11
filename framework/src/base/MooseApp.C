@@ -413,7 +413,7 @@ MooseApp::executeExecutioner()
       Moose::err << "Syntax OK" << std::endl;
       return;
     }
-    _executioner->execute();
+    _executioner->justGo();
   }
   else
     mooseError("No executioner was specified (go fix your input file)");
