@@ -1048,13 +1048,20 @@ enableFPE(bool on)
 // Currently there are 6 exec types (See Moose.h)
 const std::vector<ExecFlagType> populateExecTypes()
 {
-  std::vector<ExecFlagType> exec_types(6);
+  std::vector<ExecFlagType> exec_types(12);
   exec_types[0] = EXEC_INITIAL;
   exec_types[1] = EXEC_TIMESTEP_BEGIN;
   exec_types[2] = EXEC_NONLINEAR;
   exec_types[3] = EXEC_LINEAR;
   exec_types[4] = EXEC_TIMESTEP_END;
   exec_types[5] = EXEC_CUSTOM;
+  exec_types[6] = EXEC_CYCLE_END;
+  exec_types[7] = EXEC_CYCLE_BEGIN;
+  exec_types[8] = EXEC_PICARD_END;
+  exec_types[9] = EXEC_PICARD_BEGIN;
+  exec_types[10] = EXEC_STAGE_END;
+  exec_types[11] = EXEC_STAGE_BEGIN;
+
   return exec_types;
 }
 

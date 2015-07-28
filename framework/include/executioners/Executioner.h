@@ -293,6 +293,11 @@ private:
    */
   void executeStages();
 
+  /**
+   * Computes the UserObjects and AuxiliaryKernels for the given ExecFlagType
+   */
+  void computeUserObjectsAndAuxiliaryKernels(ExecFlagType exec_flag);
+
   /// The number of steps to do
   unsigned int _steps;
 

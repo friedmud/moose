@@ -65,9 +65,9 @@ enum ExecFlagType {
   /// Object is evaluated in every jacobian computation
   EXEC_NONLINEAR         = 0x04,
   /// Object is evaluated at the end of every time step
-  EXEC_TIMESTEP_END      = 0x08,
+  EXEC_STEP_END      = 0x08,
   /// Object is evaluated at the beginning of every time step
-  EXEC_TIMESTEP_BEGIN    = 0x10,
+  EXEC_STEP_BEGIN    = 0x10,
   /// Object is evaluated at the end of the simulations (output only)
   EXEC_FINAL             = 0x20,
   /// Forces execution to occur (output only)
@@ -76,6 +76,16 @@ enum ExecFlagType {
   EXEC_FAILED            = 0x80,
   /// For use with custom executioners that want to fire objects at a specific time
   EXEC_CUSTOM            = 0x100,
+
+  EXEC_CYCLE_END      = 0x1000,
+  EXEC_CYCLE_BEGIN    = 0x2000,
+
+  EXEC_PICARD_END      = 0x4000,
+  EXEC_PICARD_BEGIN    = 0x8000,
+
+  EXEC_STAGE_END      = 0x10000,
+  EXEC_STAGE_BEGIN    = 0x20000,
+
   ///@{
   /// Deprecated
   EXEC_RESIDUAL          = 0x200, // EXEC_LINEAR
@@ -85,6 +95,8 @@ enum ExecFlagType {
   OUTPUT_INITIAL         = 0x01,
   OUTPUT_LINEAR          = 0x02,
   OUTPUT_NONLINEAR       = 0x04,
+  EXEC_TIMESTEP_END      = 0x08,
+  EXEC_TIMESTEP_BEGIN    = 0x10,
   OUTPUT_TIMESTEP_END    = 0x08,
   OUTPUT_TIMESTEP_BEGIN  = 0x10,
   OUTPUT_FINAL           = 0x20,

@@ -100,5 +100,5 @@ SetupInterface::execBitFlags() const
 MultiMooseEnum
 SetupInterface::getExecuteOptions()
 {
-  return MultiMooseEnum("initial=0x01 linear=0x02 nonlinear=0x04 timestep_end=0x08 timestep_begin=0x10 custom=0x100 residual=0x200 jacobian=0x400 timestep=0x800", "linear");
+  return MultiMooseEnum("initial=0x01 linear=0x02 nonlinear=0x04 timestep_end=0x08 timestep_begin=0x10 custom=0x100 residual=0x200 jacobian=0x400 timestep=0x800 cycle_end=0x1000 cycle_begin=0x2000 picard_end=0x4000 picard_begin=0x8000 stage_end=0x10000 stage_begin=0x20000", "linear");
 }

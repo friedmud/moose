@@ -138,6 +138,13 @@ Executioner::executeSteps()
   {
     beginStep();
 
+    _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);
+
+    _fe_problem.timestepSetup();
+
+    _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_BEGIN);
+    _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::POST_AUX);
+
     switch (_time_scheme)
     {
       case REAL_TIME:
@@ -149,6 +156,13 @@ Executioner::executeSteps()
     }
 
     executeCycles();
+
+    _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::PRE_AUX);
+
+    _fe_problem.onTimestepEnd();
+
+    _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
+    _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
 
     _fe_problem.outputStep(EXEC_TIMESTEP_END);
 
@@ -163,6 +177,8 @@ Executioner::executeCycles()
   {
     beginCycle();
 
+    computeUserObjectsAndAuxiliaryKernels(EXEC_CYCLE_BEGIN);
+
     executePicards();
 
     _fe_problem.computeIndicatorsAndMarkers();
@@ -172,6 +188,10 @@ Executioner::executeCycles()
       _fe_problem.outputStep(EXEC_TIMESTEP_END);
       _fe_problem.adaptMesh();
     }
+
+    computeUserObjectsAndAuxiliaryKernels(EXEC_CYCLE_END);
+
+    _fe_problem.outputStep(EXEC_CYCLE_END);
 
     endCycle();
   }
@@ -184,19 +204,11 @@ Executioner::executePicards()
   {
     beginPicard();
 
-    _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);
-
-    _fe_problem.timestepSetup();
-    _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_BEGIN);
-    _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::POST_AUX);
+    computeUserObjectsAndAuxiliaryKernels(EXEC_PICARD_BEGIN);
 
     executeStages();
 
-    _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::PRE_AUX);
-    _fe_problem.onTimestepEnd();
-
-    _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
-    _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
+    computeUserObjectsAndAuxiliaryKernels(EXEC_PICARD_END);
 
     endPicard();
   }
@@ -208,10 +220,26 @@ Executioner::executeStages()
   for (_current_stage = 0; _current_stage < _stages && keepStaging(); _current_stage++)
   {
     beginStage();
+
+    computeUserObjectsAndAuxiliaryKernels(EXEC_STAGE_BEGIN);
+
     execute();
+
+    computeUserObjectsAndAuxiliaryKernels(EXEC_STAGE_END);
+
     endStage();
   }
 }
+
+void
+Executioner::computeUserObjectsAndAuxiliaryKernels(ExecFlagType exec_flag)
+{
+  _fe_problem.computeUserObjects(exec_flag, UserObjectWarehouse::PRE_AUX);
+
+  _fe_problem.computeAuxiliaryKernels(exec_flag);
+  _fe_problem.computeUserObjects(exec_flag, UserObjectWarehouse::POST_AUX);
+}
+
 
 std::string
 Executioner::getTimeStepperName()
