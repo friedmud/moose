@@ -69,15 +69,10 @@ InputParameters validParams<Transient>()
 
   params.addParam<bool>("use_multiapp_dt", false, "If true then the dt for the simulation will be chosen by the MultiApps.  If false (the default) then the minimum over the master dt and the MultiApps is used");
 
-  params.addParam<unsigned int>("picard_max_its", 1, "Number of times each timestep will be solved.  Mainly used when wanting to do Picard iterations with MultiApps that are set to execute_on timestep_end or timestep_begin");
-  params.addParam<Real>("picard_rel_tol", 1e-8, "The relative nonlinear residual drop to shoot for during Picard iterations.  This check is performed based on the Master app's nonlinear residual.");
-  params.addParam<Real>("picard_abs_tol", 1e-50, "The absolute nonlinear residual to shoot for during Picard iterations.  This check is performed based on the Master app's nonlinear residual.");
-
   params.addParamNamesToGroup("start_time dtmin dtmax n_startup_steps trans_ss_check ss_check_tol ss_tmin sync_times time_t time_dt growth_factor predictor_scale use_AB2 use_littlef abort_on_solve_fail output_to_file file_name estimate_time_error timestep_tolerance use_multiapp_dt", "Advanced");
 
   params.addParamNamesToGroup("time_periods time_period_starts time_period_ends", "Time Periods");
 
-  params.addParamNamesToGroup("picard_max_its picard_rel_tol picard_abs_tol", "Picard");
 
   params.addParam<bool>("verbose", false, "Print detailed diagnostics on timestep calculation");
 
@@ -96,8 +91,6 @@ Transient::Transient(const InputParameters & parameters) :
     _unconstrained_dt(declareRestartableData<Real>("unconstrained_dt", -1)),
     _at_sync_point(declareRestartableData<bool>("at_sync_point", false)),
     _first(declareRecoverableData<bool>("first", true)),
-    _multiapps_converged(declareRestartableData<bool>("multiapps_converged", true)),
-    _last_solve_converged(declareRestartableData<bool>("last_solve_converged", true)),
     _end_time(getParam<Real>("end_time")),
     _dtmin(getParam<Real>("dtmin")),
     _dtmax(getParam<Real>("dtmax")),
@@ -115,20 +108,13 @@ Transient::Transient(const InputParameters & parameters) :
     _timestep_tolerance(getParam<Real>("timestep_tolerance")),
     _target_time(declareRestartableData<Real>("target_time", -1)),
     _use_multiapp_dt(getParam<bool>("use_multiapp_dt")),
-    _picard_it(declareRestartableData<int>("picard_it", 0)),
-    _picard_max_its(getParam<unsigned int>("picard_max_its")),
-    _picard_converged(declareRestartableData<bool>("picard_converged", false)),
-    _picard_initial_norm(declareRestartableData<Real>("picard_initial_norm", 0.0)),
-    _picard_timestep_begin_norm(declareRestartableData<Real>("picard_timestep_begin_norm", 0.0)),
-    _picard_timestep_end_norm(declareRestartableData<Real>("picard_timestep_end_norm", 0.0)),
-    _picard_rel_tol(getParam<Real>("picard_rel_tol")),
-    _picard_abs_tol(getParam<Real>("picard_abs_tol")),
     _verbose(getParam<bool>("verbose"))
 {
   _problem.getNonlinearSystem().setDecomposition(_splitting);
   _t_step = 0;
   _dt = 0;
   _next_interval_output_time = 0.0;
+  setSteps(_num_steps);
 
   // Either a start_time has been forced on us, or we want to tell the App about what our start time is (in case anyone else is interested.
   if (_app.hasStartTime())
@@ -217,7 +203,6 @@ Transient::init()
   else
   {
     computeDT();
-//  _dt = computeConstrainedDT();
     _dt = getDT();
   }
 
@@ -227,33 +212,9 @@ Transient::init()
 void
 Transient::execute()
 {
-/*
-  preExecute();
+  std::cout<<"Junk"<<std::endl;
 
-  // Start time loop...
-  while (true)
-  {
-    if (_first != true)
-      incrementStepOrReject();
-
-    _first = false;
-
-    if (!keepGoing())
-      break;
-
-    computeDT();
-
-    takeStep();
-
-    endStep();
-
-    _steps_taken++;
-  }
-
-  if (!_app.halfTransient())
-    _problem.outputStep(EXEC_FINAL);
-  postExecute();
-*/
+  takeStep();
 }
 
 void
@@ -265,15 +226,16 @@ Transient::computeDT()
 void
 Transient::incrementStepOrReject()
 {
-  if (_last_solve_converged)
+  if (lastSolveConverged())
   {
+    std::cout<<"Incrementing step!"<<std::endl;
+
 #ifdef LIBMESH_ENABLE_AMR
     if (_problem.adaptivity().isOn())
       _problem.adaptMesh();
 #endif
 
     _time_old = _time; // = _time_old + _dt;
-    _t_step++;
 
     _problem.advanceState();
   }
@@ -292,62 +254,12 @@ Transient::incrementStepOrReject()
 void
 Transient::takeStep(Real input_dt)
 {
-  _picard_it = 0;
-
-  _problem.backupMultiApps(EXEC_TIMESTEP_BEGIN);
-  _problem.backupMultiApps(EXEC_TIMESTEP_END);
-
-  while (_picard_it<_picard_max_its && _picard_converged == false)
-  {
-    if (_picard_max_its > 1)
-    {
-      _console << "\nBeginning Picard Iteration " << _picard_it << "\n" << std::endl;
-
-      Real current_norm = _problem.computeResidualL2Norm();
-
-      if (_picard_it == 0) // First Picard iteration - need to save off the initial nonlinear residual
-      {
-        _picard_initial_norm = current_norm;
-        _console << "Initial Picard Norm: " << _picard_initial_norm << '\n';
-      }
-    }
-
-    // For every iteration other than the first, we need to restore the state of the MultiApps
-    if (_picard_it > 0)
-    {
-      _problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN);
-      _problem.restoreMultiApps(EXEC_TIMESTEP_END);
-    }
-
-    solveStep(input_dt);
-
-    if (_picard_max_its > 1)
-    {
-      _picard_timestep_end_norm = _problem.computeResidualL2Norm();
-
-      _console << "Picard Norm after TIMESTEP_END MultiApps: " << _picard_timestep_end_norm << '\n';
-
-      Real max_norm = std::max(_picard_timestep_begin_norm, _picard_timestep_end_norm);
-
-      Real max_relative_drop = max_norm / _picard_initial_norm;
-
-      if (max_norm < _picard_abs_tol || max_relative_drop < _picard_rel_tol)
-      {
-        _console << "Picard converged!" << std::endl;
-
-        _picard_converged = true;
-        return;
-      }
-    }
-
-    ++_picard_it;
-  }
+  solveStep(input_dt);
 }
 
 void
 Transient::solveStep(Real input_dt)
 {
-  /*
   _dt_old = _dt;
 
   if (input_dt == -1.0)
@@ -362,35 +274,12 @@ Transient::solveStep(Real input_dt)
   // Increment time
   _time = _time_old + _dt;
 
-  _problem.execTransfers(EXEC_TIMESTEP_BEGIN);
-  _multiapps_converged = _problem.execMultiApps(EXEC_TIMESTEP_BEGIN, _picard_max_its == 1);
+  std::cout<<"Time: "<<_time<<std::endl;
 
-  if (!_multiapps_converged)
-    return;
-
-  preSolve();
   _time_stepper->preSolve();
 
   _problem.timestepSetup();
 
-  // Compute Pre-Aux User Objects (Timestep begin)
-  _problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);
-
-  // Compute TimestepBegin AuxKernels
-  _problem.computeAuxiliaryKernels(EXEC_TIMESTEP_BEGIN);
-
-  // Compute Post-Aux User Objects (Timestep begin)
-  _problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::POST_AUX);
-
-  if (_picard_max_its > 1)
-  {
-    _picard_timestep_begin_norm = _problem.computeResidualL2Norm();
-
-    _console << "Picard Norm after TIMESTEP_BEGIN MultiApps: " << _picard_timestep_begin_norm << '\n';
-  }
-
-  // Perform output for timestep begin
-  _problem.outputStep(EXEC_TIMESTEP_BEGIN);
 
   _time_stepper->step();
 
@@ -399,74 +288,40 @@ Transient::solveStep(Real input_dt)
   {
     _console << COLOR_GREEN << " Solve Converged!" << COLOR_DEFAULT << std::endl;
 
-    if (_picard_max_its <= 1)
+    if (getPicards() <= 1)
       _time_stepper->acceptStep();
 
-    _solution_change_norm = _problem.solutionChangeNorm();
-
-    _problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::PRE_AUX);
-#if 0
-    // User definable callback
-    if (_estimate_error)
-      estimateTimeError();
-#endif
-
-    _problem.onTimestepEnd();
-
-    _problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
-    _problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
-    _problem.execTransfers(EXEC_TIMESTEP_END);
-    _multiapps_converged = _problem.execMultiApps(EXEC_TIMESTEP_END, _picard_max_its == 1);
-
-    if (!_multiapps_converged)
-      return;
+    //output
+    if (_time_interval && (_time + _timestep_tolerance >= _next_interval_output_time))
+      _next_interval_output_time += _time_interval_output_interval;
   }
   else
   {
     _console << COLOR_RED << " Solve Did NOT Converge!" << COLOR_DEFAULT << std::endl;
 
     // Perform the output of the current, failed time step (this only occurs if desired)
-    _problem.outputStep(EXEC_FAILED);
+    _fe_problem.outputStep(EXEC_FAILED);
   }
-
-  postSolve();
   _time_stepper->postSolve();
   _dt = current_dt; // _dt might be smaller than this at this point for multistep methods
-  _time = _time_old;
-  */
 }
 
 void
-Transient::endStep(Real input_time)
+Transient::beginStep()
+{
+  if (_first != true)
+    incrementStepOrReject();
+
+  _first = false;
+}
+
+void
+Transient::endTransientStep(Real input_time)
 {
   if (input_time == -1.0)
     _time = _time_old + _dt;
   else
     _time = input_time;
-
-  _picard_converged=false;
-
-  _last_solve_converged = lastSolveConverged();
-
-  if (_last_solve_converged)
-  {
-    // Compute the Error Indicators and Markers
-    _problem.computeIndicatorsAndMarkers();
-
-    // Perform the output of the current time step
-    _problem.outputStep(EXEC_TIMESTEP_END);
-
-    // Output MultiApps if we were doing Picard iterations
-    if (_picard_max_its > 1)
-    {
-      _problem.advanceMultiApps(EXEC_TIMESTEP_BEGIN);
-      _problem.advanceMultiApps(EXEC_TIMESTEP_END);
-    }
-
-    //output
-    if (_time_interval && (_time + _timestep_tolerance >= _next_interval_output_time))
-      _next_interval_output_time += _time_interval_output_interval;
-   }
 }
 
 Real
@@ -654,7 +509,9 @@ Transient::estimateTimeError()
 bool
 Transient::lastSolveConverged()
 {
-  return _multiapps_converged && _time_stepper->converged();
+  std::cout<<"LSC: "<<(multiAppsConverged() && _time_stepper->converged())<<std::endl;
+
+  return multiAppsConverged() && _time_stepper->converged();
 }
 
 void
@@ -684,12 +541,6 @@ void
 Transient::setTargetTime(Real target_time)
 {
   _target_time = target_time;
-}
-
-Real
-Transient::getSolutionChangeNorm()
-{
-  return _solution_change_norm;
 }
 
 void
@@ -730,4 +581,3 @@ Transient::getTimeStepperName()
   else
     return std::string();
 }
-

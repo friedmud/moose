@@ -276,7 +276,7 @@ TransientMultiApp::solveStep(Real dt, Real target_time, bool auto_advance)
           problem->forceOutput();
 
           // Clean up the end
-          ex->endStep(target_time-app_time_offset);
+          ex->endTransientStep(target_time-app_time_offset);
         }
         else
           ex->endStep();
@@ -290,7 +290,7 @@ TransientMultiApp::solveStep(Real dt, Real target_time, bool auto_advance)
     else if (_tolerate_failure)
     {
       ex->takeStep(dt);
-      ex->endStep(target_time-app_time_offset);
+      ex->endTransientStep(target_time-app_time_offset);
     }
     else
     {

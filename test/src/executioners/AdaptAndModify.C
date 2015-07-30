@@ -33,7 +33,7 @@ AdaptAndModify::AdaptAndModify(const InputParameters & parameters) :
 void
 AdaptAndModify::incrementStepOrReject()
 {
-  if (_last_solve_converged)
+  if (lastSolveConverged())
   {
     _time_old = _time;
     _t_step++;
@@ -50,15 +50,11 @@ AdaptAndModify::incrementStepOrReject()
 }
 
 void
-AdaptAndModify::endStep(Real input_time)
+AdaptAndModify::endTransientStep(Real input_time)
 {
-  if (input_time == -1.0)
-    _time = _time_old + _dt;
-  else
-    _time = input_time;
+  Transient::endTransientStep(input_time);
 
-  _last_solve_converged = lastSolveConverged();
-  if (_last_solve_converged)
+  if (lastSolveConverged())
   {
     // Compute the Error Indicators and Markers
     for (unsigned int i=0; i<_adapt_cycles; i++)
@@ -72,13 +68,6 @@ AdaptAndModify::endStep(Real input_time)
 
 #endif
     }
-    _problem.computeUserObjects(EXEC_CUSTOM);
-
-    // Set the time for the next output interval if we're at or beyond an output interval
-    if (_time_interval && (_time + _timestep_tolerance >= _next_interval_output_time))
-      _next_interval_output_time += _time_interval_output_interval;
   }
-
-  _problem.outputStep(EXEC_TIMESTEP_END);
 
 }

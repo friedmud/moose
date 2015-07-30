@@ -99,7 +99,9 @@ public:
    */
   virtual void incrementStepOrReject();
 
-  virtual void endStep(Real input_time = -1.0);
+  virtual void endStep() {endTransientStep();}
+
+  virtual void endTransientStep(Real input_time = -1.0);
 
   /**
    * Can be used to set the next "target time" which is a time to nail perfectly.
@@ -207,7 +209,7 @@ public:
    */
   //Because this returns the number of Picard iterations, rather than the current
   //iteration count (which starts at 0), increment by 1.
-  Real numPicardIts() { return _picard_it+1; }
+  Real numPicardIts() { return getPicards()+1; }
 
 
 protected:
@@ -215,6 +217,11 @@ protected:
    * This should execute the solve for one timestep.
    */
   virtual void solveStep(Real input_dt = -1.0);
+
+  /**
+   * Called at the beginning of each Step
+   */
+  virtual void beginStep();
 
   FEProblem & _problem;
 
@@ -236,12 +243,6 @@ protected:
 
   /// Is it our first time through the execution loop?
   bool & _first;
-
-  /// Whether or not the multiapps failed during the last timestem
-  bool & _multiapps_converged;
-
-  /// Whether or not the last solve converged
-  bool & _last_solve_converged;
 
   Real _end_time;
   Real _dtmin;
@@ -272,23 +273,8 @@ protected:
   Real & _target_time;
   bool _use_multiapp_dt;
 
-  /**
-   * Picard Related
-   */
-  /// Number of Picard iterations to perform
-  int  & _picard_it;
-  Real _picard_max_its;
-  bool & _picard_converged;
-  Real & _picard_initial_norm;
-  Real & _picard_timestep_begin_norm;
-  Real & _picard_timestep_end_norm;
-  Real _picard_rel_tol;
-  Real _picard_abs_tol;
-
   ///should detailed diagnostic output be printed
   bool _verbose;
-
-  Real _solution_change_norm;
 
   void setupTimeIntegrator();
 };

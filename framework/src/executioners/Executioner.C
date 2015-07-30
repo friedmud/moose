@@ -35,9 +35,15 @@ InputParameters validParams<Executioner>()
 
   params.addParam<std::vector<std::string> >("splitting", "Top-level splitting defining a hierarchical decomposition into subsystems to help the solver.");
 
+  params.addParam<unsigned int>("picard_max_its", 1, "Number of times each timestep will be solved.  Mainly used when wanting to do Picard iterations with MultiApps that are set to execute_on timestep_end or timestep_begin");
+  params.addParam<Real>("picard_rel_tol", 1e-8, "The relative nonlinear residual drop to shoot for during Picard iterations.  This check is performed based on the Master app's nonlinear residual.");
+  params.addParam<Real>("picard_abs_tol", 1e-50, "The absolute nonlinear residual to shoot for during Picard iterations.  This check is performed based on the Master app's nonlinear residual.");
+
 #ifdef LIBMESH_HAVE_PETSC
   params += commonExecutionParameters();
 #endif //LIBMESH_HAVE_PETSC
+
+  params.addParamNamesToGroup("picard_max_its picard_rel_tol picard_abs_tol", "Picard");
 
   return params;
 }
@@ -95,7 +101,15 @@ Executioner::Executioner(const InputParameters & parameters) :
     _current_cycle(declareRecoverableData<unsigned int>("current_cycle", 0)),
     _current_picard(declareRecoverableData<unsigned int>("current_picard", 0)),
     _current_stage(declareRecoverableData<unsigned int>("current_stage", 0)),
-    _time(_fe_problem.time())
+    _time(_fe_problem.time()),
+    _picard_converged(declareRestartableData<bool>("picard_converged", false)),
+    _picard_initial_norm(declareRestartableData<Real>("picard_initial_norm", 0.0)),
+    _picard_timestep_begin_norm(declareRestartableData<Real>("picard_timestep_begin_norm", 0.0)),
+    _picard_timestep_end_norm(declareRestartableData<Real>("picard_timestep_end_norm", 0.0)),
+    _picard_rel_tol(getParam<Real>("picard_rel_tol")),
+    _picard_abs_tol(getParam<Real>("picard_abs_tol")),
+    _multiapps_converged(declareRestartableData<bool>("multiapps_converged", true)),
+    _last_solve_converged(declareRestartableData<bool>("last_solve_converged", true))
 {
 }
 
@@ -134,8 +148,12 @@ Executioner::justGo()
 void
 Executioner::executeSteps()
 {
+  std::cout<<"_steps+1 "<<_steps+1<<std::endl;
+
   for (_current_step = 1; _current_step < _steps + 1 && keepStepping(); _current_step++)
   {
+    std::cout<<"here"<<std::endl;
+
     beginStep();
 
     _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);
@@ -155,16 +173,60 @@ Executioner::executeSteps()
         break;
     }
 
+    // Compute Pre-Aux User Objects (Timestep begin)
+    _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);
+
+    // Compute TimestepBegin AuxKernels
+    _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_BEGIN);
+
+    // Compute Post-Aux User Objects (Timestep begin)
+    _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::POST_AUX);
+
+    _fe_problem.execTransfers(EXEC_TIMESTEP_BEGIN);
+    _multiapps_converged = _fe_problem.execMultiApps(EXEC_TIMESTEP_BEGIN, getPicards() == 1);
+
+    if (!_multiapps_converged)
+      return;
+
+    // Perform output for timestep begin
+    _fe_problem.outputStep(EXEC_TIMESTEP_BEGIN);
+
     executeCycles();
 
-    _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::PRE_AUX);
+    _picard_converged=false;
+
+    _last_solve_converged = lastSolveConverged();
 
     _fe_problem.onTimestepEnd();
 
-    _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
-    _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
 
-    _fe_problem.outputStep(EXEC_TIMESTEP_END);
+    if (_last_solve_converged)
+    {
+      // Compute the Error Indicators and Markers
+      _fe_problem.computeIndicatorsAndMarkers();
+
+      // Output MultiApps if we were doing Picard iterations
+      if (_picards > 1)
+      {
+        _fe_problem.advanceMultiApps(EXEC_TIMESTEP_BEGIN);
+        _fe_problem.advanceMultiApps(EXEC_TIMESTEP_END);
+      }
+
+      _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_END);
+      _fe_problem.computeUserObjects(EXEC_TIMESTEP_END, UserObjectWarehouse::POST_AUX);
+      _fe_problem.execTransfers(EXEC_TIMESTEP_END);
+      _multiapps_converged = _fe_problem.execMultiApps(EXEC_TIMESTEP_END, getPicards() == 1);
+
+      if (!_multiapps_converged)
+        return;
+
+      // Perform the output of the current time step
+      _fe_problem.outputStep(EXEC_TIMESTEP_END);
+
+      _solution_change_norm = _fe_problem.solutionChangeNorm();
+
+      _fe_problem.onTimestepEnd();
+    }
 
     endStep();
   }
@@ -206,9 +268,59 @@ Executioner::executePicards()
 
     computeUserObjectsAndAuxiliaryKernels(EXEC_PICARD_BEGIN);
 
+    if (_picards > 1)
+    {
+      _fe_problem.backupMultiApps(EXEC_TIMESTEP_BEGIN);
+      _fe_problem.backupMultiApps(EXEC_TIMESTEP_END);
+
+      _console << "\nBeginning Picard Iteration " << _current_picard << "\n" << std::endl;
+
+      Real current_norm = _fe_problem.computeResidualL2Norm();
+
+      if (_current_picard == 0) // First Picard iteration - need to save off the initial nonlinear residual
+      {
+        _picard_initial_norm = current_norm;
+        _console << "Initial Picard Norm: " << _picard_initial_norm << '\n';
+      }
+    }
+
+    // For every iteration other than the first, we need to restore the state of the MultiApps
+    if (_current_picard > 0)
+    {
+      _fe_problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN);
+      _fe_problem.restoreMultiApps(EXEC_TIMESTEP_END);
+    }
+
+    if (getPicards() > 1)
+    {
+      _picard_timestep_begin_norm = _fe_problem.computeResidualL2Norm();
+
+      _console << "Picard Norm after TIMESTEP_BEGIN MultiApps: " << _picard_timestep_begin_norm << '\n';
+    }
+
     executeStages();
 
     computeUserObjectsAndAuxiliaryKernels(EXEC_PICARD_END);
+
+
+    if (_picards > 1)
+    {
+      _picard_timestep_end_norm = _fe_problem.computeResidualL2Norm();
+
+      _console << "Picard Norm after TIMESTEP_END MultiApps: " << _picard_timestep_end_norm << '\n';
+
+      Real max_norm = std::max(_picard_timestep_begin_norm, _picard_timestep_end_norm);
+
+      Real max_relative_drop = max_norm / _picard_initial_norm;
+
+      if (max_norm < _picard_abs_tol || max_relative_drop < _picard_rel_tol)
+      {
+        _console << "Picard converged!" << std::endl;
+
+        _picard_converged = true;
+        return;
+      }
+    }
 
     endPicard();
   }
@@ -257,4 +369,16 @@ Executioner::addAttributeReporter(const std::string & name, Real & attribute, co
   if (!execute_on.empty())
     params.set<MultiMooseEnum>("execute_on") = execute_on;
   problem->addPostprocessor("ExecutionerAttributeReporter", name, params);
+}
+
+bool
+Executioner::lastSolveConverged()
+{
+  return _last_solve_converged;
+}
+
+bool
+Executioner::multiAppsConverged()
+{
+  return _multiapps_converged;
 }

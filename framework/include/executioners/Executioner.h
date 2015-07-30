@@ -129,6 +129,11 @@ public:
    */
   int currentStage() { return _current_stage; }
 
+  /**
+   * Norm of how much the solution changed in this timestep
+   */
+  Real getSolutionChangeNorm() { return _solution_change_norm; }
+
 protected:
   /**
    * Called during init()
@@ -163,6 +168,26 @@ protected:
    * Set the number of stages to do
    */
   void setStages(unsigned int stages) { _stages = stages; }
+
+  /**
+   * Get the number of steps to do
+   */
+  unsigned int getSteps() { return _steps; }
+
+  /**
+   * Get the number of cycles to do
+   */
+  unsigned int getCycles() { return _cycles; }
+
+  /**
+   * Get the number of picards to do
+   */
+  unsigned int getPicards() { return _picards; }
+
+  /**
+   * Get the number of stages to do
+   */
+  unsigned int getStages() { return _stages; }
 
   /**
    * Whether or not to continue the Steps loop
@@ -256,6 +281,18 @@ protected:
    */
   virtual void addAttributeReporter(const std::string & name, Real & attribute, const std::string execute_on = "");
 
+  /**
+   * Whether or not the last solve converged.
+   *
+   * (Solve and MultiApps)
+   */
+  virtual bool lastSolveConverged();
+
+  /**
+   * Whether or not the multiapps converged
+   */
+  virtual bool multiAppsConverged();
+
   FEProblem & _fe_problem;
 
   /// Initial Residual Variables
@@ -327,6 +364,24 @@ private:
 
   /// The current time computation scheme
   TimeScheme _time_scheme;
+
+  /**
+   * Picard Related
+   */
+  bool & _picard_converged;
+  Real & _picard_initial_norm;
+  Real & _picard_timestep_begin_norm;
+  Real & _picard_timestep_end_norm;
+  Real _picard_rel_tol;
+  Real _picard_abs_tol;
+
+  /// Whether or not the multiapps failed during the last timestem
+  bool & _multiapps_converged;
+
+  /// Whether or not the last solve converged
+  bool & _last_solve_converged;
+
+  Real _solution_change_norm;
 };
 
 #endif //EXECUTIONER_H
