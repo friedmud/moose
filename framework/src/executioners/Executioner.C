@@ -35,7 +35,7 @@ InputParameters validParams<Executioner>()
 
   params.addParam<std::vector<std::string> >("splitting", "Top-level splitting defining a hierarchical decomposition into subsystems to help the solver.");
 
-  params.addParam<unsigned int>("picard_max_its", 1, "Number of times each timestep will be solved.  Mainly used when wanting to do Picard iterations with MultiApps that are set to execute_on timestep_end or timestep_begin");
+  params.addParam<unsigned int>("picard_max_its", 1, "Number of times each timestep will be solved.  Mainly used when wanting to do Picard iterations with MultiApps that are set to execute_on picard_end, picard_begin, stage_end or stage_begin");
   params.addParam<Real>("picard_rel_tol", 1e-8, "The relative nonlinear residual drop to shoot for during Picard iterations.  This check is performed based on the Master app's nonlinear residual.");
   params.addParam<Real>("picard_abs_tol", 1e-50, "The absolute nonlinear residual to shoot for during Picard iterations.  This check is performed based on the Master app's nonlinear residual.");
 
@@ -235,6 +235,8 @@ Executioner::executeSteps()
 void
 Executioner::executeCycles()
 {
+  std::cout<<"executeCycles cycles: "<<_cycles<<std::endl;
+
   for (_current_cycle = 0; _current_cycle < _cycles && keepCycling(); _current_cycle++)
   {
     beginCycle();
@@ -346,6 +348,9 @@ Executioner::executeStages()
 void
 Executioner::computeUserObjectsAndAuxiliaryKernels(ExecFlagType exec_flag)
 {
+  if (exec_flag == EXEC_CYCLE_END)
+    std::cout<<"computeUserObjectsAndAuxiliaryKernels(CYCLE_END)"<<std::endl;
+
   _fe_problem.computeUserObjects(exec_flag, UserObjectWarehouse::PRE_AUX);
 
   _fe_problem.computeAuxiliaryKernels(exec_flag);

@@ -29,6 +29,8 @@ NumDOFs::NumDOFs(const InputParameters & parameters) :
 Real
 NumDOFs::getValue()
 {
+  std::cout<<"NumDOFs::getValue()"<<std::endl;
+
   return _subproblem.es().n_dofs();
 }
 

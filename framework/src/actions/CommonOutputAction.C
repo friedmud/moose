@@ -62,7 +62,7 @@ InputParameters validParams<CommonOutputAction>()
    params.addParam<std::vector<VariableName> >("show", "A list of the variables and postprocessors that should be output to the Exodus file (may include Variables, ScalarVariables, and Postprocessor names).");
 
   // Add the 'output_on' input parameter
-  params.addParam<MultiMooseEnum>("output_on", Output::getExecuteOptions("timestep_end"), "Set to (initial|linear|nonlinear|timestep_end|timestep_begin|final|failed|custom) to execute only at that moment (default: timestep_end)");
+  params.addParam<MultiMooseEnum>("output_on", Output::getExecuteOptions("timestep_end"), "Set to (initial|linear|nonlinear|timestep_end|timestep_begin|final|failed|custom|cycle_begin|cycle_end|picard_begin|picard_end|stage_begin|stage_end) to execute only at that moment (default: timestep_end)");
 
   // Add common output toggles
   params.addParam<bool>("output_initial", false, "Request that the initial condition is output to the solution file");

@@ -40,6 +40,15 @@ namespace Moose {
       execstore_type_to_enum["TIMESTEP_BEGIN"] = EXEC_TIMESTEP_BEGIN;
       execstore_type_to_enum["CUSTOM"] = EXEC_CUSTOM;
 
+      execstore_type_to_enum["CYCLE_END"] = EXEC_CYCLE_END;
+      execstore_type_to_enum["CYCLE_BEGIN"] = EXEC_CYCLE_BEGIN;
+
+      execstore_type_to_enum["PICARD_END"] = EXEC_PICARD_END;
+      execstore_type_to_enum["PICARD_BEGIN"] = EXEC_PICARD_BEGIN;
+
+      execstore_type_to_enum["STAGE_END"] = EXEC_STAGE_END;
+      execstore_type_to_enum["STAGE_BEGIN"] = EXEC_STAGE_BEGIN;
+
       // Deprecated syntax
       execstore_type_to_enum["RESIDUAL"] = EXEC_LINEAR;
       execstore_type_to_enum["JACOBIAN"] = EXEC_NONLINEAR;

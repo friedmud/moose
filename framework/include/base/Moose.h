@@ -56,6 +56,10 @@ class FEProblem;
 //   (1) the local function populateExecTypes in Moose.C.
 //   (2) the method SetupInterface::getExecuteOptions
 //   (3) the function Output::getExecuteOptions
+//   (4) the ExecStore object in ExecStore.h
+//   (5) the method Output::getExecuteOptions
+//   (6) The initExecStoreType function in Conversion.C
+//   (7) Add calls to updateDependObjects() and initialSetup in FEProblem::initialSetup()
 enum ExecFlagType {
   EXEC_NONE              = 0x00,
   /// Object is evaluated only once at the beginning of the simulation

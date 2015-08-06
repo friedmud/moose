@@ -382,6 +382,12 @@ void FEProblem::initialSetup()
     _user_objects(EXEC_TIMESTEP_BEGIN)[i].updateDependObjects(_aux.getDependObjects(EXEC_TIMESTEP_BEGIN));
     _user_objects(EXEC_INITIAL)[i].updateDependObjects(_aux.getDependObjects(EXEC_INITIAL));
     _user_objects(EXEC_CUSTOM)[i].updateDependObjects(_aux.getDependObjects(EXEC_CUSTOM));
+    _user_objects(EXEC_CYCLE_BEGIN)[i].updateDependObjects(_aux.getDependObjects(EXEC_CYCLE_BEGIN));
+    _user_objects(EXEC_CYCLE_END)[i].updateDependObjects(_aux.getDependObjects(EXEC_CYCLE_END));
+    _user_objects(EXEC_PICARD_BEGIN)[i].updateDependObjects(_aux.getDependObjects(EXEC_PICARD_BEGIN));
+    _user_objects(EXEC_PICARD_END)[i].updateDependObjects(_aux.getDependObjects(EXEC_PICARD_END));
+    _user_objects(EXEC_STAGE_BEGIN)[i].updateDependObjects(_aux.getDependObjects(EXEC_STAGE_BEGIN));
+    _user_objects(EXEC_STAGE_END)[i].updateDependObjects(_aux.getDependObjects(EXEC_STAGE_END));
 
     _user_objects(EXEC_LINEAR)[i].initialSetup();
     _user_objects(EXEC_NONLINEAR)[i].initialSetup();
@@ -389,6 +395,12 @@ void FEProblem::initialSetup()
     _user_objects(EXEC_TIMESTEP_BEGIN)[i].initialSetup();
     _user_objects(EXEC_INITIAL)[i].initialSetup();
     _user_objects(EXEC_CUSTOM)[i].initialSetup();
+    _user_objects(EXEC_CYCLE_BEGIN)[i].initialSetup();
+    _user_objects(EXEC_CYCLE_END)[i].initialSetup();
+    _user_objects(EXEC_PICARD_BEGIN)[i].initialSetup();
+    _user_objects(EXEC_PICARD_END)[i].initialSetup();
+    _user_objects(EXEC_STAGE_BEGIN)[i].initialSetup();
+    _user_objects(EXEC_STAGE_END)[i].initialSetup();
   }
 
   // Initialize scalars so they are properly sized for use as input into ParsedFunctions
@@ -1860,6 +1872,8 @@ FEProblem::addPostprocessor(std::string pp_name, const std::string & name, Input
     const std::vector<ExecFlagType> exec_flags = Moose::vectorStringsToEnum<ExecFlagType>(parameters.get<MultiMooseEnum>("execute_on"));
     for (unsigned int i=0; i<exec_flags.size(); ++i)
     {
+      std::cout<<"Adding "<<mo->name()<<" with exec_type: "<<exec_flags[i]<<std::endl;
+
       // Check for name collision
       if (_user_objects(exec_flags[i])[tid].getUserObjectByName(mo->name()))
         mooseError(std::string("A UserObject with the name \"") + mo->name() + "\" already exists.  You may not add a Postprocessor by the same name.");
@@ -2166,6 +2180,24 @@ void
 FEProblem::computeUserObjectsInternal(ExecFlagType type, UserObjectWarehouse::GROUP group)
 {
   std::vector<UserObjectWarehouse> & pps = _user_objects(type);
+
+  if (type == EXEC_CYCLE_END)
+  {
+    std::cout<<"computeUserObjectsInternal(CYCLE_END) "<<&pps[0]<<std::endl;
+    std::cout<<"num pps: "<<pps.size()<<std::endl;
+    std::cout<<"block ids size: "<<pps[0].blockIds().size()<<std::endl;
+
+    for (auto id : pps[0].blockIds())
+    {
+      std::cout<<id<<std::endl;
+
+      std::cout<<"Here!"<<std::endl;
+
+      for (auto pp : pps[0].elementUserObjects(id, group))
+        std::cout<<"Name: "<<pp->name()<<std::endl;
+    }
+  }
+
   if (pps[0].blockIds().size() || pps[0].boundaryIds().size() || pps[0].nodesetIds().size() || pps[0].blockNodalIds().size() || pps[0].internalSideUserObjects(group).size())
   {
     if (!pps[0].nodesetIds().size())
@@ -3606,6 +3638,9 @@ void
 FEProblem::adaptMesh()
 {
   unsigned int cycles_per_step = _adaptivity.getCyclesPerStep();
+
+  std::cout<<"cycles_per_step: "<<cycles_per_step<<std::endl;
+
   for (unsigned int i = 0; i < cycles_per_step; ++i)
   {
     _console << "Adaptivity step " << i+1 << " of " << cycles_per_step << '\n';

@@ -24,7 +24,7 @@ InputParameters validParams<SetupInterface>()
   MultiMooseEnum execute_options(SetupInterface::getExecuteOptions());
 
   // Add the 'execute_on' input parameter for users to set
-  params.addParam<MultiMooseEnum>("execute_on", execute_options, "Set to (nonlinear|linear|timestep_end|timestep_begin|custom) to execute only at that moment");
+  params.addParam<MultiMooseEnum>("execute_on", execute_options, "Set to (nonlinear|linear|timestep_end|timestep_begin|custom|cycle_begin|cycle_end|picard_begin|picard_end|stage_begin|stage_end) to execute only at that moment");
 
   return params;
 }

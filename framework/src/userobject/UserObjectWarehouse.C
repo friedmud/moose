@@ -249,6 +249,11 @@ UserObjectWarehouse::addUserObject(MooseSharedPointer<UserObject> & user_object)
   {
     // Extract the BlockIDs (see BlockRestrictable)
     ElementUserObject * element_uo = dynamic_cast<ElementUserObject *>(raw_ptr);
+
+    std::cout<<"UOWarehouse::addUserObject() adding: "<<element_uo->name()<<" with block: "<<*element_uo->blockIDs().begin()<<std::endl;
+
+    std::cout<<this<<std::endl;
+
     const std::set<SubdomainID> & blks = element_uo->blockIDs();
 
     // Add to the list of all SideUserObjects
@@ -257,6 +262,8 @@ UserObjectWarehouse::addUserObject(MooseSharedPointer<UserObject> & user_object)
     // Loop through each of the block ids and update the various storage lists
     for (std::set<SubdomainID>::const_iterator it = blks.begin(); it != blks.end(); ++it)
     {
+      std::cout<<"Inserting into "<<*it<<std::endl;
+
       _block_element_user_objects[*it].push_back(element_uo);
       _block_ids_with_user_objects.insert(*it);
     }

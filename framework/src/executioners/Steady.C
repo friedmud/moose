@@ -55,6 +55,9 @@ Steady::_init()
   // Everything else defaults to 1
   setCycles(_fe_problem.adaptivity().getSteps()+1);
 
+  std::cout<<"Cycles: "<<_fe_problem.adaptivity().getSteps()+1<<std::endl;
+
+
   setTimeScheme(PSEUDO_TIME);
 }
 
@@ -80,6 +83,10 @@ void
 Steady::beginStep()
 {
   _console << "Step: " << currentStep() << "\n";
+
+  std::cout<<"  Cycle: "<<currentCycle()<<std::endl;
+
+  _fe_problem.time() = currentCycle();
 }
 
 void

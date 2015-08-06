@@ -43,10 +43,10 @@ InputParameters validParams<Output>()
   params.addParam<Real>("time_tolerance", 1e-14, "Time tolerance utilized checking start and end times");
 
   // Add the 'output_on' input parameter for users to set
-  params.addParam<MultiMooseEnum>("output_on", Output::getExecuteOptions("timestep_end"), "Set to (none|initial|linear|nonlinear|timestep_end|timestep_begin|final|failed|custom) to execute only at that moment");
+  params.addParam<MultiMooseEnum>("output_on", Output::getExecuteOptions("timestep_end"), "Set to (none|initial|linear|nonlinear|timestep_end|timestep_begin|final|failed|custom|cycle_begin|cycle_end|picard_begin|picard_end|stage_begin|stage_end) to execute only at that moment");
 
   // Add ability to append to the 'output_on' list
-  params.addParam<MultiMooseEnum>("additional_output_on", Output::getExecuteOptions(), "This list of output flags is added to the existing flags (initial|linear|nonlinear|timestep_end|timestep_begin|final|failed|custom) to execute only at that moment");
+  params.addParam<MultiMooseEnum>("additional_output_on", Output::getExecuteOptions(), "This list of output flags is added to the existing flags (initial|linear|nonlinear|timestep_end|timestep_begin|final|failed|custom|cycle_begin|cycle_end|picard_begin|picard_end|stage_begin|stage_end) to execute only at that moment");
 
   // 'Timing' group
   params.addParamNamesToGroup("time_tolerance interval output_initial output_final sync_times sync_only start_time end_time ", "Timing");
@@ -72,7 +72,7 @@ MultiMooseEnum
 Output::getExecuteOptions(std::string default_type)
 {
   // Build the string of options
-  std::string options = "none=0x00 initial=0x01 linear=0x02 nonlinear=0x04 timestep_end=0x08 timestep_begin=0x10 final=0x20 failed=0x80";
+  std::string options = "none=0x00 initial=0x01 linear=0x02 nonlinear=0x04 timestep_end=0x08 timestep_begin=0x10 final=0x20 failed=0x80 cycle_end=0x1000 cycle_begin=0x2000 picard_end=0x4000 picard_begin=0x8000 stage_end=0x10000 stage_begin=0x20000";
 
   // The numbers associated must be in sync with the ExecFlagType in Moose.h
   return MultiMooseEnum(options, default_type);

@@ -35,7 +35,13 @@ public:
       _obj_nonlinear(libMesh::n_threads()),
       _obj_timestep_end(libMesh::n_threads()),
       _obj_timestep_begin(libMesh::n_threads()),
-      _obj_custom(libMesh::n_threads())
+      _obj_custom(libMesh::n_threads()),
+      _obj_cycle_end(libMesh::n_threads()),
+      _obj_cycle_begin(libMesh::n_threads()),
+      _obj_picard_end(libMesh::n_threads()),
+      _obj_picard_begin(libMesh::n_threads()),
+      _obj_stage_end(libMesh::n_threads()),
+      _obj_stage_begin(libMesh::n_threads())
   {
   }
 
@@ -54,6 +60,12 @@ public:
     case EXEC_TIMESTEP_BEGIN: return _obj_timestep_begin;
     case EXEC_NONLINEAR: return _obj_nonlinear;
     case EXEC_CUSTOM: return _obj_custom;
+    case EXEC_CYCLE_END: return _obj_cycle_end;
+    case EXEC_CYCLE_BEGIN: return _obj_cycle_begin;
+    case EXEC_PICARD_END: return _obj_picard_end;
+    case EXEC_PICARD_BEGIN: return _obj_picard_begin;
+    case EXEC_STAGE_END: return _obj_stage_end;
+    case EXEC_STAGE_BEGIN: return _obj_stage_begin;
     case EXEC_LINEAR:
     default:
       return _obj_linear;
@@ -61,18 +73,23 @@ public:
   }
 
 protected:
-  /// executed once at the beginning of the simulation
+  /// @{
+  /// Object holders
+
   std::vector<T> _obj_initial;
-  /// executed every residual evaluation
   std::vector<T> _obj_linear;
-  /// executed every jacobian (nonlinear) evaluation
   std::vector<T> _obj_nonlinear;
-  /// executed at the end of every time step
   std::vector<T> _obj_timestep_end;
-  /// executed at the beginning of every time step
   std::vector<T> _obj_timestep_begin;
-  /// executed at a custom time by the Executioner
   std::vector<T> _obj_custom;
+  std::vector<T> _obj_cycle_end;
+  std::vector<T> _obj_cycle_begin;
+  std::vector<T> _obj_picard_end;
+  std::vector<T> _obj_picard_begin;
+  std::vector<T> _obj_stage_end;
+  std::vector<T> _obj_stage_begin;
+
+  /// @}
 };
 
 #endif /* EXECSTORE_H */
