@@ -127,9 +127,9 @@ protected:
   Real & _time_old;
   int & _t_step;
   Real & _dt;
-  Real & _dt_min;
-  Real & _dt_max;
-  Real & _end_time;
+  const Real & _dt_min;
+  const Real & _dt_max;
+  const Real & _end_time;
   std::set<Real> & _sync_times;
 
   Real & _timestep_tolerance;

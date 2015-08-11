@@ -107,7 +107,7 @@ protected:
   Assembly & _assembly;
 
   /// Time
-  Real & _t;
+  const Real & _t;
 
   /// The coordinate system type for this problem, references the value in Assembly
   const Moose::CoordinateSystemType & _coord_sys;

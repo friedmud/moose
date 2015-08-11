@@ -188,19 +188,19 @@ protected:
   MultiMooseEnum _output_on;
 
   /// The current time for output purposes
-  Real & _time;
+  const Real & _time;
 
   /// The old time
-  Real & _time_old;
+  const Real & _time_old;
 
   /// The current time step
-  int & _t_step;
+  const int & _t_step;
 
   /// Time step delta
-  Real & _dt;
+  const Real & _dt;
 
   /// Old time step delta
-  Real & _dt_old;
+  const Real & _dt_old;
 
   /// The number of outputs written
   unsigned int _num;

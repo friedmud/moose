@@ -33,10 +33,10 @@ TimeStepper::TimeStepper(const InputParameters & parameters) :
     Restartable(parameters, "TimeSteppers"),
     _fe_problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem")),
     _executioner(*parameters.getCheckedPointerParam<Transient *>("_executioner")),
-    _time(_fe_problem.time()),
-    _time_old(_fe_problem.timeOld()),
-    _t_step(_fe_problem.timeStep()),
-    _dt(_fe_problem.dt()),
+    _time(_fe_problem._time),
+    _time_old(_fe_problem._time_old),
+    _t_step(_fe_problem._t_step),
+    _dt(_fe_problem._dt),
     _dt_min(_executioner.dtMin()),
     _dt_max(_executioner.dtMax()),
     _end_time(_executioner.endTime()),
@@ -237,4 +237,3 @@ TimeStepper::addSyncTime(Real sync_time)
 {
   _sync_times.insert(sync_time);
 }
-

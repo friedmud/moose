@@ -223,7 +223,7 @@ protected:
   bool _print_mesh_changed;
 
   /// Time
-  Real & _t;
+  const Real & _t;
   /// When adaptivity start
   Real _start_time;
   /// When adaptivity stops

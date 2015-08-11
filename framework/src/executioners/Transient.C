@@ -81,13 +81,11 @@ InputParameters validParams<Transient>()
 
 Transient::Transient(const InputParameters & parameters) :
     Executioner(parameters),
-    _problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem", "This might happen if you don't have a mesh")),
+    _time(_fe_problem._time),
+    _time_old(_fe_problem._time_old),
+    _dt(_fe_problem._dt),
+    _dt_old(_fe_problem._dt_old),
     _time_scheme(getParam<MooseEnum>("scheme")),
-    _t_step(_problem.timeStep()),
-    _time(_problem.time()),
-    _time_old(_problem.timeOld()),
-    _dt(_problem.dt()),
-    _dt_old(_problem.dtOld()),
     _unconstrained_dt(declareRestartableData<Real>("unconstrained_dt", -1)),
     _at_sync_point(declareRestartableData<bool>("at_sync_point", false)),
     _first(declareRecoverableData<bool>("first", true)),
@@ -110,9 +108,9 @@ Transient::Transient(const InputParameters & parameters) :
     _use_multiapp_dt(getParam<bool>("use_multiapp_dt")),
     _verbose(getParam<bool>("verbose"))
 {
-  _problem.getNonlinearSystem().setDecomposition(_splitting);
-  _t_step = 0;
   _dt = 0;
+
+  _fe_problem.getNonlinearSystem().setDecomposition(_splitting);
   _next_interval_output_time = 0.0;
   setSteps(_num_steps);
 
@@ -123,7 +121,7 @@ Transient::Transient(const InputParameters & parameters) :
     _app.setStartTime(_start_time);
 
   _time = _time_old = _start_time;
-  _problem.transient(true);
+  _fe_problem.transient(true);
 
   if (parameters.isParamValid("predictor_scale"))
   {
@@ -134,7 +132,7 @@ Transient::Transient(const InputParameters & parameters) :
     {
       InputParameters params = _app.getFactory().getValidParams("SimplePredictor");
       params.set<Real>("scale") = predscale;
-      _problem.addPredictor("SimplePredictor", "predictor", params);
+      _fe_problem.addPredictor("SimplePredictor", "predictor", params);
     }
 
     else
@@ -142,7 +140,7 @@ Transient::Transient(const InputParameters & parameters) :
   }
 
   if (!_restart_file_base.empty())
-    _problem.setRestartFile(_restart_file_base);
+    _fe_problem.setRestartFile(_restart_file_base);
 
   setupTimeIntegrator();
 
@@ -166,7 +164,7 @@ Transient::init()
   if (!_time_stepper.get())
   {
     InputParameters pars = _app.getFactory().getValidParams("ConstantDT");
-    pars.set<FEProblem *>("_fe_problem") = &_problem;
+    pars.set<FEProblem *>("_fe_problem") = &_fe_problem;
     pars.set<Transient *>("_executioner") = this;
 
     /**
@@ -183,31 +181,25 @@ Transient::init()
     _time_stepper = MooseSharedNamespace::static_pointer_cast<TimeStepper>(_app.getFactory().create("ConstantDT", "TimeStepper", pars));
   }
 
-  _problem.initialSetup();
+  _fe_problem.initialSetup();
   _time_stepper->init();
 
   if (_app.isRestarting())
     _time_old = _time;
 
   Moose::setup_perf_log.push("Output Initial Condition","Setup");
-  _problem.outputStep(EXEC_INITIAL);
+  _fe_problem.outputStep(EXEC_INITIAL);
   Moose::setup_perf_log.pop("Output Initial Condition","Setup");
 
-  // If this is the first step
-  if (_t_step == 0)
-    _t_step = 1;
-
-  if (_t_step > 1) //Recover case
+  if (currentStep() > 1) //Recover case
     _dt_old = _dt;
-
   else
   {
     computeDT();
     _dt = getDT();
   }
-
-
 }
+
 
 void
 Transient::execute()
@@ -231,20 +223,20 @@ Transient::incrementStepOrReject()
     std::cout<<"Incrementing step!"<<std::endl;
 
 #ifdef LIBMESH_ENABLE_AMR
-    if (_problem.adaptivity().isOn())
-      _problem.adaptMesh();
+    if (_fe_problem.adaptivity().isOn())
+      _fe_problem.adaptMesh();
 #endif
 
-    _time_old = _time; // = _time_old + _dt;
+    setTimeOld(getTime());
 
-    _problem.advanceState();
+    _fe_problem.advanceState();
   }
   else
   {
-    _problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN);
-    _problem.restoreMultiApps(EXEC_TIMESTEP_END);
+    _fe_problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN);
+    _fe_problem.restoreMultiApps(EXEC_TIMESTEP_END);
     _time_stepper->rejectStep();
-    _time = _time_old;
+    setTime(getTimeOld());
   }
 
   _first = false;
@@ -269,7 +261,7 @@ Transient::solveStep(Real input_dt)
 
   Real current_dt = _dt;
 
-  _problem.onTimestepBegin();
+  _fe_problem.onTimestepBegin();
 
   // Increment time
   _time = _time_old + _dt;
@@ -278,7 +270,7 @@ Transient::solveStep(Real input_dt)
 
   _time_stepper->preSolve();
 
-  _problem.timestepSetup();
+  _fe_problem.timestepSetup();
 
 
   _time_stepper->step();
@@ -337,7 +329,7 @@ Transient::computeConstrainedDT()
   std::ostringstream diag;
 
   //After startup steps, compute new dt
-  if (_t_step > _n_startup_steps)
+  if (currentStep() > _n_startup_steps)
     dt_cur = getDT();
 
   else
@@ -350,7 +342,7 @@ Transient::computeConstrainedDT()
          << std::left
          << _dt
          << " tstep: "
-         << _t_step
+         << currentStep()
          << " n_startup_steps: "
          << _n_startup_steps
          << std::endl;
@@ -414,7 +406,7 @@ Transient::computeConstrainedDT()
   }
 
   // Constrain by what the multi apps are doing
-  Real multi_app_dt = _problem.computeMultiAppsDT(EXEC_TIMESTEP_BEGIN);
+  Real multi_app_dt = _fe_problem.computeMultiAppsDT(EXEC_TIMESTEP_BEGIN);
   if (_use_multiapp_dt || multi_app_dt < dt_cur)
   {
     dt_cur = multi_app_dt;
@@ -428,7 +420,7 @@ Transient::computeConstrainedDT()
          << dt_cur
          << std::endl;
   }
-  multi_app_dt = _problem.computeMultiAppsDT(EXEC_TIMESTEP_END);
+  multi_app_dt = _fe_problem.computeMultiAppsDT(EXEC_TIMESTEP_END);
   if (multi_app_dt < dt_cur)
   {
     dt_cur = multi_app_dt;
@@ -458,13 +450,13 @@ Transient::getDT()
 bool
 Transient::keepGoing()
 {
-  bool keep_going = !_problem.isSolveTerminationRequested();
+  bool keep_going = !_fe_problem.isSolveTerminationRequested();
 
   // Check for stop condition based upon steady-state check flag:
   if (lastSolveConverged() && _trans_ss_check == true && _time > _ss_tmin)
   {
     // Compute new time solution l2_norm
-    Real new_time_solution_norm = _problem.getNonlinearSystem().currentSolution()->l2_norm();
+    Real new_time_solution_norm = _fe_problem.getNonlinearSystem().currentSolution()->l2_norm();
 
     // Compute l2_norm relative error
     Real ss_relerr_norm = fabs(new_time_solution_norm - _old_time_solution_norm)/new_time_solution_norm;
@@ -486,7 +478,7 @@ Transient::keepGoing()
   }
 
   // Check for stop condition based upon number of simulation steps and/or solution end time:
-  if (static_cast<unsigned int>(_t_step) > _num_steps)
+  if (static_cast<unsigned int>(currentStep()) > _num_steps)
     keep_going = false;
 
   if ((_time>_end_time) || (fabs(_time-_end_time)<=_timestep_tolerance))
@@ -518,7 +510,7 @@ void
 Transient::beginLoop()
 {
   // Add time period start times to sync times
-  const std::vector<TimePeriod *> time_periods = _problem.getTimePeriods();
+  const std::vector<TimePeriod *> time_periods = _fe_problem.getTimePeriods();
   for (unsigned int i = 0; i < time_periods.size(); ++i)
     _time_stepper->addSyncTime(time_periods[i]->start());
 
@@ -534,7 +526,7 @@ Transient::endLoop()
 Problem &
 Transient::problem()
 {
-  return _problem;
+  return _fe_problem;
 }
 
 void
@@ -546,10 +538,10 @@ Transient::setTargetTime(Real target_time)
 void
 Transient::setupTimeIntegrator()
 {
-  if (_time_scheme.isValid() && _problem.hasTimeIntegrator())
+  if (_time_scheme.isValid() && _fe_problem.hasTimeIntegrator())
     mooseError("You cannot specify time_scheme in the Executioner and independently add a TimeIntegrator to the system at the same time");
 
-  if (!_problem.hasTimeIntegrator())
+  if (!_fe_problem.hasTimeIntegrator())
   {
     if (!_time_scheme.isValid())
       _time_scheme = "implicit-euler";
@@ -569,7 +561,7 @@ Transient::setupTimeIntegrator()
     }
 
     InputParameters params = _app.getFactory().getValidParams(ti_str);
-    _problem.addTimeIntegrator(ti_str, ti_str, params);
+    _fe_problem.addTimeIntegrator(ti_str, ti_str, params);
   }
 }
 

@@ -44,6 +44,7 @@ NonlinearEigen::NonlinearEigen(const InputParameters & parameters) :
 void
 NonlinearEigen::init()
 {
+  /*
   if (_app.isRecovering())
   {
     _console << "\nCannot recover NonlinearEigen solves!\nExiting...\n" << std::endl;
@@ -81,6 +82,7 @@ NonlinearEigen::init()
       _problem.time() = t;
     }
   }
+  */
 }
 
 void

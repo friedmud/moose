@@ -101,7 +101,7 @@ Dirk::solve() {
   // Compute first stage
   _console << "Dirk: 1. stage" << std::endl;
   _stage = 1;
-  _fe_problem.time() = time_stage1;
+  _time = time_stage1;
   _fe_problem.getNonlinearSystem().sys().solve();
 
   _fe_problem.initPetscOutput();
@@ -109,8 +109,8 @@ Dirk::solve() {
   // Compute second stage
   _console << "Dirk: 2. stage" << std::endl;
   _stage = 2;
-  _fe_problem.timeOld() = time_stage1;
-  _fe_problem.time()    = time;
+  _time_old = time_stage1;
+  _time = time;
 
 #ifdef LIBMESH_HAVE_PETSC
   Moose::PetscSupport::petscSetOptions(_fe_problem);
@@ -131,7 +131,7 @@ Dirk::solve() {
   _fe_problem.getNonlinearSystem().sys().solve();
 
   // Reset time at beginning of step to its original value
-  _fe_problem.timeOld() = time_old;
+  _time_old = time_old;
 
 }
 

@@ -64,7 +64,7 @@ RungeKutta2::solve()
   Real time_half = (time + time_old) / 2.;
 
   _stage = 1;
-  _fe_problem.time() = time_half;
+  _time = time_half;
   _fe_problem.getNonlinearSystem().sys().solve();
 
   _fe_problem.advanceState();
@@ -73,8 +73,8 @@ RungeKutta2::solve()
   // ---------------------------------
   _console << " 2. stage" << std::endl;
   _stage = 2;
-  _fe_problem.time() = time;
-  _fe_problem.timeOld() = time_half;
+  _time = time;
+  _time_old = time_half;
 
 #ifdef LIBMESH_HAVE_PETSC
   Moose::PetscSupport::petscSetOptions(_fe_problem);
@@ -84,7 +84,7 @@ RungeKutta2::solve()
   _fe_problem.getNonlinearSystem().sys().solve();
 
   // Reset time_old back to what it was
-  _fe_problem.timeOld() = time_old;
+  _time_old = time_old;
 }
 
 void

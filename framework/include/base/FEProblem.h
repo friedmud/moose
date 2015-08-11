@@ -51,6 +51,10 @@ class RandomInterface;
 class RandomData;
 class MeshChangedInterface;
 class MultiMooseEnum;
+class Executioner;
+class Transient;
+class TimeIntegrator;
+class TimeStepper;
 
 template<>
 InputParameters validParams<FEProblem>();
@@ -319,11 +323,15 @@ public:
   virtual void onTimestepBegin();
   virtual void onTimestepEnd();
 
-  virtual Real & time() const { return _time; }
-  virtual Real & timeOld() const { return _time_old; }
-  virtual int & timeStep() const { return _t_step; }
-  virtual Real & dt() const { return _dt; }
-  virtual Real & dtOld() const { return _dt_old; }
+  virtual const Real & time() const { return _time; }
+  virtual const Real & timeOld() const { return _time_old; }
+  virtual const int & timeStep() const { return _t_step; }
+  virtual const Real & dt() const { return _dt; }
+  virtual const Real & dtOld() const { return _dt_old; }
+
+  virtual const int & currentCycle() { return _current_cycle; }
+  virtual const int & currentPicard() { return _current_picard; }
+  virtual const int & currentStage() { return _current_stage; }
 
   virtual void transient(bool trans) { _transient = trans; }
   virtual bool isTransient() const { return _transient; }
@@ -898,6 +906,16 @@ protected:
   Real & _dt;
   Real & _dt_old;
 
+  /// Current cycle
+  int & _current_cycle;
+
+  /// Current picard iteration
+  int & _current_picard;
+
+  /// Current stage
+  int & _current_stage;
+
+
   NonlinearSystem & _nl;
   AuxiliarySystem _aux;
 
@@ -1061,6 +1079,10 @@ private:
   friend class ComputeBoundaryInitialConditionThread;
   friend class Restartable;
   friend class DisplacedProblem;
+  friend class Executioner;
+  friend class Transient;
+  friend class TimeIntegrator;
+  friend class TimeStepper;
 };
 
 template<typename T>

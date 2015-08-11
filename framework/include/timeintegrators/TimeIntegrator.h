@@ -69,10 +69,13 @@ protected:
   const NumericVector<Number> & _solution_old;
   const NumericVector<Number> & _solution_older;
   //
-  int & _t_step;
+  const int & _t_step;
   //
-  Real & _dt;
-  Real & _dt_old;
+  const Real & _dt;
+  const Real & _dt_old;
+
+  Real & _time;
+  Real & _time_old;
 
   /// residual vector for time contributions
   NumericVector<Number> & _Re_time;

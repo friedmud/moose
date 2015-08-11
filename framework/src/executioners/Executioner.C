@@ -97,11 +97,10 @@ Executioner::Executioner(const InputParameters & parameters) :
     _cycles(1),
     _picards(1),
     _stages(1),
-    _current_step(_fe_problem.timeStep()),
-    _current_cycle(declareRecoverableData<unsigned int>("current_cycle", 0)),
-    _current_picard(declareRecoverableData<unsigned int>("current_picard", 0)),
-    _current_stage(declareRecoverableData<unsigned int>("current_stage", 0)),
-    _time(_fe_problem.time()),
+    _current_step(_fe_problem._t_step),
+    _current_cycle(_fe_problem._current_cycle),
+    _current_picard(_fe_problem._current_picard),
+    _current_stage(_fe_problem._current_stage),
     _picard_converged(declareRestartableData<bool>("picard_converged", false)),
     _picard_initial_norm(declareRestartableData<Real>("picard_initial_norm", 0.0)),
     _picard_timestep_begin_norm(declareRestartableData<Real>("picard_timestep_begin_norm", 0.0)),
@@ -111,6 +110,7 @@ Executioner::Executioner(const InputParameters & parameters) :
     _multiapps_converged(declareRestartableData<bool>("multiapps_converged", true)),
     _last_solve_converged(declareRestartableData<bool>("last_solve_converged", true))
 {
+  _current_step = 0;
 }
 
 Executioner::~Executioner()
@@ -162,16 +162,6 @@ Executioner::executeSteps()
 
     _fe_problem.computeAuxiliaryKernels(EXEC_TIMESTEP_BEGIN);
     _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::POST_AUX);
-
-    switch (_time_scheme)
-    {
-      case REAL_TIME:
-        _time += 0.1;
-        break;
-      case PSEUDO_TIME:
-        _time = _current_step;
-        break;
-    }
 
     // Compute Pre-Aux User Objects (Timestep begin)
     _fe_problem.computeUserObjects(EXEC_TIMESTEP_BEGIN, UserObjectWarehouse::PRE_AUX);

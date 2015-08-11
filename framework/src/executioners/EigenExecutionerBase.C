@@ -48,6 +48,7 @@ EigenExecutionerBase::EigenExecutionerBase(const InputParameters & parameters) :
      _normalization(isParamValid("normalization") ? getPostprocessorValue("normalization")
                     : getPostprocessorValue("bx_norm")) // use |Bx| for normalization by default
 {
+  /*
   //FIXME: currently we have to use old and older solution vectors for power iteration.
   //       We will need 'step' in the future.
   _problem.transient(true);
@@ -70,6 +71,7 @@ EigenExecutionerBase::EigenExecutionerBase(const InputParameters & parameters) :
   // used for controlling screen print-out
   _problem.timeStep() = 0;
   _problem.dt() = 1.0;
+  */
 }
 
 EigenExecutionerBase::~EigenExecutionerBase()
@@ -79,6 +81,7 @@ EigenExecutionerBase::~EigenExecutionerBase()
 void
 EigenExecutionerBase::init()
 {
+  /*
   checkIntegrity();
   _eigen_sys.buildSystemDoFIndices(EigenSystem::EIGEN);
 
@@ -113,7 +116,7 @@ EigenExecutionerBase::init()
   // normalize solution to make |Bx|=_eigenvalue, _eigenvalue at this point has the initialized value
   makeBXConsistent(_eigenvalue);
 
-  /* a time step check point */
+  // a time step check point
   _problem.onTimestepEnd();
 
   Moose::setup_perf_log.push("Output Initial Condition","Setup");
@@ -126,6 +129,7 @@ EigenExecutionerBase::init()
   _problem.outputStep(EXEC_INITIAL);
   _problem.time() = t;
   Moose::setup_perf_log.pop("Output Initial Condition","Setup");
+  */
 }
 
 void
@@ -349,6 +353,7 @@ EigenExecutionerBase::postIteration()
 void
 EigenExecutionerBase::postExecute()
 {
+  /*
   if (getParam<bool>("output_before_normalization"))
   {
     _problem.timeStep()++;
@@ -379,6 +384,7 @@ EigenExecutionerBase::postExecute()
     _problem.outputStep(EXEC_TIMESTEP_END);
     _problem.time() = t;
   }
+  */
 }
 
 Real
@@ -564,4 +570,3 @@ EigenExecutionerBase::nonlinearSolve(Real rel_tol, Real abs_tol, Real pfactor, R
   _problem.es().parameters.set<Real> ("linear solver tolerance") = tol2;
   _problem.es().parameters.set<Real> ("nonlinear solver relative residual tolerance") = tol3;
 }
-

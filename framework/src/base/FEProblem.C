@@ -117,6 +117,10 @@ FEProblem::FEProblem(const InputParameters & parameters) :
     _dt(declareRestartableData<Real>("dt")),
     _dt_old(declareRestartableData<Real>("dt_old")),
 
+    _current_cycle(declareRecoverableData<int>("current_cycle", 0)),
+    _current_picard(declareRecoverableData<int>("current_picard", 0)),
+    _current_stage(declareRecoverableData<int>("current_stage", 0)),
+
     _nl(getParam<bool>("use_nonlinear") ? *(new NonlinearSystem(*this, name_sys("nl", _n))) : *(new EigenSystem(*this, name_sys("nl", _n)))),
     _aux(*this, name_sys("aux", _n)),
     _coupling(Moose::COUPLING_DIAG),
@@ -1872,19 +1876,28 @@ FEProblem::addPostprocessor(std::string pp_name, const std::string & name, Input
     const std::vector<ExecFlagType> exec_flags = Moose::vectorStringsToEnum<ExecFlagType>(parameters.get<MultiMooseEnum>("execute_on"));
     for (unsigned int i=0; i<exec_flags.size(); ++i)
     {
-      std::cout<<"Adding "<<mo->name()<<" with exec_type: "<<exec_flags[i]<<std::endl;
+      ExecFlagType flag = exec_flags[i];
+
+      // DRG: For now, try to preserve the previous behavior of Steady Executioner
+      if (!isTransient())
+      {
+        if (flag == EXEC_TIMESTEP_BEGIN)
+          flag = EXEC_CYCLE_BEGIN;
+        else if (flag == EXEC_TIMESTEP_END)
+          flag = EXEC_CYCLE_END;
+      }
 
       // Check for name collision
-      if (_user_objects(exec_flags[i])[tid].getUserObjectByName(mo->name()))
+      if (_user_objects(flag)[tid].getUserObjectByName(mo->name()))
         mooseError(std::string("A UserObject with the name \"") + mo->name() + "\" already exists.  You may not add a Postprocessor by the same name.");
-      _pps(exec_flags[i])[tid].addPostprocessor(pp);
+      _pps(flag)[tid].addPostprocessor(pp);
 
       // Add it to the user object warehouse as well...
       MooseSharedPointer<UserObject> user_object = MooseSharedNamespace::dynamic_pointer_cast<UserObject>(mo);
       if (!user_object.get())
         mooseError("Unknown user object type: " + pp_name);
 
-      _user_objects(exec_flags[i])[tid].addUserObject(user_object);
+      _user_objects(flag)[tid].addUserObject(user_object);
     }
 
     _pps_data[tid]->init(mo->name());
@@ -2032,8 +2045,27 @@ FEProblem::addUserObject(std::string user_object_name, const std::string & name,
     MooseSharedPointer<UserObject> user_object = MooseSharedNamespace::static_pointer_cast<UserObject>(_factory.create(user_object_name, name, parameters, tid));
 
     const std::vector<ExecFlagType> & exec_flags = user_object->execFlags();
+
     for (unsigned int i=0; i<exec_flags.size(); ++i)
-      _user_objects(exec_flags[i])[tid].addUserObject(user_object);
+    {
+      ExecFlagType flag = exec_flags[i];
+
+      std::cout<<"Flag: "<<flag<<std::endl;
+
+      // DRG: For now, try to preserve the previous behavior of Steady Executioner
+      if (!isTransient())
+      {
+        if (flag == EXEC_TIMESTEP_BEGIN)
+          flag = EXEC_CYCLE_BEGIN;
+        else if (flag == EXEC_TIMESTEP_END)
+        {
+          std::cout<<"Freaking here!!!!!!!!!!!!!!!!!"<<std::endl;
+          flag = EXEC_CYCLE_END;
+        }
+      }
+
+      _user_objects(flag)[tid].addUserObject(user_object);
+    }
   }
 }
 

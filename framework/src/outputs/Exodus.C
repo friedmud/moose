@@ -252,6 +252,19 @@ Exodus::output(const ExecFlagType & type)
   _global_names.clear();
   _global_values.clear();
 
+  // Write out the current counters
+  _global_names.push_back("step");
+  _global_values.push_back(_problem_ptr->timeStep());
+
+  _global_names.push_back("cycle");
+  _global_values.push_back(_problem_ptr->currentCycle());
+
+  _global_names.push_back("picard");
+  _global_values.push_back(_problem_ptr->currentPicard());
+
+  _global_names.push_back("stage");
+  _global_values.push_back(_problem_ptr->currentStage());
+
   // Call the individual output methods
   AdvancedOutput<OversampleOutput>::output(type);
 

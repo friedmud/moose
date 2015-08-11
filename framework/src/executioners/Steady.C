@@ -82,11 +82,6 @@ Steady::keepCycling()
 void
 Steady::beginStep()
 {
-  _console << "Step: " << currentStep() << "\n";
-
-  std::cout<<"  Cycle: "<<currentCycle()<<std::endl;
-
-  _fe_problem.time() = currentCycle();
 }
 
 void

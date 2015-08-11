@@ -51,13 +51,13 @@ protected:
   /// even explicit schemes have implicit form (it is the time derivative "kernel")
   bool _is_implicit;
   /// Time
-  Real & _t;
+  const Real & _t;
   /// The number of the time step
-  int & _t_step;
+  const int & _t_step;
   /// Time step size
-  Real & _dt;
+  const Real & _dt;
   /// Size of the old time step
-  Real & _dt_old;
+  const Real & _dt_old;
 
   // NOTE: dunno if it is set properly in time of instantiation (might be a source of bugs)
   bool _is_transient;

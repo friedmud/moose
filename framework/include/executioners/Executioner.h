@@ -112,22 +112,22 @@ public:
   /**
    * The current step.
    */
-  int currentStep() { return _current_step; }
+  const int & currentStep() { return _current_step; }
 
   /**
    * The current cycle.
    */
-  int currentCycle() { return _current_cycle; }
+  const int & currentCycle() { return _current_cycle; }
 
   /**
    * The current picard.
    */
-  int currentPicard() { return _current_picard; }
+  const int & currentPicard() { return _current_picard; }
 
   /**
    * The current stage.
    */
-  int currentStage() { return _current_stage; }
+  const int & currentStage() { return _current_stage; }
 
   /**
    * Norm of how much the solution changed in this timestep
@@ -336,31 +336,28 @@ private:
   void computeUserObjectsAndAuxiliaryKernels(ExecFlagType exec_flag);
 
   /// The number of steps to do
-  unsigned int _steps;
+  int _steps;
 
   /// The number of cycles to do
-  unsigned int _cycles;
+  int _cycles;
 
   /// The number of picard iterations to do
-  unsigned int _picards;
+  int _picards;
 
   /// The number of stages to do
-  unsigned int _stages;
+  int _stages;
 
   /// Current step
   int & _current_step;
 
   /// Current cycle
-  unsigned int & _current_cycle;
+  int & _current_cycle;
 
   /// Current picard iteration
-  unsigned int & _current_picard;
+  int & _current_picard;
 
   /// Current stage
-  unsigned int & _current_stage;
-
-  /// The current time
-  Real & _time;
+  int & _current_stage;
 
   /// The current time computation scheme
   TimeScheme _time_scheme;

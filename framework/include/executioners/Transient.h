@@ -74,9 +74,34 @@ public:
   virtual void estimateTimeError();
 
   /**
-   * @return The the computed dt to use for this timestep.
+   * Get the current time.
+   */
+  virtual Real getTime() { return _time; };
+
+  /**
+   * Get the old time.
+   */
+  virtual Real getTimeOld() { return _time_old; };
+
+  /**
+   * The current dt
    */
   virtual Real getDT();
+
+  /**
+   * Set the current time.
+   */
+  virtual void setTime(Real t) { _time = t; };
+
+  /**
+   * Set the old time.
+   */
+  virtual void setTimeOld(Real t){ _time_old = t; };
+
+  /**
+   * The current dt
+   */
+  virtual void setDT(Real dt) { _dt = dt; }
 
   /**
    * Transient loop will continue as long as this keeps returning true.
@@ -108,21 +133,6 @@ public:
    * Useful for driving MultiApps.
    */
   virtual void setTargetTime(Real target_time);
-
-  /**
-   * Get the current time.
-   */
-  virtual Real getTime() { return _time; };
-
-  /**
-   * Set the current time.
-   */
-  virtual void setTime(Real t) { _time = t; };
-
-  /**
-   * Set the old time.
-   */
-  virtual void setTimeOld(Real t){ _time_old = t; };
 
   /**
    * Get the Relative L2 norm of the change in the solution.
@@ -201,7 +211,7 @@ public:
    */
   Real unconstrainedDT() { return _unconstrained_dt; }
 
-  void parentOutputPositionChanged() { _problem.parentOutputPositionChanged(); }
+  void parentOutputPositionChanged() { _fe_problem.parentOutputPositionChanged(); }
 
   /**
    * Get the number of Picard iterations performed
@@ -223,20 +233,20 @@ protected:
    */
   virtual void beginStep();
 
-  FEProblem & _problem;
+  /// The current time
+  Real & _time;
+
+  /// The old time
+  Real & _time_old;
+
+  /// Current timestep size
+  Real & _dt;
+
+  /// Old timestep size
+  Real & _dt_old;
 
   MooseEnum _time_scheme;
   MooseSharedPointer<TimeStepper> _time_stepper;
-
-  /// Current timestep.
-  int & _t_step;
-  /// Current time
-  Real & _time;
-  /// Previous time
-  Real & _time_old;
-  /// Current delta t... or timestep size.
-  Real & _dt;
-  Real & _dt_old;
 
   Real & _unconstrained_dt;
   bool & _at_sync_point;

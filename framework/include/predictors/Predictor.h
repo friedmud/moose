@@ -47,9 +47,9 @@ protected:
   FEProblem & _fe_problem;
   NonlinearSystem & _nl;
 
-  int & _t_step;
-  Real & _dt;
-  Real & _dt_old;
+  const int & _t_step;
+  const Real & _dt;
+  const Real & _dt_old;
   const NumericVector<Number> & _solution;
   NumericVector<Number> & _solution_old;
   NumericVector<Number> & _solution_older;
