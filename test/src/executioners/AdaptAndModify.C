@@ -36,9 +36,8 @@ AdaptAndModify::incrementStepOrReject()
   if (lastSolveConverged())
   {
     _time_old = _time;
-    _t_step++;
 
-    _problem.advanceState();
+    _fe_problem.advanceState();
   }
   else
   {
@@ -60,11 +59,11 @@ AdaptAndModify::endTransientStep(Real input_time)
     for (unsigned int i=0; i<_adapt_cycles; i++)
     {
       // Compute the Error Indicators and Markers
-      _problem.computeIndicatorsAndMarkers();
+      _fe_problem.computeIndicatorsAndMarkers();
 
 #ifdef LIBMESH_ENABLE_AMR
-      if (_problem.adaptivity().isOn())
-        _problem.adaptMesh();
+      if (_fe_problem.adaptivity().isOn())
+        _fe_problem.adaptMesh();
 
 #endif
     }

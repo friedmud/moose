@@ -101,6 +101,7 @@ Executioner::Executioner(const InputParameters & parameters) :
     _current_cycle(_fe_problem._current_cycle),
     _current_picard(_fe_problem._current_picard),
     _current_stage(_fe_problem._current_stage),
+    _total_executioner_loop_iterations(_fe_problem._total_executioner_loop_iterations),
     _picard_converged(declareRestartableData<bool>("picard_converged", false)),
     _picard_initial_norm(declareRestartableData<Real>("picard_initial_norm", 0.0)),
     _picard_timestep_begin_norm(declareRestartableData<Real>("picard_timestep_begin_norm", 0.0)),
@@ -152,6 +153,8 @@ Executioner::executeSteps()
 
   for (_current_step = 1; _current_step < _steps + 1 && keepStepping(); _current_step++)
   {
+    _total_executioner_loop_iterations++;
+
     std::cout<<"here"<<std::endl;
 
     beginStep();
@@ -229,6 +232,9 @@ Executioner::executeCycles()
 
   for (_current_cycle = 0; _current_cycle < _cycles && keepCycling(); _current_cycle++)
   {
+    if (_cycles > 1)
+      _total_executioner_loop_iterations++;
+
     beginCycle();
 
     computeUserObjectsAndAuxiliaryKernels(EXEC_CYCLE_BEGIN);
@@ -256,6 +262,9 @@ Executioner::executePicards()
 {
   for (_current_picard = 0; _current_picard < _picards && keepPicarding(); _current_picard++)
   {
+    if (_picards > 1)
+      _total_executioner_loop_iterations++;
+
     beginPicard();
 
     computeUserObjectsAndAuxiliaryKernels(EXEC_PICARD_BEGIN);
@@ -323,6 +332,9 @@ Executioner::executeStages()
 {
   for (_current_stage = 0; _current_stage < _stages && keepStaging(); _current_stage++)
   {
+    if (_stages > 1)
+      _total_executioner_loop_iterations++;
+
     beginStage();
 
     computeUserObjectsAndAuxiliaryKernels(EXEC_STAGE_BEGIN);

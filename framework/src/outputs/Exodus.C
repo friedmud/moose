@@ -149,6 +149,9 @@ Exodus::outputNodalVariables()
   std::vector<std::string> nodal(getNodalVariableOutput().begin(), getNodalVariableOutput().end());
   _exodus_io_ptr->set_output_variables(nodal);
 
+  std::cout<<"Exodus writing out at time: "<<time()<<std::endl;
+  print_trace();
+
   // Write the data via libMesh::ExodusII_IO
   _exodus_io_ptr->write_timestep(filename(), *_es_ptr, _exodus_num, time() + _app.getGlobalTimeOffset());
   _exodus_num++;
@@ -238,6 +241,8 @@ Exodus::output(const ExecFlagType & type)
   if (!hasOutput(type))
     return;
 
+  std::cout<<"Outputting Exodus! "<<OversampleOutput::_advanced_output_on.contains("initial")<<std::endl;
+
   // Start the performance log
   Moose::perf_log.push("output()", "Exodus");
 
@@ -252,6 +257,9 @@ Exodus::output(const ExecFlagType & type)
   _global_names.clear();
   _global_values.clear();
 
+  // Call the individual output methods
+  AdvancedOutput<OversampleOutput>::output(type);
+
   // Write out the current counters
   _global_names.push_back("step");
   _global_values.push_back(_problem_ptr->timeStep());
@@ -264,9 +272,6 @@ Exodus::output(const ExecFlagType & type)
 
   _global_names.push_back("stage");
   _global_values.push_back(_problem_ptr->currentStage());
-
-  // Call the individual output methods
-  AdvancedOutput<OversampleOutput>::output(type);
 
   // Write the global variables (populated by the output methods)
   if (!_global_values.empty())

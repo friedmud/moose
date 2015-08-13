@@ -332,6 +332,7 @@ public:
   virtual const int & currentCycle() { return _current_cycle; }
   virtual const int & currentPicard() { return _current_picard; }
   virtual const int & currentStage() { return _current_stage; }
+  virtual const int & totalExecutionerLoopIterations() { return _total_executioner_loop_iterations; }
 
   virtual void transient(bool trans) { _transient = trans; }
   virtual bool isTransient() const { return _transient; }
@@ -915,6 +916,8 @@ protected:
   /// Current stage
   int & _current_stage;
 
+  /// Total number of Executioner loop iterations
+  int & _total_executioner_loop_iterations;
 
   NonlinearSystem & _nl;
   AuxiliarySystem _aux;

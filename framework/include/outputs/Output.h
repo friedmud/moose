@@ -68,7 +68,7 @@ public:
    *
    * When the Executioner is steady this utilizes the time_step and when Transient the actual time is used.
    */
-  virtual Real time();
+  Real time();
 
    /**
    * Get the old output time.

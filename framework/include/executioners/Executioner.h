@@ -359,6 +359,9 @@ private:
   /// Current stage
   int & _current_stage;
 
+  /// Total number of Executioner loop iterations
+  int & _total_executioner_loop_iterations;
+
   /// The current time computation scheme
   TimeScheme _time_scheme;
 

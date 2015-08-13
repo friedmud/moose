@@ -18,7 +18,7 @@
 /**
  *   Manufactured solution for advection-diffusion-reaction problem-1.
  */
-Number ManSol4ADR1(const Point& p, Real& A0, Real& B0, Real& C0, Real& omega, Real &t, bool& is_transient)
+Number ManSol4ADR1(const Point& p, Real& A0, Real& B0, Real& C0, Real& omega, const Real &t, bool& is_transient)
 {
   Number f = A0*std::sin(3.*libMesh::pi*p(0))+B0*std::sin(3.*libMesh::pi*p(1))+C0*std::sin(libMesh::pi*p(0))*std::sin(libMesh::pi*p(1));
   if (is_transient) return f*std::sin(omega*libMesh::pi*t);
@@ -28,7 +28,7 @@ Number ManSol4ADR1(const Point& p, Real& A0, Real& B0, Real& C0, Real& omega, Re
 Number ManSol4ADR1src(const Point& p, Real& A0, Real& B0, Real& C0,
                       Real& Au, Real& Bu, Real& Cu,
                       Real& Av, Real& Bv, Real& Cv,
-                      Real& Ak, Real& Bk, Real& Ck, Real& W, Real &t, bool& is_transient)
+                      Real& Ak, Real& Bk, Real& Ck, Real& W, const Real &t, bool& is_transient)
 {
   Real x = p(0);
   Real y = p(1);
@@ -80,7 +80,7 @@ Gradient ManSol4ADR1exd(const Point& p,
 /**
  *   Manufactured solution for advection-diffusion-reaction problem-2.
  */
-Number ManSol4ADR2(const Point& p, Real& A0, Real& B0, Real& C0, Real& w, Real &t)
+Number ManSol4ADR2(const Point& p, Real& A0, Real& B0, Real& C0, Real& w, const Real &t)
 {
   Real x = p(0);
   Real y = p(1);
@@ -94,7 +94,7 @@ Number ManSol4ADR2(const Point& p, Real& A0, Real& B0, Real& C0, Real& w, Real &
 Number ManSol4ADR2src(const Point& p, Real& A0, Real& B0, Real& C0,
                       Real& Au, Real& Bu, Real& Cu,
                       Real& Av, Real& Bv, Real& Cv,
-                      Real& Ak, Real& Bk, Real& Ck, Real& w, Real &t)
+                      Real& Ak, Real& Bk, Real& Ck, Real& w, const Real &t)
 {
   Real x = p(0);
   Real y = p(1);

@@ -429,8 +429,14 @@ AdvancedOutput<T>::hasOutput(const ExecFlagType & type)
 {
   // If any of the component outputs are true, then there is some output to perform
   for (std::map<std::string, MultiMooseEnum>::const_iterator it = T::_advanced_output_on.begin(); it != T::_advanced_output_on.end(); ++it)
+  {
     if (shouldOutput(it->first, type))
+    {
+      std::cout<<T::name()<<" shouldOutput: "<<it->first<<std::endl;
       return true;
+    }
+  }
+
 
   // There is nothing to output
   return false;

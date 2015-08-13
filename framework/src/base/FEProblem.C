@@ -93,7 +93,7 @@ InputParameters validParams<FEProblem>()
   params.addPrivateParam<MooseMesh *>("mesh");
   params.addParam<unsigned int>("dimNullSpace", 0, "The dimension of the nullspace");
   params.addParam<unsigned int>("dimNearNullSpace", 0, "The dimension of the near nullspace");
-  params.addParam<bool>("solve", true, "Whether or not to actually solve the Nonlinear system.  This is handy in the case that all you want to do is execute AuxKernels, Transfers, etc. without actually solving anything");
+  params.addParam<bool>("solve", true, "Whether or not to actually solve the Nofnlinear system.  This is handy in the case that all you want to do is execute AuxKernels, Transfers, etc. without actually solving anything");
   params.addParam<bool>("use_nonlinear", true, "Determines whether to use a Nonlinear vs a Eigenvalue system (Automatically determined based on executioner)");
   params.addParam<bool>("error_on_jacobian_nonzero_reallocation", false, "This causes PETSc to error if it had to reallocate memory in the Jacobian matrix due to not having enough nonzeros");
 
@@ -120,6 +120,8 @@ FEProblem::FEProblem(const InputParameters & parameters) :
     _current_cycle(declareRecoverableData<int>("current_cycle", 0)),
     _current_picard(declareRecoverableData<int>("current_picard", 0)),
     _current_stage(declareRecoverableData<int>("current_stage", 0)),
+
+    _total_executioner_loop_iterations(declareRecoverableData<int>("total_exeuctioner_loop_iterations", 0)),
 
     _nl(getParam<bool>("use_nonlinear") ? *(new NonlinearSystem(*this, name_sys("nl", _n))) : *(new EigenSystem(*this, name_sys("nl", _n)))),
     _aux(*this, name_sys("aux", _n)),
@@ -1878,15 +1880,6 @@ FEProblem::addPostprocessor(std::string pp_name, const std::string & name, Input
     {
       ExecFlagType flag = exec_flags[i];
 
-      // DRG: For now, try to preserve the previous behavior of Steady Executioner
-      if (!isTransient())
-      {
-        if (flag == EXEC_TIMESTEP_BEGIN)
-          flag = EXEC_CYCLE_BEGIN;
-        else if (flag == EXEC_TIMESTEP_END)
-          flag = EXEC_CYCLE_END;
-      }
-
       // Check for name collision
       if (_user_objects(flag)[tid].getUserObjectByName(mo->name()))
         mooseError(std::string("A UserObject with the name \"") + mo->name() + "\" already exists.  You may not add a Postprocessor by the same name.");
@@ -2051,18 +2044,6 @@ FEProblem::addUserObject(std::string user_object_name, const std::string & name,
       ExecFlagType flag = exec_flags[i];
 
       std::cout<<"Flag: "<<flag<<std::endl;
-
-      // DRG: For now, try to preserve the previous behavior of Steady Executioner
-      if (!isTransient())
-      {
-        if (flag == EXEC_TIMESTEP_BEGIN)
-          flag = EXEC_CYCLE_BEGIN;
-        else if (flag == EXEC_TIMESTEP_END)
-        {
-          std::cout<<"Freaking here!!!!!!!!!!!!!!!!!"<<std::endl;
-          flag = EXEC_CYCLE_END;
-        }
-      }
 
       _user_objects(flag)[tid].addUserObject(user_object);
     }

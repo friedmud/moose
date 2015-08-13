@@ -166,7 +166,7 @@ Output::time()
   if (_transient)
     return _time;
   else
-    return _t_step;
+    return _problem_ptr->totalExecutionerLoopIterations();
 }
 
 Real
@@ -175,7 +175,7 @@ Output::timeOld()
   if (_transient)
     return _time_old;
   else
-    return _t_step - 1;
+    return _problem_ptr->totalExecutionerLoopIterations() - 1;
 }
 
 Real
