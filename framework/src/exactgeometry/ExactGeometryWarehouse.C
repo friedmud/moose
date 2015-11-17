@@ -53,7 +53,7 @@ ExactGeometryWarehouse::jacobianSetup()
 }
 
 void
-ExactGeometryWarehouse::addExactGeometry(MooseSharedPointer<ExactGeometry> & exact_geometry)
+ExactGeometryWarehouse::addExactGeometry(MooseSharedPointer<ExactGeometry> exact_geometry)
 {
   // Make certain that the ExactGeometry is valid
   mooseAssert(exact_geometry, "ExactGeometry is NULL");
@@ -62,4 +62,13 @@ ExactGeometryWarehouse::addExactGeometry(MooseSharedPointer<ExactGeometry> & exa
 
   // Add to elemental/nodal storage
   _all_exact_geometries.push_back(exact_geometry);
+
+  const std::set<BoundaryID> & boundaries = exact_geometry->boundaryIDs();
+
+  for (std::set<BoundaryID>::const_iterator bit = boundaries.begin(); bit != boundaries.end(); ++bit)
+  {
+    BoundaryID bnd_id = *bit;
+
+    _active_boundary_exact_geometries[bnd_id].push_back(exact_geometry);
+  }
 }

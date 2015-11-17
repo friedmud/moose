@@ -34,6 +34,9 @@ public:
   /// The elements that were just refined.
   std::vector<const Elem *> _refined_elements;
 
+  /// The nodes attached to elements that were just refined
+  std::set<Node *> _refined_nodes;
+
   /// The elements that were just coarsened.
   std::vector<const Elem *> _coarsened_elements;
 

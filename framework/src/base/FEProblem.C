@@ -71,6 +71,7 @@
 #include "MultiMooseEnum.h"
 #include "Predictor.h"
 #include "Assembly.h"
+#include "ExactGeometry.h"
 
 // libMesh includes
 #include "libmesh/exodusII_io.h"
@@ -180,6 +181,7 @@ FEProblem::FEProblem(const InputParameters & parameters) :
 
   _functions.resize(n_threads);
   _ics.resize(n_threads);
+  _egs.resize(n_threads);
   _materials.resize(n_threads);
 
   _material_data.resize(n_threads);
@@ -1556,6 +1558,26 @@ FEProblem::addInitialCondition(const std::string & ic_name, const std::string & 
   }
   else
     mooseError("Variable '" << var_name << "' requested in initial condition '" << name << "' does not exist.");
+}
+
+void
+FEProblem::addExactGeometry(const std::string & eg_name, const std::string & name, InputParameters parameters)
+{
+  // check parameters for errors
+  parameters.checkParams(name);
+
+  parameters.set<FEProblem *>("_fe_problem") = this;
+  parameters.set<SubProblem *>("_subproblem") = this;
+
+  parameters.set<SystemBase *>("_sys") = &_nl;
+
+  for (unsigned int tid=0; tid < libMesh::n_threads(); tid++)
+    _egs[tid].addExactGeometry(MooseSharedNamespace::static_pointer_cast<ExactGeometry>(_factory.create(eg_name, name, parameters, tid)));
+}
+
+void
+FEProblem::executeInitialExactGeometry()
+{
 }
 
 void
@@ -3791,6 +3813,8 @@ FEProblem::meshChanged()
 {
   if (_material_props.hasStatefulProperties() || _bnd_material_props.hasStatefulProperties())
     _mesh.cacheChangedLists(); // Currently only used with adaptivity and stateful material properties
+
+
 
   // Clear these out because they corresponded to the old mesh
   _ghosted_elems.clear();

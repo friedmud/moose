@@ -743,6 +743,9 @@ protected:
   /// The elements that were just refined.
   ConstElemPointerRange * _refined_elements;
 
+  /// The nodes attached to elements that were just refined
+  NodeRange * _refined_nodes;
+
   /// The elements that were just coarsened.
   ConstElemPointerRange * _coarsened_elements;
 

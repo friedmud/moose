@@ -12,30 +12,23 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "ExactGeometry.h"
-#include "FEProblem.h"
-#include "MooseMesh.h"
-#include "Assembly.h"
-#include "MooseVariable.h"
+#ifndef ADDEXACTGEOMETRYACTION_H
+#define ADDEXACTGEOMETRYACTION_H
+
+#include "MooseObjectAction.h"
+
+class AddExactGeometryAction;
 
 template<>
-InputParameters validParams<ExactGeometry>()
-{
-  InputParameters params = validParams<MooseObject>();
-  params += validParams<SetupInterface>();
-  params += validParams<BoundaryRestrictable>();
+InputParameters validParams<AddExactGeometryAction>();
 
-  params.registerBase("ExactGeometry");
-  return params;
-}
 
-ExactGeometry::ExactGeometry(const InputParameters & parameters) :
-    MooseObject(parameters),
-    SetupInterface(parameters),
-    BoundaryRestrictable(parameters),
-    Restartable(parameters, "ExactGeometrys"),
-    _subproblem(*parameters.get<SubProblem *>("_subproblem")),
-    _fe_problem(*parameters.get<FEProblem *>("_fe_problem")),
-    _tid(parameters.get<THREAD_ID>("_tid"))
+class AddExactGeometryAction : public MooseObjectAction
 {
-}
+public:
+  AddExactGeometryAction(InputParameters params);
+
+  virtual void act();
+};
+
+#endif // ADDEXACTGEOMETRYACTION_H

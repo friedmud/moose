@@ -43,19 +43,19 @@ public:
 
   const std::vector<MooseSharedPointer<ExactGeometry> > & allExactGeometries() const { return _all_exact_geometries; }
 
-  std::vector<MooseSharedPointer<ExactGeometry> > & activeBlockExactGeometries(SubdomainID block) { return _active_block_exact_geometries[block]; }
+  std::vector<MooseSharedPointer<ExactGeometry> > & activeBoundaryExactGeometries(BoundaryID bnd_id) { return _active_boundary_exact_geometries[bnd_id]; }
 
   /**
    * @param ExactGeometry being added
    */
-  void addExactGeometry(MooseSharedPointer<ExactGeometry> & exact_geometry);
+  void addExactGeometry(MooseSharedPointer<ExactGeometry> exact_geometry);
 
 protected:
   /// all ExactGeometries
   std::vector<MooseSharedPointer<ExactGeometry> > _all_exact_geometries;
 
-  /// nodal kernels active on a block
-  std::map<SubdomainID, std::vector<MooseSharedPointer<ExactGeometry> > > _active_block_exact_geometries;
+  /// ExactGeometries on boundaries
+  std::map<BoundaryID, std::vector<MooseSharedPointer<ExactGeometry> > > _active_boundary_exact_geometries;
 };
 
 #endif // EXACTGEOMETRYWAREHOUSE_H

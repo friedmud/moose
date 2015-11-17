@@ -29,6 +29,7 @@
 #include "TransferWarehouse.h"
 #include "UserObjectWarehouse.h"
 #include "InitialConditionWarehouse.h"
+#include "ExactGeometryWarehouse.h"
 #include "Restartable.h"
 #include "SolverParams.h"
 #include "PetscSupport.h"
@@ -430,6 +431,14 @@ public:
 
   // IC /////
   void addInitialCondition(const std::string & ic_name, const std::string & name, InputParameters parameters);
+
+  // EG ////
+  void addExactGeometry(const std::string & eg_name, const std::string & name, InputParameters parameters);
+
+  /**
+   * Execute the ExactGeometry for the first time, in case of uniform refinement.
+   */
+  void executeInitialExactGeometry();
 
   void projectSolution();
 
@@ -962,6 +971,9 @@ protected:
 
   /// Initial condition warehouses (one for each thread)
   std::vector<InitialConditionWarehouse> _ics;
+
+  /// Exact geometry warehouses (one for each thread)
+  std::vector<ExactGeometryWarehouse> _egs;
 
   // material properties
   MaterialPropertyStorage & _material_props;

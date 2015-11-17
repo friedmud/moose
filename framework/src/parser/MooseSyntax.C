@@ -46,6 +46,9 @@ void associateSyntax(Syntax & syntax, ActionFactory & action_factory)
   syntax.registerActionSyntax("DynamicObjectRegistrationAction", "Problem");
   syntax.registerActionSyntax("SetupMeshAction", "Mesh");
   syntax.registerActionSyntax("SetupMeshCompleteAction", "Mesh");
+
+  syntax.registerActionSyntax("AddExactGeometryAction", "ExactGeometry/*");
+
 //  syntax.registerActionSyntax("SetupMeshCompleteAction", "Mesh", "prepare_mesh");
 //  syntax.registerActionSyntax("SetupMeshCompleteAction", "Mesh", "setup_mesh_complete");
   syntax.registerActionSyntax("CreateDisplacedProblemAction", "Mesh");

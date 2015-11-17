@@ -19,6 +19,7 @@
 #include "MooseObject.h"
 #include "InputParameters.h"
 #include "SetupInterface.h"
+#include "BoundaryRestrictable.h"
 #include "Restartable.h"
 
 class ExactGeometry;
@@ -37,6 +38,7 @@ InputParameters validParams<ExactGeometry>();
 class ExactGeometry :
   public MooseObject,
   public SetupInterface,
+  public BoundaryRestrictable,
   public Restartable
 {
 public:

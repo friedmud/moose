@@ -387,6 +387,7 @@
 #include "CheckOutputAction.h"
 #include "SetupRecoverFileBaseAction.h"
 #include "AddNodalKernelAction.h"
+#include "AddExactGeometryAction.h"
 
 // Outputs
 #ifdef LIBMESH_HAVE_EXODUS_API
@@ -918,6 +919,8 @@ addActionTypes(Syntax & syntax)
 "(setup_mesh_complete)"
 "(determine_system_type)"
 "(create_problem)"
+"(add_exact_geometry)"
+"(execute_initial_exact_geometry)"
 "(setup_time_integrator)"
 "(setup_executioner)"
 "(setup_time_stepper)"
@@ -1084,6 +1087,9 @@ registerActions(Syntax & syntax, ActionFactory & action_factory)
   // TODO: Why is this here?
   registerTask("finish_input_file_output", false);
   registerAction(EmptyAction, "finish_input_file_output");
+
+  registerAction(AddExactGeometryAction, "add_exact_geometry");
+  registerAction(AddExactGeometryAction, "execute_initial_exact_geometry");
 
 #undef registerAction
 #define registerAction(tplt, action) action_factory.regLegacy<tplt>(stringifyName(tplt), action)

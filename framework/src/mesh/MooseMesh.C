@@ -109,6 +109,7 @@ MooseMesh::MooseMesh(const InputParameters & parameters) :
     _is_nemesis(getParam<bool>("nemesis")),
     _is_prepared(false),
     _refined_elements(NULL),
+    _refined_nodes(NULL),
     _coarsened_elements(NULL),
     _active_local_elem_range(NULL),
     _active_semilocal_node_range(NULL),
