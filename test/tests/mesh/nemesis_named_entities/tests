@@ -1,0 +1,9 @@
+[Tests]
+  [./test]
+    type = 'Exodiff'
+    input = 'nemesis_named_entities.i'
+    exodiff = 'nemesis_named_entities_out.e'
+    min_parallel = 4
+    max_parallel = 4
+  [../]
+[]
