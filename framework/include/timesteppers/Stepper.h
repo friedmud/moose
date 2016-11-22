@@ -21,6 +21,10 @@
 #include "MooseUtils.h"
 #include "libmesh/numeric_vector.h"
 
+
+// Forward Declarations
+class NewStepper;
+
 /// Holds all information used by Steppers to calculate dt via the "advance"
 /// function.  For some variables (e.g. dt), a history of fixed-length 3 of previous
 /// values is maintained.
@@ -120,6 +124,8 @@ private:
   Real _rewind_time;
 
   libMesh::Parallel::Communicator _dummy_comm;
+
+  friend class NewStepper;
 };
 
 /// A base class for time stepping algorithms for use in determining dt between
