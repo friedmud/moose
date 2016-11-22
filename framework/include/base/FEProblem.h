@@ -30,6 +30,7 @@
 #include "ExecuteMooseObjectWarehouse.h"
 #include "AuxGroupExecuteMooseObjectWarehouse.h"
 #include "MaterialWarehouse.h"
+#include "NewStepper.h"
 
 // libMesh includes
 #include "libmesh/enum_quadrature_type.h"
@@ -67,6 +68,7 @@ class InternalSideUserObject;
 class GeneralUserObject;
 class Function;
 class KernelBase;
+class NewStepper;
 
 // libMesh forward declarations
 namespace libMesh
@@ -481,6 +483,19 @@ public:
 
   // Materials /////
   void addMaterial(const std::string & kernel_name, const std::string & name, InputParameters parameters);
+
+  // Steppers ////
+
+  /**
+   * Get the DT from another Stepper.
+   *
+   * Note: This is intended to be called in the constructor of a Stepper
+   * This returns a _reference_ and must be caught as a reference.
+   * The value within this reference will automatically be updated by the system.
+   *
+   * @param name The name of the InputParameter holding the Stepper name to get the value from.
+   */
+  Real & getStepperDT(const StepperName & name);
 
   /**
    * Add the MooseVariables that the current materials depend on to the dependency list.
@@ -1085,6 +1100,12 @@ protected:
   std::map<std::string,unsigned int> _subspace_dim;
 
   std::vector<Assembly *> _assembly;
+
+  /// Steppers
+  MooseObjectWarehouseBase<NewStepper> _steppers;
+
+  /// Stepper DT values
+  std::map<StepperName, Real> & _stepper_dt_values;
 
   /// functions
   MooseObjectWarehouse<Function> _functions;

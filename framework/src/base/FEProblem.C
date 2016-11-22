@@ -119,6 +119,8 @@ FEProblem::FEProblem(const InputParameters & parameters) :
     _aux(*this, "aux0"),
     _coupling(Moose::COUPLING_DIAG),
     _cm(NULL),
+    _steppers(/*threaded=*/false),
+    _stepper_dt_values(declareRecoverableData<std::map<StepperName, Real>>("stepper_dt_values")),
     _scalar_ics(/*threaded=*/false),
     _material_props(declareRestartableDataWithContext<MaterialPropertyStorage>("material_props", &_mesh)),
     _bnd_material_props(declareRestartableDataWithContext<MaterialPropertyStorage>("bnd_material_props", &_mesh)),
@@ -1977,6 +1979,17 @@ FEProblem::addMaterial(const std::string & mat_name, const std::string & name, I
 
     }
   }
+}
+
+Real &
+FEProblem::getStepperDT(const StepperName & stepper_name)
+{
+  auto value = _stepper_dt_values.find(stepper_name);
+
+  if (value == _stepper_dt_values.end())
+    mooseError("Unknown Stepper!");
+
+  return value->second;
 }
 
 
