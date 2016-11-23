@@ -33,6 +33,11 @@ ConstantDT::ConstantDT(const InputParameters & parameters) :
     _growth_factor(getParam<Real>("growth_factor")),
     _last_dt(declareRestartableData<Real>("last_dt", 0))
 {
+  {
+    auto params = _app.getFactory().getValidParams("BetterCuttingGrowingNewStepper");
+    params.set<Real>("dt") = _constant_dt;
+    _fe_problem.addNewStepper("ConstantNewStepper", name() + "_cg", params);
+  }
 }
 
 StepperBlock *
