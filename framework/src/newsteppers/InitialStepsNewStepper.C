@@ -23,7 +23,7 @@ InputParameters validParams<InitialStepsNewStepper>()
   InputParameters params = validParams<NewStepper>();
 
   params.addRequiredParam<StepperName>("incoming_stepper", "The name of the Stepper to get the current dt from");
-  params.addRequiredParam<Real>("n_steps", "The number of startup steps to do");
+  params.addRequiredParam<unsigned int>("n_steps", "The number of startup steps to do");
 
   return params;
 }
@@ -47,7 +47,8 @@ InitialStepsNewStepper::computeDT()
 Real
 InitialStepsNewStepper::computeFailedDT()
 {
-  return std::min(_incoming_stepper_dt, computeDT());
+  // Don't need to do anything
+  return _incoming_stepper_dt;
 }
 
 InitialStepsNewStepper::~InitialStepsNewStepper()

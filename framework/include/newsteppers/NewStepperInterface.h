@@ -15,11 +15,12 @@
 #ifndef NEWSTEPPERINTERFACE_H
 #define NEWSTEPPERINTERFACE_H
 
-// Standard includes
-#include <string>
-
 // MOOSE includes
 #include "MooseTypes.h"
+#include "DependencyResolverInterface.h"
+
+// Standard includes
+#include <string>
 
 // Forward Declarations
 class FEProblem;
@@ -31,7 +32,7 @@ class MooseObject;
  * Interface class for classes which interact with Postprocessors.
  * Provides the getPostprocessorValueXYZ() and related interfaces.
  */
-class NewStepperInterface
+class NewStepperInterface : public DependencyResolverInterface
 {
 public:
   NewStepperInterface(const MooseObject * moose_object);
@@ -59,6 +60,16 @@ public:
    */
   const Real & getStepperDTByName(const StepperName & name);
 
+  /**
+   * For DependencyResolverInterface
+   */
+  const std::set<std::string> & getRequestedItems() override;
+
+  /**
+   * For DependencyResolverInterface
+   */
+  const std::set<std::string> & getSuppliedItems() override;
+
 protected:
   /**
    * Check to see if a Stepper exists
@@ -75,6 +86,12 @@ protected:
   bool hasStepperByName(const PostprocessorName & name) const;
 
 private:
+  /// The name of this Stepper for the DependencyResolverInterface
+  const std::set<std::string> _si_name;
+
+  /// The set of Steppers this Stepper depends on
+  std::set<std::string> _depend_steppers;
+
   /// NewStepperInterface Parameters
   const InputParameters & _si_params;
 

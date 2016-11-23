@@ -18,6 +18,8 @@
 #include "MooseObject.h"
 
 NewStepperInterface::NewStepperInterface(const MooseObject * moose_object) :
+    DependencyResolverInterface(),
+    _si_name({moose_object->name()}),
     _si_params(moose_object->parameters()),
     _si_feproblem(*_si_params.getCheckedPointerParam<FEProblem *>("_fe_problem",
                                                                   "Missing FEProblem Pointer in NewStepperInterface!"))
@@ -27,8 +29,10 @@ NewStepperInterface::NewStepperInterface(const MooseObject * moose_object) :
 const Real &
 NewStepperInterface::getStepperDT(const std::string & name)
 {
-  if (!hasStepper(name))
-    mooseError("Unknown Stepper parameter name: " << name);
+  std::cout<<"NewStepperInterface::getStepperDT: "<<name<<std::endl;
+  std::cout<<"NewStepperInterface::getStepperDT: "<<_si_params.get<StepperName>(name)<<std::endl;
+
+  _depend_steppers.insert(_si_params.get<StepperName>(name));
 
   return _si_feproblem.getStepperDT(_si_params.get<StepperName>(name));
 }
@@ -36,11 +40,23 @@ NewStepperInterface::getStepperDT(const std::string & name)
 const Real &
 NewStepperInterface::getStepperDTByName(const StepperName & name)
 {
-  if (!hasStepperByName(name))
-    mooseError("Unknown Stepper: " << name);
+  _depend_steppers.insert(name);
 
   return _si_feproblem.getStepperDT(name);
 }
+
+const std::set<std::string> &
+NewStepperInterface::getRequestedItems()
+{
+  return _depend_steppers;
+}
+
+const std::set<std::string> &
+NewStepperInterface::getSuppliedItems()
+{
+  return _si_name;
+}
+
 
 bool
 NewStepperInterface::hasStepper(const std::string & name) const

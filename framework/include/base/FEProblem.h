@@ -372,6 +372,11 @@ public:
   virtual void onTimestepBegin() override;
   virtual void onTimestepEnd() override;
 
+  /**
+   * Compute dt using NewSteppers
+   */
+  virtual Real computeDT();
+
   virtual Real & time() const { return _time; }
   virtual Real & timeOld() const { return _time_old; }
   virtual int & timeStep() const { return _t_step; }

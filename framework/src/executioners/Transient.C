@@ -305,16 +305,19 @@ Transient::execute()
 void
 Transient::updateStepperInfo(bool first)
 {
+  auto & si = _fe_problem.getStepperInfo();
+
   _soln_nonlin.resize(_fe_problem.getNonlinearSystem().currentSolution()->size());
   _soln_aux.resize(_fe_problem.getAuxiliarySystem().currentSolution()->size());
   _soln_predicted.resize(_fe_problem.getNonlinearSystem().currentSolution()->size());
 
   if (first)
-    _si.pushHistory(_prev_dt, true, 0);
-  _si.update(_steps_taken, _time, _dt, _nl_its, _l_its, _last_solve_converged,
-             _solve_time, _soln_nonlin, _soln_aux, _soln_predicted);
+    si.pushHistory(_prev_dt, true, 0);
 
-  _prev_dt = _si.dt(); // for restart
+  si.update(_steps_taken, _time, _dt, _nl_its, _l_its, _last_solve_converged,
+            _solve_time, _soln_nonlin, _soln_aux, _soln_predicted);
+
+  _prev_dt = si.dt(); // for restart
 };
 
 void
@@ -347,6 +350,7 @@ Transient::computeDT(bool first)
     }
   }
 
+  /*
   updateStepperInfo(first);
 
   if (_stepper)
@@ -356,6 +360,24 @@ Transient::computeDT(bool first)
       // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
       _snapshots[_si.time()] = _app.backup();
     if (_si.rewindTime() != -1)
+    {
+      if (_snapshots.count(_si.rewindTime()) == 0)
+        mooseError("no snapshot available for requested rewind time");
+      _app.restore(_snapshots[_si.rewindTime()]);
+      computeDT(); // recursive call necessary because rewind modifies state _si depends on
+    }
+  }
+  */
+
+  // NewSteppers
+  {
+    updateStepperInfo(first);
+    _new_dt = _fe_problem.computeDT();
+    auto & si = _fe_problem.getStepperInfo();
+    if (si.wantSnapshot())
+      // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
+      _snapshots[si.time()] = _app.backup();
+    if (si.rewindTime() != -1)
     {
       if (_snapshots.count(_si.rewindTime()) == 0)
         mooseError("no snapshot available for requested rewind time");

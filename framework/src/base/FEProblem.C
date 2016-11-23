@@ -624,6 +624,9 @@ void FEProblem::initialSetup()
       computeUserObjects(EXEC_TIMESTEP_BEGIN, Moose::ALL);
       computeUserObjects(EXEC_LINEAR, Moose::ALL);
     }
+
+    _steppers.sort();
+
     Moose::setup_perf_log.pop("computeUserObjects()", "Setup");
   }
 
@@ -1997,12 +2000,21 @@ FEProblem::addNewStepper(const std::string & stepper_name, const std::string & n
 Real &
 FEProblem::getStepperDT(const StepperName & stepper_name)
 {
+  // Can't error check here because objects might still be being built
+  /*
   auto value = _stepper_dt_values.find(stepper_name);
 
   if (value == _stepper_dt_values.end())
     mooseError("Unknown Stepper!");
 
   return value->second;
+  */
+
+  std::cout<<"Retrieving dt from: "<<stepper_name<<std::endl;
+
+  // Using side-effect insertion here on purpose
+  // We'll have another round later where we double-check couplings and throw errors if stuff didn't exist
+  return _stepper_dt_values[stepper_name];
 }
 
 
@@ -3459,6 +3471,23 @@ FEProblem::onTimestepBegin()
 void
 FEProblem::onTimestepEnd()
 {
+}
+
+Real
+FEProblem::computeDT()
+{
+  Real dt = 0.;
+
+  auto & steppers = _steppers.getActiveObjects();
+
+  for (auto & stepper : steppers)
+  {
+    std::cout<<"Computing DT for: "<<stepper->name()<<std::endl;;
+
+    _stepper_dt_values[stepper->name()] = dt = stepper->computeDT();
+  }
+
+  return dt;
 }
 
 void
