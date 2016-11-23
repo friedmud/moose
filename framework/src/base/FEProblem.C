@@ -625,8 +625,6 @@ void FEProblem::initialSetup()
       computeUserObjects(EXEC_LINEAR, Moose::ALL);
     }
 
-    _steppers.sort();
-
     Moose::setup_perf_log.pop("computeUserObjects()", "Setup");
   }
 
@@ -1985,7 +1983,7 @@ FEProblem::addMaterial(const std::string & mat_name, const std::string & name, I
 }
 
 void
-FEProblem::addNewStepper(const std::string & stepper_name, const std::string & name, InputParameters parameters)
+FEProblem::addStepper(const std::string & stepper_name, const std::string & name, InputParameters parameters)
 {
   // Check parameters for errors.
   parameters.checkParams(name);
@@ -1993,7 +1991,7 @@ FEProblem::addNewStepper(const std::string & stepper_name, const std::string & n
   parameters.set<FEProblem *>("_fe_problem") = this;
   parameters.set<SubProblem *>("_subproblem") = this;
 
-  MooseSharedPointer<NewStepper> ns = _factory.create<NewStepper>(stepper_name, name, parameters, /*tid=*/0);
+  MooseSharedPointer<Stepper> ns = _factory.create<Stepper>(stepper_name, name, parameters, /*tid=*/0);
   _steppers.addObject(ns, /*tid=*/0);
 }
 

@@ -12,7 +12,7 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "Stepper.h"
+#include "BlockStepper.h"
 
 StepperInfo::StepperInfo()
   : _step_count(1),
@@ -747,4 +747,3 @@ DT2Block::calcErr(StepperInfo & si)
   Real err = (diff->l2_norm() / std::max(_big_soln->l2_norm(), small_soln->l2_norm())) / dt();
   return err;
 }
-

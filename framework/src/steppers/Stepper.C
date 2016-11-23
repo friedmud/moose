@@ -12,27 +12,32 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "NewStepper.h"
+#include "Stepper.h"
 #include "FEProblem.h"
 #include "Transient.h"
 #include "MooseApp.h"
 
 template<>
-InputParameters validParams<NewStepper>()
+InputParameters validParams<Stepper>()
 {
   InputParameters params = validParams<MooseObject>();
 
-  params.registerBase("NewStepper");
+  params.registerBase("Stepper");
+
+  // Controls the name of the output from this stepper
+  // If this is left blank then the name will default to the name of the object
+  params.addPrivateParam<StepperName>("_output_name", "");
 
   return params;
 }
 
-NewStepper::NewStepper(const InputParameters & parameters) :
+Stepper::Stepper(const InputParameters & parameters) :
     MooseObject(parameters),
-    Restartable(parameters, "NewSteppers"),
-    NewStepperInterface(this),
+    Restartable(parameters, "Steppers"),
+    StepperInterface(this),
     _fe_problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem")),
     _factory(_app.getFactory()),
+    _output_name(getParam<StepperName>("_output_name") != "" ? getParam<StepperName>("_output_name") : name()),
     _stepper_info(_fe_problem.getStepperInfo()),
     _step_count(_stepper_info._step_count),
     _time(_stepper_info._time),
@@ -50,6 +55,15 @@ NewStepper::NewStepper(const InputParameters & parameters) :
 {
 }
 
-NewStepper::~NewStepper()
+Stepper::~Stepper()
 {
+}
+
+void
+Stepper::setOutputName(const StepperName & output_name)
+{
+  _output_name = output_name;
+
+  // Need to tell the Interface about this as well...
+  setSuppliedItemName(output_name);
 }

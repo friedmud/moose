@@ -1,0 +1,14 @@
+[Tests]
+  [./test]
+    type = 'Exodiff'
+    input = 'piecewise_stepper.i'
+    exodiff = 'piecewise_stepper_out.e'
+    scale_refine = 3
+  [../]
+  [./no_interp]
+    type = 'Exodiff'
+    input = 'piecewise_stepper_no_interp.i'
+    exodiff = 'piecewise_stepper_no_interp_out.e'
+    scale_refine = 3
+  [../]
+[]

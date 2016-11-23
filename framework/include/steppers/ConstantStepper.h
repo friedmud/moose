@@ -12,24 +12,28 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "AddNewStepperAction.h"
-#include "FEProblem.h"
-#include "NewStepper.h"
+#ifndef CONSTANTSTEPPER_H
+#define CONSTANTSTEPPER_H
+
+#include "Stepper.h"
+
+class ConstantStepper;
 
 template<>
-InputParameters validParams<AddNewStepperAction>()
-{
-  InputParameters params = validParams<MooseObjectAction>();
-  return params;
-}
+InputParameters validParams<ConstantStepper>();
 
-AddNewStepperAction::AddNewStepperAction(InputParameters params) :
-    MooseObjectAction(params)
+class ConstantStepper : public Stepper
 {
-}
+public:
+  ConstantStepper(const InputParameters & parameters);
+  virtual ~ConstantStepper();
 
-void
-AddNewStepperAction::act()
-{
-  _problem->addNewStepper(_type, _name, _moose_object_pars);
-}
+  virtual Real computeDT() override;
+
+  virtual Real computeFailedDT() override;
+
+protected:
+  const Real & _input_dt;
+};
+
+#endif /* CONSTANTSTEPPER_H */

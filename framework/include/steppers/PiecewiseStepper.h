@@ -12,28 +12,38 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef CONSTANTNEWSTEPPER_H
-#define CONSTANTNEWSTEPPER_H
+#ifndef PIECEWISESTEPPER_H
+#define PIECEWISESTEPPER_H
 
-#include "NewStepper.h"
+#include "Stepper.h"
+#include "LinearInterpolation.h"
 
-class ConstantNewStepper;
+class PiecewiseStepper;
 
 template<>
-InputParameters validParams<ConstantNewStepper>();
+InputParameters validParams<PiecewiseStepper>();
 
-class ConstantNewStepper : public NewStepper
+/**
+ * Choose dt based on a list of dt's and times
+ */
+class PiecewiseStepper : public Stepper
 {
 public:
-  ConstantNewStepper(const InputParameters & parameters);
-  virtual ~ConstantNewStepper();
+  PiecewiseStepper(const InputParameters & parameters);
+  virtual ~PiecewiseStepper();
 
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;
 
 protected:
-  const Real & _input_dt;
+  const std::vector<Real> & _times;
+  const std::vector<Real> & _dts;
+
+  /// Whether or not to interpolate DT between times
+  bool _interpolate;
+
+  LinearInterpolation _linear_interpolation;
 };
 
-#endif /* CONSTANTNEWSTEPPER_H */
+#endif /* PIECEWISESTEPPER_H */

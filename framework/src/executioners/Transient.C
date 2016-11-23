@@ -183,7 +183,7 @@ Transient::Transient(const InputParameters & parameters) :
 void
 Transient::init()
 {
-  if (!_time_stepper.get())
+  if (!_time_stepper.get() && !_fe_problem.hasSteppers())
   {
     InputParameters pars = _app.getFactory().getValidParams("ConstantDT");
     pars.set<FEProblem *>("_fe_problem") = &_problem;
@@ -204,7 +204,51 @@ Transient::init()
   }
 
   _problem.initialSetup();
-  _time_stepper->init();
+  if (_time_stepper)
+    _time_stepper->init();
+
+
+  // Prepare Steppers
+  {
+    auto & stepper_warehouse = _fe_problem.getStepperWarehouse();
+
+    // Sort the steppers that were built from the input file
+    stepper_warehouse.sort();
+
+    // Add these steppers to the end.  They apply to every simulation.
+    {
+      auto & steppers = stepper_warehouse.getActiveObjects();
+
+      // Grab the output name for the last one
+      auto last_name = steppers.back()->outputName();
+
+      /*
+      {
+        auto params = _factory.getValidParams("DTLimitStepper");
+        params.set<StepperName>("incoming_stepper") = last_name;
+        params.set<Real>("min") = dtMin();
+        params.set<Real>("max") = dtMax();
+        _fe_problem->addStepper("dtLimit", "_final_limit", params);
+      }
+
+      if (sync_times.size() > 0)
+      {
+        auto params = _factory.getValidParams("SyncTimesStepper");
+        params.set<StepperName>("incoming_stepper") = "_final_limit";
+        _fe_problem->addStepper("SyncTimes", "_final_sync_times", params);
+      }
+
+      if (!_app.halfTransient())
+      {
+        auto params = _factory.getValidParams("TimeBoundsStepper");
+        params.set<StepperName>("incoming_stepper") = last_name;
+        params.set<Real>("start") = getStartTime();
+        params.set<Real>("end") = endTime();
+        _fe_problem->addStepper("TimeBoundsStepper", "_final_limit", params);
+      }
+      */
+    }
+  }
 
   if (_app.isRestarting())
     _time_old = _time;
@@ -232,13 +276,15 @@ Transient::init()
 void
 Transient::preStep()
 {
-  _time_stepper->preStep();
+  if (_time_stepper)
+    _time_stepper->preStep();
 }
 
 void
 Transient::postStep()
 {
-  _time_stepper->postStep();
+  if (_time_stepper)
+    _time_stepper->postStep();
 }
 
 int Transient::n_startup_steps()
@@ -323,8 +369,10 @@ Transient::updateStepperInfo(bool first)
 void
 Transient::computeDT(bool first)
 {
-  _time_stepper->computeStep(); // This is actually when DT gets computed
+  if (_time_stepper)
+    _time_stepper->computeStep(); // This is actually when DT gets computed
 
+  /*
   // initialize new-style stepper here because users of moose may have subclassed Transient
   // (I'm looking at you Yak!) and overridden functions like init().
   if (!_stepper)
@@ -349,6 +397,7 @@ Transient::computeDT(bool first)
       mooseDoOnce(mooseWarning("the time stepper used is based on deprecated functionality"));
     }
   }
+  */
 
   /*
   updateStepperInfo(first);
@@ -369,7 +418,7 @@ Transient::computeDT(bool first)
   }
   */
 
-  // NewSteppers
+  // Steppers
   {
     updateStepperInfo(first);
     _new_dt = _fe_problem.computeDT();
@@ -421,7 +470,10 @@ Transient::incrementStepOrReject()
   {
     _problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN, true);
     _problem.restoreMultiApps(EXEC_TIMESTEP_END, true);
-    _time_stepper->rejectStep();
+
+    if (_time_stepper)
+      _time_stepper->rejectStep();
+
     _last_solve_converged = false; // TODO: discover why this is not already correctly set...
     _time = _time_old;
   }
@@ -494,7 +546,9 @@ Transient::solveStep(Real input_dt)
     return;
 
   preSolve();
-  _time_stepper->preSolve();
+
+  if (_time_stepper)
+    _time_stepper->preSolve();
 
   _problem.timestepSetup();
 
@@ -517,7 +571,11 @@ Transient::solveStep(Real input_dt)
   timeval solve_end;
   gettimeofday(&solve_start, nullptr);
 
-  _time_stepper->step();
+  if (_time_stepper)
+    _time_stepper->step();
+  else
+    _fe_problem.solve();
+
   gettimeofday(&solve_end, nullptr);
   _solve_time = (static_cast<Real>(solve_end.tv_sec  - solve_start.tv_sec) +
                                              static_cast<Real>(solve_end.tv_usec - solve_start.tv_usec)*1.e-6);
@@ -544,7 +602,7 @@ Transient::solveStep(Real input_dt)
         _console << "XFEM not modifying mesh, continuing"<<std::endl;
       }
 
-      if (_picard_max_its <= 1)
+      if (_picard_max_its <= 1 && _time_stepper)
         _time_stepper->acceptStep();
 
       _sln_diff_norm = _problem.relativeSolutionDifferenceNorm();
@@ -570,7 +628,9 @@ Transient::solveStep(Real input_dt)
   }
 
   postSolve();
-  _time_stepper->postSolve();
+
+  if (_time_stepper)
+    _time_stepper->postSolve();
 
   if (_picard_max_its > 1 && lastSolveConverged())
   {
@@ -657,7 +717,7 @@ Transient::computeConstrainedDT()
   diag.clear();
 
   // Allow the time stepper to limit the time step
-  _at_sync_point = _time_stepper->constrainStep(dt_cur);
+  _at_sync_point = _time_stepper && _time_stepper->constrainStep(dt_cur);
 
   // Don't let time go beyond next time interval output if specified
   // TODO: delete this dead code - _time_interval is always false
@@ -746,8 +806,14 @@ Transient::computeConstrainedDT()
 Real
 Transient::getDT()
 {
+  /*
   if (_stepper)
     return _new_dt;
+  */
+
+  if (_fe_problem.hasSteppers())
+    return _new_dt;
+
   return _time_stepper->getCurrentDT();
 }
 
@@ -801,7 +867,7 @@ Transient::estimateTimeError()
 bool
 Transient::lastSolveConverged()
 {
-  return _multiapps_converged && _time_stepper->converged();
+  return _multiapps_converged && ( (_time_stepper && _time_stepper->converged()) || _fe_problem.converged() );
 }
 
 void
@@ -815,13 +881,15 @@ Transient::preExecute()
   //   if (tp)
   //     _time_stepper->addSyncTime(tp->getSyncTimes());
   // }
-  _time_stepper->preExecute();
+  if (_time_stepper)
+    _time_stepper->preExecute();
 }
 
 void
 Transient::postExecute()
 {
-  _time_stepper->postExecute();
+  if (_time_stepper)
+    _time_stepper->postExecute();
 }
 
 void

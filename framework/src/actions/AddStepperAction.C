@@ -12,39 +12,24 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "ConstantNewStepper.h"
+#include "AddStepperAction.h"
 #include "FEProblem.h"
-#include "Transient.h"
-#include "MooseApp.h"
+#include "Stepper.h"
 
 template<>
-InputParameters validParams<ConstantNewStepper>()
+InputParameters validParams<AddStepperAction>()
 {
-  InputParameters params = validParams<NewStepper>();
-
-  params.addRequiredParam<Real>("dt", "The dt to maintain");
-
+  InputParameters params = validParams<MooseObjectAction>();
   return params;
 }
 
-ConstantNewStepper::ConstantNewStepper(const InputParameters & parameters) :
-    NewStepper(parameters),
-    _input_dt(getParam<Real>("dt"))
+AddStepperAction::AddStepperAction(InputParameters params) :
+    MooseObjectAction(params)
 {
 }
 
-Real
-ConstantNewStepper::computeDT()
+void
+AddStepperAction::act()
 {
-  return _input_dt;
-}
-
-Real
-ConstantNewStepper::computeFailedDT()
-{
-  return computeDT();
-}
-
-ConstantNewStepper::~ConstantNewStepper()
-{
+  _problem->addStepper(_type, _name, _moose_object_pars);
 }

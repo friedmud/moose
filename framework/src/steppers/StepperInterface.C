@@ -12,25 +12,25 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "NewStepperInterface.h"
+#include "StepperInterface.h"
 #include "FEProblem.h"
 #include "MooseTypes.h"
 #include "MooseObject.h"
 
-NewStepperInterface::NewStepperInterface(const MooseObject * moose_object) :
+StepperInterface::StepperInterface(const MooseObject * moose_object) :
     DependencyResolverInterface(),
-    _si_name({moose_object->name()}),
+    _si_name({moose_object->parameters().get<StepperName>("_output_name") != "" ? moose_object->parameters().get<StepperName>("_output_name") : moose_object->parameters().get<std::string>("_object_name")}),
     _si_params(moose_object->parameters()),
     _si_feproblem(*_si_params.getCheckedPointerParam<FEProblem *>("_fe_problem",
-                                                                  "Missing FEProblem Pointer in NewStepperInterface!"))
+                                                                  "Missing FEProblem Pointer in StepperInterface!"))
 {
 }
 
 const Real &
-NewStepperInterface::getStepperDT(const std::string & name)
+StepperInterface::getStepperDT(const std::string & name)
 {
-  std::cout<<"NewStepperInterface::getStepperDT: "<<name<<std::endl;
-  std::cout<<"NewStepperInterface::getStepperDT: "<<_si_params.get<StepperName>(name)<<std::endl;
+  std::cout<<"StepperInterface::getStepperDT: "<<name<<std::endl;
+  std::cout<<"StepperInterface::getStepperDT: "<<_si_params.get<StepperName>(name)<<std::endl;
 
   _depend_steppers.insert(_si_params.get<StepperName>(name));
 
@@ -38,7 +38,7 @@ NewStepperInterface::getStepperDT(const std::string & name)
 }
 
 const Real &
-NewStepperInterface::getStepperDTByName(const StepperName & name)
+StepperInterface::getStepperDTByName(const StepperName & name)
 {
   _depend_steppers.insert(name);
 
@@ -46,26 +46,31 @@ NewStepperInterface::getStepperDTByName(const StepperName & name)
 }
 
 const std::set<std::string> &
-NewStepperInterface::getRequestedItems()
+StepperInterface::getRequestedItems()
 {
   return _depend_steppers;
 }
 
 const std::set<std::string> &
-NewStepperInterface::getSuppliedItems()
+StepperInterface::getSuppliedItems()
 {
   return _si_name;
 }
 
+void
+StepperInterface::setSuppliedItemName(const StepperName & item_name)
+{
+  _si_name = {static_cast<std::string>(item_name)};
+}
 
 bool
-NewStepperInterface::hasStepper(const std::string & name) const
+StepperInterface::hasStepper(const std::string & name) const
 {
   return _si_feproblem.hasPostprocessor(_si_params.get<PostprocessorName>(name));
 }
 
 bool
-NewStepperInterface::hasStepperByName(const PostprocessorName & name) const
+StepperInterface::hasStepperByName(const PostprocessorName & name) const
 {
   return _si_feproblem.hasPostprocessor(name);
 }

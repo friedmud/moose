@@ -51,10 +51,11 @@
 #include "BreakBoundaryOnSubdomain.h"
 #include "ParsedAddSideset.h"
 
-// NewSteppers
-#include "ConstantNewStepper.h"
-#include "BetterCuttingGrowingNewStepper.h"
-#include "InitialStepsNewStepper.h"
+// Steppers
+#include "ConstantStepper.h"
+#include "SimpleStepper.h"
+#include "InitialStepsStepper.h"
+#include "PiecewiseStepper.h"
 
 // problems
 #include "FEProblem.h"
@@ -415,7 +416,7 @@
 #include "CheckOutputAction.h"
 #include "SetupRecoverFileBaseAction.h"
 #include "AddNodalKernelAction.h"
-#include "AddNewStepperAction.h"
+#include "AddStepperAction.h"
 
 // Outputs
 #ifdef LIBMESH_HAVE_EXODUS_API
@@ -491,9 +492,10 @@ registerObjects(Factory & factory)
   registerProblem(DisplacedProblem);
 
   // Steppers
-  registerStepper(ConstantNewStepper);
-  registerStepper(BetterCuttingGrowingNewStepper);
-  registerStepper(InitialStepsNewStepper);
+  registerStepper(ConstantStepper);
+  registerStepper(SimpleStepper);
+  registerStepper(InitialStepsStepper);
+  registerStepper(PiecewiseStepper);
 
   // kernels
   registerKernel(TimeDerivative);
@@ -863,7 +865,7 @@ addActionTypes(Syntax & syntax)
   registerMooseObjectTask("init_mesh",                    MooseMesh,              false);
   registerMooseObjectTask("add_mesh_modifier",            MeshModifier,           false);
 
-  registerMooseObjectTask("add_new_stepper",              NewStepper,             false);
+  registerMooseObjectTask("add_stepper",                  Stepper,                false);
 
   registerMooseObjectTask("add_kernel",                   Kernel,                 false);
   appendMooseObjectTask  ("add_kernel",                   EigenKernel);
@@ -990,7 +992,7 @@ addActionTypes(Syntax & syntax)
 "(create_problem)"
 "(setup_time_integrator)"
 "(setup_executioner)"
-"(add_new_stepper)"
+"(add_stepper)"
 "(setup_time_stepper)"
 "(setup_predictor)"
 "(setup_postprocessor_data)"
@@ -1076,7 +1078,7 @@ registerActions(Syntax & syntax, ActionFactory & action_factory)
   registerAction(AddFunctionAction, "add_function");
   registerAction(CreateExecutionerAction, "setup_executioner");
 
-  registerAction(AddNewStepperAction, "add_new_stepper");
+  registerAction(AddStepperAction, "add_stepper");
 
   registerAction(SetupTimeStepperAction, "setup_time_stepper");
   registerAction(SetupTimeIntegratorAction, "setup_time_integrator");

@@ -12,8 +12,8 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef NEWSTEPPERINTERFACE_H
-#define NEWSTEPPERINTERFACE_H
+#ifndef STEPPERINTERFACE_H
+#define STEPPERINTERFACE_H
 
 // MOOSE includes
 #include "MooseTypes.h"
@@ -32,10 +32,10 @@ class MooseObject;
  * Interface class for classes which interact with Postprocessors.
  * Provides the getPostprocessorValueXYZ() and related interfaces.
  */
-class NewStepperInterface : public DependencyResolverInterface
+class StepperInterface : public DependencyResolverInterface
 {
 public:
-  NewStepperInterface(const MooseObject * moose_object);
+  StepperInterface(const MooseObject * moose_object);
 
   /**
    * Get the DT from another Stepper.
@@ -47,7 +47,6 @@ public:
    * @param name The name of the InputParameter holding the Stepper name to get the value from.
    */
   const Real & getStepperDT(const std::string & name);
-
 
   /**
    * Get the DT from another Stepper.
@@ -72,6 +71,11 @@ public:
 
 protected:
   /**
+   * Set the name of the supplied item
+   */
+  void setSuppliedItemName(const StepperName & item_name);
+
+  /**
    * Check to see if a Stepper exists
    *
    * @param name The name of the parameter holding the name of the Stepper
@@ -87,16 +91,16 @@ protected:
 
 private:
   /// The name of this Stepper for the DependencyResolverInterface
-  const std::set<std::string> _si_name;
+  std::set<std::string> _si_name;
 
   /// The set of Steppers this Stepper depends on
   std::set<std::string> _depend_steppers;
 
-  /// NewStepperInterface Parameters
+  /// StepperInterface Parameters
   const InputParameters & _si_params;
 
   /// Reference the the FEProblem class
   FEProblem & _si_feproblem;
 };
 
-#endif //NEWSTEPPERINTERFACE_H
+#endif //STEPPERINTERFACE_H

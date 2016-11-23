@@ -23,7 +23,7 @@
 
 
 // Forward Declarations
-class NewStepper;
+class Stepper;
 
 /// Holds all information used by Steppers to calculate dt via the "advance"
 /// function.  For some variables (e.g. dt), a history of fixed-length 3 of previous
@@ -125,7 +125,7 @@ private:
 
   libMesh::Parallel::Communicator _dummy_comm;
 
-  friend class NewStepper;
+  friend class Stepper;
 };
 
 /// A base class for time stepping algorithms for use in determining dt between

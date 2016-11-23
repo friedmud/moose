@@ -12,33 +12,24 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef INITIALSTEPSNEWSTEPPER_H
-#define INITIALSTEPSNEWSTEPPER_H
+#ifndef ADDSTEPPERACTION_H
+#define ADDSTEPPERACTION_H
 
-#include "NewStepper.h"
+#include "MooseObjectAction.h"
 
-class InitialStepsNewStepper;
+//Forward Declaration
+class AddStepperAction;
 
 template<>
-InputParameters validParams<InitialStepsNewStepper>();
+InputParameters validParams<AddStepperAction>();
 
-/**
- * Cuts the incoming dt for the first N steps
- */
-class InitialStepsNewStepper : public NewStepper
+
+class AddStepperAction : public MooseObjectAction
 {
 public:
-  InitialStepsNewStepper(const InputParameters & parameters);
-  virtual ~InitialStepsNewStepper();
+  AddStepperAction(InputParameters params);
 
-  virtual Real computeDT() override;
-
-  virtual Real computeFailedDT() override;
-
-protected:
-  const Real & _incoming_stepper_dt;
-
-  const unsigned int & _n_steps;
+  virtual void act() override;
 };
 
-#endif /* INITIALSTEPSNEWSTEPPER_H */
+#endif // ADDSTEPPERACTION_H

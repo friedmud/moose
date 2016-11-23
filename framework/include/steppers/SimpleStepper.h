@@ -12,17 +12,15 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#if 0
+#ifndef SIMPLESTEPPER_H
+#define SIMPLESTEPPER_H
 
-#ifndef CUTTINGGROWINGNEWSTEPPER_H
-#define CUTTINGGROWINGNEWSTEPPER_H
+#include "Stepper.h"
 
-#include "NewStepper.h"
-
-class CuttingGrowingNewStepper;
+class SimpleStepper;
 
 template<>
-InputParameters validParams<CuttingGrowingNewStepper>();
+InputParameters validParams<SimpleStepper>();
 
 /**
  * Essentially takes the place of what used to be ConstantDT
@@ -33,20 +31,24 @@ InputParameters validParams<CuttingGrowingNewStepper>();
  * This one cuts the timestep by half when a solve fails and regrows by
  * a growth_factor when there is convergence.
  */
-class CuttingGrowingNewStepper : public NewStepper
+class SimpleStepper : public Stepper
 {
 public:
-  CuttingGrowingNewStepper(const InputParameters & parameters);
-  virtual ~CuttingGrowingNewStepper();
+  SimpleStepper(const InputParameters & parameters);
+  virtual ~SimpleStepper();
 
   virtual Real computeDT() override;
+
+  virtual Real computeFailedDT() override;
 
 protected:
   const Real & _input_dt;
 
-  const Real & _previous_stepper_dt;
+  /// The factor to grow dt by
+  const Real & _growth_factor;
+
+  /// The previous dt _this_ particular Stepper computed
+  Real & _prev_dt;
 };
 
-#endif /* CUTTINGGROWINGNEWSTEPPER_H */
-
-#endif
+#endif /* SIMPLESTEPPER_H */

@@ -46,15 +46,10 @@
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
 
-  [./NewSteppers]
+  [./Steppers]
     [./cg]
-      type = BetterCuttingGrowingNewStepper
+      type = SimpleStepper
       dt = 0.2
-    [../]
-    [./initial_steps]
-      type = InitialStepsNewStepper
-      incoming_stepper = cg
-      n_steps = 4
     [../]
   [../]
 []

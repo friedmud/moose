@@ -12,32 +12,32 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef NEWSTEPPER_H
-#define NEWSTEPPER_H
+#ifndef STEPPER_H
+#define STEPPER_H
 
 #include "MooseObject.h"
 #include "Restartable.h"
-#include "NewStepperInterface.h"
+#include "StepperInterface.h"
 
-class NewStepper;
+class Stepper;
 class FEProblem;
 class Factory;
 class StepperInfo;
 
 template<>
-InputParameters validParams<NewStepper>();
+InputParameters validParams<Stepper>();
 
 /**
  * Base class for time stepping
  */
-class NewStepper :
+class Stepper :
   public MooseObject,
   public Restartable,
-  public NewStepperInterface
+  public StepperInterface
 {
 public:
-  NewStepper(const InputParameters & parameters);
-  virtual ~NewStepper();
+  Stepper(const InputParameters & parameters);
+  virtual ~Stepper();
 
   /**
    * Compute the size of the next timestep
@@ -49,16 +49,34 @@ public:
    */
   virtual Real computeFailedDT() = 0;
 
+  /**
+   * Get the name of the output from this Stepper
+   */
+  const StepperName & outputName() { return _output_name; }
+
 protected:
   /**
    * Generate a unique name.  Useful for sub-stepper names
    */
   std::string uName(const std::string & suffix) { return name() + "_" + suffix; }
 
+  /**
+   * Set the name this Stepper should output as.
+   *
+   * This is useful for compound steppers.  They can change their own output name
+   * and pass their true name in as the output name for the last stepper in the sequence.
+   *
+   * That way, when other Steppers depend on this one they get the final value from the chain.
+   */
+  void setOutputName(const StepperName & output_name);
+
   FEProblem & _fe_problem;
 
   /// Use this to build sub-Steppers
   Factory & _factory;
+
+  /// The name this Stepper will output as.  This is set from a private param: _output_name
+  StepperName _output_name;
 
 private:
   /// Information consumed by Steppers
@@ -84,4 +102,4 @@ protected:
   Real & _rewind_time;
 };
 
-#endif /* NEWSTEPPER_H */
+#endif /* STEPPER_H */

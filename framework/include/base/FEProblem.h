@@ -30,8 +30,8 @@
 #include "ExecuteMooseObjectWarehouse.h"
 #include "AuxGroupExecuteMooseObjectWarehouse.h"
 #include "MaterialWarehouse.h"
-#include "NewStepper.h"
 #include "Stepper.h"
+#include "BlockStepper.h"
 
 // libMesh includes
 #include "libmesh/enum_quadrature_type.h"
@@ -69,7 +69,7 @@ class InternalSideUserObject;
 class GeneralUserObject;
 class Function;
 class KernelBase;
-class NewStepper;
+class Stepper;
 
 // libMesh forward declarations
 namespace libMesh
@@ -373,7 +373,7 @@ public:
   virtual void onTimestepEnd() override;
 
   /**
-   * Compute dt using NewSteppers
+   * Compute dt using Steppers
    */
   virtual Real computeDT();
 
@@ -492,9 +492,9 @@ public:
 
   // Steppers ////
   /**
-   * Add a NewStepper
+   * Add a Stepper
    */
-  void addNewStepper(const std::string & stepper_name, const std::string & name, InputParameters parameters);
+  void addStepper(const std::string & stepper_name, const std::string & name, InputParameters parameters);
 
   /**
    * Get the DT from another Stepper.
@@ -508,9 +508,19 @@ public:
   Real & getStepperDT(const StepperName & name);
 
   /**
+   * Grab the Stepper Warehouse
+   */
+  MooseObjectWarehouseBase<Stepper> & getStepperWarehouse() { return _steppers; }
+
+  /**
+   * Whether or not there are any Steppers.
+   */
+  bool hasSteppers() { return _steppers.hasActiveObjects(); }
+
+  /**
    * Get the current Stepper information
    *
-   * Meant to be called in the constructor of NewStepper
+   * Meant to be called in the constructor of Stepper
    */
   StepperInfo & getStepperInfo() { return _stepper_info; }
 
@@ -1119,7 +1129,7 @@ protected:
   std::vector<Assembly *> _assembly;
 
   /// Steppers
-  MooseObjectWarehouseBase<NewStepper> _steppers;
+  MooseObjectWarehouseBase<Stepper> _steppers;
 
   /// Stepper DT values
   std::map<StepperName, Real> & _stepper_dt_values;
