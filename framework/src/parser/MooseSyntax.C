@@ -52,6 +52,8 @@ void associateSyntax(Syntax & syntax, ActionFactory & action_factory)
   syntax.registerActionSyntax("AddMeshModifierAction", "MeshModifiers/*");
   syntax.registerActionSyntax("AddMortarInterfaceAction", "Mesh/MortarInterfaces/*");
 
+  syntax.registerActionSyntax("AddNewStepperAction", "Executioner/NewSteppers/*");
+
   syntax.registerActionSyntax("AddFunctionAction", "Functions/*");
 
   syntax.registerActionSyntax("GlobalParamsAction", "GlobalParams");

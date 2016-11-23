@@ -486,6 +486,10 @@ public:
   void addMaterial(const std::string & kernel_name, const std::string & name, InputParameters parameters);
 
   // Steppers ////
+  /**
+   * Add a NewStepper
+   */
+  void addNewStepper(const std::string & stepper_name, const std::string & name, InputParameters parameters);
 
   /**
    * Get the DT from another Stepper.

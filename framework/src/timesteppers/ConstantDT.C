@@ -38,7 +38,7 @@ ConstantDT::ConstantDT(const InputParameters & parameters) :
 StepperBlock *
 ConstantDT::buildStepper()
 {
-  StepperBlock * inner = BaseStepper::converged(BaseStepper::mult(_growth_factor, BaseStepper::ptr(&_last_dt)), BaseStepper::mult(0.5, BaseStepper::ptr(&_last_dt)));
+  StepperBlock * inner = BaseStepper::converged(BaseStepper::mult(_growth_factor,BaseStepper::ptr(&_last_dt)), BaseStepper::mult(0.5, BaseStepper::ptr(&_last_dt)));
   inner = BaseStepper::min(BaseStepper::constant(_constant_dt), inner);
   inner = BaseStepper::initialN(BaseStepper::constant(_constant_dt), inner, _executioner.n_startup_steps());
   inner = BaseStepper::converged(inner, BaseStepper::mult(0.5));

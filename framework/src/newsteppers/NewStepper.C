@@ -21,7 +21,6 @@ template<>
 InputParameters validParams<NewStepper>()
 {
   InputParameters params = validParams<MooseObject>();
-  params.addParam<bool>("reset_dt", false, "Use when restarting a calculation to force a change in dt.");
 
   params.registerBase("NewStepper");
 
@@ -33,6 +32,7 @@ NewStepper::NewStepper(const InputParameters & parameters) :
     Restartable(parameters, "NewSteppers"),
     NewStepperInterface(this),
     _fe_problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem")),
+    _factory(_app.getFactory()),
     _stepper_info(_fe_problem.getStepperInfo()),
     _step_count(_stepper_info._step_count),
     _time(_stepper_info._time),

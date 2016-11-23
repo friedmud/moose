@@ -51,6 +51,9 @@
 #include "BreakBoundaryOnSubdomain.h"
 #include "ParsedAddSideset.h"
 
+// NewSteppers
+#include "ConstantNewStepper.h"
+
 // problems
 #include "FEProblem.h"
 #include "DisplacedProblem.h"
@@ -410,6 +413,7 @@
 #include "CheckOutputAction.h"
 #include "SetupRecoverFileBaseAction.h"
 #include "AddNodalKernelAction.h"
+#include "AddNewStepperAction.h"
 
 // Outputs
 #ifdef LIBMESH_HAVE_EXODUS_API
@@ -483,6 +487,9 @@ registerObjects(Factory & factory)
   // problems
   registerProblem(FEProblem);
   registerProblem(DisplacedProblem);
+
+  // Steppers
+  registerStepper(ConstantNewStepper);
 
   // kernels
   registerKernel(TimeDerivative);
@@ -852,6 +859,8 @@ addActionTypes(Syntax & syntax)
   registerMooseObjectTask("init_mesh",                    MooseMesh,              false);
   registerMooseObjectTask("add_mesh_modifier",            MeshModifier,           false);
 
+  registerMooseObjectTask("add_new_stepper",              NewStepper,             false);
+
   registerMooseObjectTask("add_kernel",                   Kernel,                 false);
   appendMooseObjectTask  ("add_kernel",                   EigenKernel);
 
@@ -977,6 +986,7 @@ addActionTypes(Syntax & syntax)
 "(create_problem)"
 "(setup_time_integrator)"
 "(setup_executioner)"
+"(add_new_stepper)"
 "(setup_time_stepper)"
 "(setup_predictor)"
 "(setup_postprocessor_data)"
@@ -1061,6 +1071,9 @@ registerActions(Syntax & syntax, ActionFactory & action_factory)
 
   registerAction(AddFunctionAction, "add_function");
   registerAction(CreateExecutionerAction, "setup_executioner");
+
+  registerAction(AddNewStepperAction, "add_new_stepper");
+
   registerAction(SetupTimeStepperAction, "setup_time_stepper");
   registerAction(SetupTimeIntegratorAction, "setup_time_integrator");
   registerAction(CreateDisplacedProblemAction, "init_displaced_problem");

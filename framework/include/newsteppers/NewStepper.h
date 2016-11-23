@@ -21,8 +21,7 @@
 
 class NewStepper;
 class FEProblem;
-class Transient;
-class StepperBlock;
+class Factory;
 class StepperInfo;
 
 template<>
@@ -47,6 +46,9 @@ public:
 
 protected:
   FEProblem & _fe_problem;
+
+  /// Use this to build sub-Steppers
+  Factory & _factory;
 
 private:
   /// Information consumed by Steppers
