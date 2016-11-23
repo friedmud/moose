@@ -12,39 +12,44 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "ConstantNewStepper.h"
+#include "InitialStepsNewStepper.h"
 #include "FEProblem.h"
 #include "Transient.h"
 #include "MooseApp.h"
 
 template<>
-InputParameters validParams<ConstantNewStepper>()
+InputParameters validParams<InitialStepsNewStepper>()
 {
   InputParameters params = validParams<NewStepper>();
 
-  params.addRequiredParam<Real>("dt", "The dt to maintain");
+  params.addRequiredParam<StepperName>("incoming_stepper", "The name of the Stepper to get the current dt from");
+  params.addRequiredParam<Real>("n_steps", "The number of startup steps to do");
 
   return params;
 }
 
-ConstantNewStepper::ConstantNewStepper(const InputParameters & parameters) :
+InitialStepsNewStepper::InitialStepsNewStepper(const InputParameters & parameters) :
     NewStepper(parameters),
-    _input_dt(getParam<Real>("dt"))
+    _incoming_stepper_dt(getStepperDT("incoming_stepper")),
+    _n_steps(getParam<unsigned int>("n_steps"))
 {
 }
 
 Real
-ConstantNewStepper::computeDT()
+InitialStepsNewStepper::computeDT()
 {
-  return _input_dt;
+  if ( _step_count  <= _n_steps )
+    return _incoming_stepper_dt / (Real)_n_steps;
+  else
+    return _incoming_stepper_dt;
 }
 
 Real
-ConstantNewStepper::computeFailedDT()
+InitialStepsNewStepper::computeFailedDT()
 {
-  return computeDT();
+  return std::min(_incoming_stepper_dt, computeDT());
 }
 
-ConstantNewStepper::~ConstantNewStepper()
+InitialStepsNewStepper::~InitialStepsNewStepper()
 {
 }

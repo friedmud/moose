@@ -12,39 +12,43 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "ConstantNewStepper.h"
+#include "BetterCuttingGrowingNewStepper.h"
 #include "FEProblem.h"
 #include "Transient.h"
 #include "MooseApp.h"
 
 template<>
-InputParameters validParams<ConstantNewStepper>()
+InputParameters validParams<BetterCuttingGrowingNewStepper>()
 {
   InputParameters params = validParams<NewStepper>();
 
-  params.addRequiredParam<Real>("dt", "The dt to maintain");
+  params.addRequiredParam<Real>("dt", "The requested dt.  The dt will be cut when a solve fails and will attempt to regrow back to this value when solves converge.");
+
+  params.addRangeCheckedParam<Real>("growth_factor", 2, "growth_factor>=1", "Maximum ratio of new to previous timestep sizes following a step that required the time step to be cut due to a failed solve.");
 
   return params;
 }
 
-ConstantNewStepper::ConstantNewStepper(const InputParameters & parameters) :
+BetterCuttingGrowingNewStepper::BetterCuttingGrowingNewStepper(const InputParameters & parameters) :
     NewStepper(parameters),
-    _input_dt(getParam<Real>("dt"))
+    _input_dt(getParam<Real>("dt")),
+    _growth_factor(getParam<Real>("growth_factor")),
+    _prev_dt(declareRestartableData<Real>("prev_dt", _input_dt))
 {
 }
 
 Real
-ConstantNewStepper::computeDT()
+BetterCuttingGrowingNewStepper::computeDT()
 {
-  return _input_dt;
+  return _prev_dt = std::min(_input_dt, _growth_factor * _prev_dt);
 }
 
 Real
-ConstantNewStepper::computeFailedDT()
+BetterCuttingGrowingNewStepper::computeFailedDT()
 {
-  return computeDT();
+  return _prev_dt = 0.5 * _dt[0]; // _dt[0] was the dt actually used in the last timestep
 }
 
-ConstantNewStepper::~ConstantNewStepper()
+BetterCuttingGrowingNewStepper::~BetterCuttingGrowingNewStepper()
 {
 }

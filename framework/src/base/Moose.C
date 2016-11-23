@@ -53,6 +53,7 @@
 
 // NewSteppers
 #include "ConstantNewStepper.h"
+#include "BetterCuttingGrowingNewStepper.h"
 
 // problems
 #include "FEProblem.h"
@@ -490,6 +491,7 @@ registerObjects(Factory & factory)
 
   // Steppers
   registerStepper(ConstantNewStepper);
+  registerStepper(BetterCuttingGrowingNewStepper);
 
   // kernels
   registerKernel(TimeDerivative);

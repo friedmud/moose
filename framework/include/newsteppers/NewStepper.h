@@ -44,7 +44,17 @@ public:
    */
   virtual Real computeDT() = 0;
 
+  /**
+   * Compute the size of the next timestep after a convergence failure
+   */
+  virtual Real computeFailedDT() = 0;
+
 protected:
+  /**
+   * Generate a unique name.  Useful for sub-stepper names
+   */
+  std::string uName(const std::string & suffix) { return name() + "_" + suffix; }
+
   FEProblem & _fe_problem;
 
   /// Use this to build sub-Steppers

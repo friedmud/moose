@@ -12,21 +12,30 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef CONSTANTNEWSTEPPER_H
-#define CONSTANTNEWSTEPPER_H
+#ifndef BETTERCUTTINGGROWINGNEWSTEPPER_H
+#define BETTERCUTTINGGROWINGNEWSTEPPER_H
 
 #include "NewStepper.h"
 
-class ConstantNewStepper;
+class BetterCuttingGrowingNewStepper;
 
 template<>
-InputParameters validParams<ConstantNewStepper>();
+InputParameters validParams<BetterCuttingGrowingNewStepper>();
 
-class ConstantNewStepper : public NewStepper
+/**
+ * Essentially takes the place of what used to be ConstantDT
+ * The name was so terribly bad for that old one that we gotta get rid of it.
+ * We might cross-register this object with ConstantDT once it's deployed though
+ * and register it as a deprecated name.
+ *
+ * This one cuts the timestep by half when a solve fails and regrows by
+ * a growth_factor when there is convergence.
+ */
+class BetterCuttingGrowingNewStepper : public NewStepper
 {
 public:
-  ConstantNewStepper(const InputParameters & parameters);
-  virtual ~ConstantNewStepper();
+  BetterCuttingGrowingNewStepper(const InputParameters & parameters);
+  virtual ~BetterCuttingGrowingNewStepper();
 
   virtual Real computeDT() override;
 
@@ -34,6 +43,12 @@ public:
 
 protected:
   const Real & _input_dt;
+
+  /// The factor to grow dt by
+  const Real & _growth_factor;
+
+  /// The previous dt _this_ particular Stepper computed
+  Real & _prev_dt;
 };
 
-#endif /* CONSTANTNEWSTEPPER_H */
+#endif /* BETTERCUTTINGGROWINGNEWSTEPPER_H */

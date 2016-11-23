@@ -12,6 +12,8 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
+#if 0
+
 #include "CuttingGrowingNewStepper.h"
 #include "FEProblem.h"
 #include "Transient.h"
@@ -99,3 +101,5 @@ CuttingGrowingNewStepper::computeDT()
 CuttingGrowingNewStepper::~CuttingGrowingNewStepper()
 {
 }
+
+#endif

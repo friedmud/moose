@@ -12,28 +12,33 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef CONSTANTNEWSTEPPER_H
-#define CONSTANTNEWSTEPPER_H
+#ifndef INITIALSTEPSNEWSTEPPER_H
+#define INITIALSTEPSNEWSTEPPER_H
 
 #include "NewStepper.h"
 
-class ConstantNewStepper;
+class InitialStepsNewStepper;
 
 template<>
-InputParameters validParams<ConstantNewStepper>();
+InputParameters validParams<InitialStepsNewStepper>();
 
-class ConstantNewStepper : public NewStepper
+/**
+ * Cuts the incoming dt for the first N steps
+ */
+class InitialStepsNewStepper : public NewStepper
 {
 public:
-  ConstantNewStepper(const InputParameters & parameters);
-  virtual ~ConstantNewStepper();
+  InitialStepsNewStepper(const InputParameters & parameters);
+  virtual ~InitialStepsNewStepper();
 
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;
 
 protected:
-  const Real & _input_dt;
+  const Real & _incoming_stepper_dt;
+
+  const unsigned int & _n_steps;
 };
 
-#endif /* CONSTANTNEWSTEPPER_H */
+#endif /* INITIALSTEPSNEWSTEPPER_H */

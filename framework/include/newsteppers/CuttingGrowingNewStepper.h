@@ -12,6 +12,8 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
+#if 0
+
 #ifndef CUTTINGGROWINGNEWSTEPPER_H
 #define CUTTINGGROWINGNEWSTEPPER_H
 
@@ -46,3 +48,5 @@ protected:
 };
 
 #endif /* CUTTINGGROWINGNEWSTEPPER_H */
+
+#endif
