@@ -222,22 +222,29 @@ Transient::init()
       // Grab the output name for the last one
       auto last_name = steppers.back()->outputName();
 
-      /*
       {
-        auto params = _factory.getValidParams("DTLimitStepper");
+        auto params = _app.getFactory().getValidParams("LimitStepper");
         params.set<StepperName>("incoming_stepper") = last_name;
         params.set<Real>("min") = dtMin();
         params.set<Real>("max") = dtMax();
-        _fe_problem->addStepper("dtLimit", "_final_limit", params);
+        _fe_problem.addStepper("LimitStepper", "_final_limit", params);
       }
 
-      if (sync_times.size() > 0)
+
+      if (_app.getOutputWarehouse().getSyncTimes().size() > 0)
       {
-        auto params = _factory.getValidParams("SyncTimesStepper");
+        auto params = _app.getFactory().getValidParams("FixedTimesStepper");
         params.set<StepperName>("incoming_stepper") = "_final_limit";
-        _fe_problem->addStepper("SyncTimes", "_final_sync_times", params);
+
+        // Copy the sync_times out into the parameter
+        auto & sync_times = _app.getOutputWarehouse().getSyncTimes();
+        auto & parameter = params.set<std::vector<Real> >("times");
+        std::copy(sync_times.begin(), sync_times.end(), parameter.begin());
+
+        _fe_problem.addStepper("FixedTimesStepper", "_final_sync_times", params);
       }
 
+      /*
       if (!_app.halfTransient())
       {
         auto params = _factory.getValidParams("TimeBoundsStepper");
@@ -247,6 +254,9 @@ Transient::init()
         _fe_problem->addStepper("TimeBoundsStepper", "_final_limit", params);
       }
       */
+
+      // Re-sort
+      stepper_warehouse.sort();
     }
   }
 

@@ -12,50 +12,43 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "FixedTimesStepper.h"
+#include "LimitStepper.h"
 #include "FEProblem.h"
 #include "Transient.h"
 #include "MooseApp.h"
 
 template<>
-InputParameters validParams<FixedTimesStepper>()
+InputParameters validParams<LimitStepper>()
 {
   InputParameters params = validParams<Stepper>();
 
   params.addRequiredParam<StepperName>("incoming_stepper", "The name of the Stepper to get the current dt from");
-  params.addRequiredParam<std::vector<Real> >("times", "The values of t");
+  params.addParam<Real>("min", 0, "The minimum allowable dt.");
+  params.addParam<Real>("max", std::numeric_limits<Real>::max(), "The maximum allowable dt.");
 
   return params;
 }
 
-FixedTimesStepper::FixedTimesStepper(const InputParameters & parameters) :
+LimitStepper::LimitStepper(const InputParameters & parameters) :
     Stepper(parameters),
     _incoming_stepper_dt(getStepperDT("incoming_stepper")),
-    _times(getParam<std::vector<Real> >("times"))
+    _min(getParam<Real>("min")),
+    _max(getParam<Real>("max"))
 {
 }
 
 Real
-FixedTimesStepper::computeDT()
+LimitStepper::computeDT()
 {
-  if (_times.size() == 0)
-    return _incoming_stepper_dt;
-
-  Real tol = _executioner.timestepTol();
-
-  for (auto t : _times)
-    if (_time < t - tol)
-      return std::min(t - _time, _incoming_stepper_dt);
-
-  return _incoming_stepper_dt;
+  return std::min(std::max(_incoming_stepper_dt, _min), _max);
 }
 
 Real
-FixedTimesStepper::computeFailedDT()
+LimitStepper::computeFailedDT()
 {
   return _incoming_stepper_dt;
 }
 
-FixedTimesStepper::~FixedTimesStepper()
+LimitStepper::~LimitStepper()
 {
 }
