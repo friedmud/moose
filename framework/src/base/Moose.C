@@ -149,6 +149,7 @@
 #include "FixedTimesStepper.h"
 #include "LimitStepper.h"
 #include "IterationAdaptiveStepper.h"
+#include "KnotTimesStepper.h"
 
 // functions
 #include "Axisymmetric2D3DSolutionFunction.h"
@@ -494,15 +495,6 @@ registerObjects(Factory & factory)
   registerProblem(FEProblem);
   registerProblem(DisplacedProblem);
 
-  // Steppers
-  registerStepper(ConstantStepper);
-  registerStepper(SimpleStepper);
-  registerStepper(InitialStepsStepper);
-  registerStepper(PiecewiseStepper);
-  registerStepper(FixedTimesStepper);
-  registerStepper(LimitStepper);
-  registerStepper(IterationAdaptiveStepper);
-
   // kernels
   registerKernel(TimeDerivative);
   registerKernel(CoupledTimeDerivative);
@@ -586,6 +578,16 @@ registerObjects(Factory & factory)
   registerExecutioner(Transient);
   registerExecutioner(InversePowerMethod);
   registerExecutioner(NonlinearEigen);
+
+  // Steppers
+  registerStepper(ConstantStepper);
+  registerStepper(SimpleStepper);
+  registerStepper(InitialStepsStepper);
+  registerStepper(PiecewiseStepper);
+  registerStepper(FixedTimesStepper);
+  registerStepper(LimitStepper);
+  registerStepper(IterationAdaptiveStepper);
+  registerStepper(KnotTimesStepper);
 
   // functions
   registerFunction(Axisymmetric2D3DSolutionFunction);
