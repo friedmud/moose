@@ -48,9 +48,8 @@
   [./Steppers]
     [./piecewise]
       type = PiecewiseStepper
-      times = '0 2 8'
-      dts = '1 2 3'
-      sync_to_times = false
+      times = '0 1.7 3.7 8.2'
+      dts = '1 2 3 4'
     [../]
   [../]
 []

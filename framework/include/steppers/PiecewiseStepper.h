@@ -43,6 +43,9 @@ protected:
   /// Whether or not to interpolate DT between times
   bool _interpolate;
 
+  /// Whether or not to perfectly land on the given times
+  bool _sync_to_times;
+
   LinearInterpolation _linear_interpolation;
 };
 
