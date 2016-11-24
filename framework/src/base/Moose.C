@@ -51,14 +51,6 @@
 #include "BreakBoundaryOnSubdomain.h"
 #include "ParsedAddSideset.h"
 
-// Steppers
-#include "ConstantStepper.h"
-#include "SimpleStepper.h"
-#include "InitialStepsStepper.h"
-#include "PiecewiseStepper.h"
-#include "FixedTimesStepper.h"
-#include "LimitStepper.h"
-
 // problems
 #include "FEProblem.h"
 #include "DisplacedProblem.h"
@@ -148,6 +140,15 @@
 #include "Transient.h"
 #include "InversePowerMethod.h"
 #include "NonlinearEigen.h"
+
+// Steppers
+#include "ConstantStepper.h"
+#include "SimpleStepper.h"
+#include "InitialStepsStepper.h"
+#include "PiecewiseStepper.h"
+#include "FixedTimesStepper.h"
+#include "LimitStepper.h"
+#include "IterationAdaptiveStepper.h"
 
 // functions
 #include "Axisymmetric2D3DSolutionFunction.h"
@@ -500,6 +501,7 @@ registerObjects(Factory & factory)
   registerStepper(PiecewiseStepper);
   registerStepper(FixedTimesStepper);
   registerStepper(LimitStepper);
+  registerStepper(IterationAdaptiveStepper);
 
   // kernels
   registerKernel(TimeDerivative);
