@@ -36,6 +36,7 @@ Stepper::Stepper(const InputParameters & parameters) :
     Restartable(parameters, "Steppers"),
     StepperInterface(this),
     _fe_problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem")),
+    _executioner(*dynamic_cast<Transient*>(_app.getExecutioner())),
     _factory(_app.getFactory()),
     _output_name(getParam<StepperName>("_output_name") != "" ? getParam<StepperName>("_output_name") : name()),
     _stepper_info(_fe_problem.getStepperInfo()),

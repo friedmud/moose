@@ -23,6 +23,7 @@ class Stepper;
 class FEProblem;
 class Factory;
 class StepperInfo;
+class Transient;
 
 template<>
 InputParameters validParams<Stepper>();
@@ -70,7 +71,11 @@ protected:
    */
   void setOutputName(const StepperName & output_name);
 
+  /// The FEProblem
   FEProblem & _fe_problem;
+
+  /// Transient Executioner
+  Transient & _executioner;
 
   /// Use this to build sub-Steppers
   Factory & _factory;

@@ -56,6 +56,7 @@
 #include "SimpleStepper.h"
 #include "InitialStepsStepper.h"
 #include "PiecewiseStepper.h"
+#include "FixedTimesStepper.h"
 
 // problems
 #include "FEProblem.h"
@@ -496,6 +497,7 @@ registerObjects(Factory & factory)
   registerStepper(SimpleStepper);
   registerStepper(InitialStepsStepper);
   registerStepper(PiecewiseStepper);
+  registerStepper(FixedTimesStepper);
 
   // kernels
   registerKernel(TimeDerivative);
