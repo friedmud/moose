@@ -37,6 +37,11 @@
   [../]
 []
 
+[Problem]
+  type = FailingProblem
+  fail_step = 3
+[]
+
 [Executioner]
   # Preconditioned JFNK (default)
   type = Transient
@@ -50,6 +55,7 @@
     [./simple]
       type = SimpleStepper
       dt = 0.2
+      growth_factor = 1.1
     [../]
   [../]
 []
