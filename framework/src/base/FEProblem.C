@@ -3482,7 +3482,10 @@ FEProblem::computeDT()
   {
     std::cout<<"Computing DT for: "<<stepper->name()<<std::endl;;
 
-    _stepper_dt_values[stepper->name()] = dt = stepper->computeDT();
+    if (_stepper_info.converged())
+      _stepper_dt_values[stepper->name()] = dt = stepper->computeDT();
+    else
+      _stepper_dt_values[stepper->name()] = dt = stepper->computeFailedDT();
   }
 
   return dt;

@@ -26,18 +26,24 @@ InputParameters validParams<FailingProblem>()
 
 FailingProblem::FailingProblem(const InputParameters & params) :
     FEProblem(params),
-    _failed(false),
+    _solves_at_fail_step(0),
     _fail_step(getParam<unsigned int>("fail_step"))
 {}
+
+void
+FailingProblem::solve()
+{
+  if (_t_step == static_cast<int>(_fail_step))
+    _solves_at_fail_step++;
+
+  FEProblem::solve();
+}
 
 bool
 FailingProblem::converged()
 {
-  if (!_failed && (_t_step == static_cast<int>(_fail_step)))
-  {
-    _failed = true;
+  if (_solves_at_fail_step == 1 && (_t_step == static_cast<int>(_fail_step)))
     return false;
-  }
 
   return FEProblem::converged();
 }
