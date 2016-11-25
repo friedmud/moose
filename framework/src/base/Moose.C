@@ -322,6 +322,8 @@
 #include "KnotTimesStepper.h"
 #include "PostprocessorStepper.h"
 #include "SolutionTimeAdaptiveStepper.h"
+#include "TimeListStepper.h"
+#include "ExodusTimeListStepper.h"
 
 // time integrators
 #include "SteadyState.h"
@@ -592,6 +594,8 @@ registerObjects(Factory & factory)
   registerStepper(KnotTimesStepper);
   registerStepper(PostprocessorStepper);
   registerStepper(SolutionTimeAdaptiveStepper);
+  registerStepper(TimeListStepper);
+  registerStepper(ExodusTimeListStepper);
 
   // functions
   registerFunction(Axisymmetric2D3DSolutionFunction);

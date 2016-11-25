@@ -12,35 +12,29 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef FIXEDTIMESSTEPPER_H
-#define FIXEDTIMESSTEPPER_H
+#ifndef EXODUSTIMELISTSTEPPER_H
+#define EXODUSTIMELISTSTEPPER_H
 
-#include "Stepper.h"
-#include "LinearInterpolation.h"
+#include "TimeListStepperBase.h"
 
-class FixedTimesStepper;
+class ExodusTimeListStepper;
 
 template<>
-InputParameters validParams<FixedTimesStepper>();
+InputParameters validParams<ExodusTimeListStepper>();
 
 /**
- * Forces the steps to hit the specified times exactly
+ * Solves the PDEs at a list of time points given as a vector in the input file.
+ * Adjusts the time list vector according to Transient start_time and end_time.
  */
-class FixedTimesStepper : public Stepper
+class ExodusTimeListStepper : public TimeListStepperBase
 {
 public:
-  FixedTimesStepper(const InputParameters & parameters);
-  virtual ~FixedTimesStepper();
-
-  virtual Real computeDT() override;
-
-  virtual Real computeFailedDT() override;
+  ExodusTimeListStepper(const InputParameters & parameters);
 
 protected:
-  /// If not coupled then this will be max()
-  const Real & _incoming_stepper_dt;
-
-  const std::vector<Real> & _times;
+  /// The ExodusII file that is being read
+  std::string _mesh_file;
+  std::vector<Real> _times;
 };
 
-#endif /* FIXEDTIMESSTEPPER_H */
+#endif //EXODUSTIMELISTSTEPPER_H

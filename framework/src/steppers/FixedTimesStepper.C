@@ -22,7 +22,7 @@ InputParameters validParams<FixedTimesStepper>()
 {
   InputParameters params = validParams<Stepper>();
 
-  params.addRequiredParam<StepperName>("incoming_stepper", "The name of the Stepper to get the current dt from");
+  params.addParam<StepperName>("incoming_stepper", "The name of the Stepper to get the current dt from.");
   params.addRequiredParam<std::vector<Real> >("times", "The values of t");
 
   return params;
@@ -53,7 +53,10 @@ FixedTimesStepper::computeDT()
 Real
 FixedTimesStepper::computeFailedDT()
 {
-  return _incoming_stepper_dt;
+  if (isParamValid("incoming_stepper"))
+    return _incoming_stepper_dt;
+  else
+    return 0.5 * _dt[0];
 }
 
 FixedTimesStepper::~FixedTimesStepper()

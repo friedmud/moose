@@ -12,35 +12,39 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef FIXEDTIMESSTEPPER_H
-#define FIXEDTIMESSTEPPER_H
+#ifndef TIMELISTSTEPPERBASE_H
+#define TIMELISTSTEPPERBASE_H
 
 #include "Stepper.h"
-#include "LinearInterpolation.h"
 
-class FixedTimesStepper;
+class TimeListStepperBase;
 
 template<>
-InputParameters validParams<FixedTimesStepper>();
+InputParameters validParams<TimeListStepperBase>();
 
 /**
- * Forces the steps to hit the specified times exactly
+ * Solves the PDEs at a sequence of given time points.
+ * Adjusts the time sequence vector according to Transient start_time and end_time.
  */
-class FixedTimesStepper : public Stepper
+class TimeListStepperBase : public Stepper
 {
 public:
-  FixedTimesStepper(const InputParameters & parameters);
-  virtual ~FixedTimesStepper();
+  TimeListStepperBase(const InputParameters & parameters);
 
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;
 
 protected:
-  /// If not coupled then this will be max()
+  /// Setup the list of times
+  void setupList(const std::vector<Real> & times);
+
+  /// If not coupled this will be max()
   const Real & _incoming_stepper_dt;
 
-  const std::vector<Real> & _times;
+private:
+  /// stores the sequence of time points.  Must be set by calling setupList()
+  std::vector<Real> &  _time_list;
 };
 
-#endif /* FIXEDTIMESSTEPPER_H */
+#endif //TIMELISTSTEPPERBASE_H

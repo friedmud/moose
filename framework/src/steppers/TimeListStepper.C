@@ -12,35 +12,20 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef FIXEDTIMESSTEPPER_H
-#define FIXEDTIMESSTEPPER_H
-
+#include "TimeListStepper.h"
 #include "Stepper.h"
-#include "LinearInterpolation.h"
-
-class FixedTimesStepper;
 
 template<>
-InputParameters validParams<FixedTimesStepper>();
-
-/**
- * Forces the steps to hit the specified times exactly
- */
-class FixedTimesStepper : public Stepper
+InputParameters validParams<TimeListStepper>()
 {
-public:
-  FixedTimesStepper(const InputParameters & parameters);
-  virtual ~FixedTimesStepper();
+  InputParameters params = validParams<TimeListStepperBase>();
+  params.addRequiredParam<std::vector<Real> >("time_list", "The values of t");
+  params.addClassDescription("Solves the Transient problem at a list of given time points.");
+  return params;
+}
 
-  virtual Real computeDT() override;
-
-  virtual Real computeFailedDT() override;
-
-protected:
-  /// If not coupled then this will be max()
-  const Real & _incoming_stepper_dt;
-
-  const std::vector<Real> & _times;
-};
-
-#endif /* FIXEDTIMESSTEPPER_H */
+TimeListStepper::TimeListStepper(const InputParameters & parameters) :
+    TimeListStepperBase(parameters)
+{
+  setupList(getParam<std::vector<Real> >("time_list"));
+}
