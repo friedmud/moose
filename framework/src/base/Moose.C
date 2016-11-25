@@ -141,17 +141,6 @@
 #include "InversePowerMethod.h"
 #include "NonlinearEigen.h"
 
-// Steppers
-#include "ConstantStepper.h"
-#include "SimpleStepper.h"
-#include "InitialStepsStepper.h"
-#include "PiecewiseStepper.h"
-#include "FixedTimesStepper.h"
-#include "LimitStepper.h"
-#include "IterationAdaptiveStepper.h"
-#include "KnotTimesStepper.h"
-#include "PostprocessorStepper.h"
-
 // functions
 #include "Axisymmetric2D3DSolutionFunction.h"
 #include "ConstantFunction.h"
@@ -321,6 +310,18 @@
 #include "DT2.h"
 #include "PostprocessorDT.h"
 #include "AB2PredictorCorrector.h"
+
+// Steppers
+#include "ConstantStepper.h"
+#include "SimpleStepper.h"
+#include "InitialStepsStepper.h"
+#include "PiecewiseStepper.h"
+#include "FixedTimesStepper.h"
+#include "LimitStepper.h"
+#include "IterationAdaptiveStepper.h"
+#include "KnotTimesStepper.h"
+#include "PostprocessorStepper.h"
+#include "SolutionTimeAdaptiveStepper.h"
 
 // time integrators
 #include "SteadyState.h"
@@ -590,6 +591,7 @@ registerObjects(Factory & factory)
   registerStepper(IterationAdaptiveStepper);
   registerStepper(KnotTimesStepper);
   registerStepper(PostprocessorStepper);
+  registerStepper(SolutionTimeAdaptiveStepper);
 
   // functions
   registerFunction(Axisymmetric2D3DSolutionFunction);

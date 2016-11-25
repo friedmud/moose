@@ -44,6 +44,7 @@
   solve_type = NEWTON
   start_time = 0.0
   end_time = 5.0
+
   [./Steppers]
     [./adapt]
       type = IterationAdaptiveStepper
@@ -57,7 +58,6 @@
       dts = '1.0, 5.0'
     [../]
   [../]
-
 []
 
 [Postprocessors]

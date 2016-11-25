@@ -67,11 +67,13 @@
 
 [Executioner]
   type = Transient
-  [./TimeStepper]
-    type = SolutionTimeAdaptiveDT
-    dt = 0.15
-  [../]
 
+  [./Steppers]
+    [./adapt]
+      type = SolutionTimeAdaptiveStepper
+      dt = 0.15
+    [../]
+  [../]
 
   # Preconditioned JFNK (default)
   solve_type = 'PJFNK'
