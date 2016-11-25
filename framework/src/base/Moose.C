@@ -150,6 +150,7 @@
 #include "LimitStepper.h"
 #include "IterationAdaptiveStepper.h"
 #include "KnotTimesStepper.h"
+#include "PostprocessorStepper.h"
 
 // functions
 #include "Axisymmetric2D3DSolutionFunction.h"
@@ -588,6 +589,7 @@ registerObjects(Factory & factory)
   registerStepper(LimitStepper);
   registerStepper(IterationAdaptiveStepper);
   registerStepper(KnotTimesStepper);
+  registerStepper(PostprocessorStepper);
 
   // functions
   registerFunction(Axisymmetric2D3DSolutionFunction);

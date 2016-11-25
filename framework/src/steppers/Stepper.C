@@ -35,6 +35,7 @@ Stepper::Stepper(const InputParameters & parameters) :
     MooseObject(parameters),
     Restartable(parameters, "Steppers"),
     StepperInterface(this),
+    PostprocessorInterface(this),
     _fe_problem(*parameters.getCheckedPointerParam<FEProblem *>("_fe_problem")),
     _executioner(*dynamic_cast<Transient*>(_app.getExecutioner())),
     _factory(_app.getFactory()),

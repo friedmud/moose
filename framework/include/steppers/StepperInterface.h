@@ -101,6 +101,9 @@ private:
 
   /// Reference the the FEProblem class
   FEProblem & _si_feproblem;
+
+  /// Default value to send back for optional coupling
+  Real _default_dt;
 };
 
 #endif //STEPPERINTERFACE_H

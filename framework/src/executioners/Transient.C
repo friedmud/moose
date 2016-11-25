@@ -230,7 +230,6 @@ Transient::init()
         _fe_problem.addStepper("LimitStepper", "_final_limit", params);
       }
 
-
       if (_app.getOutputWarehouse().getSyncTimes().size() > 0)
       {
         auto params = _app.getFactory().getValidParams("FixedTimesStepper");
@@ -244,16 +243,20 @@ Transient::init()
         _fe_problem.addStepper("FixedTimesStepper", "_final_sync_times", params);
       }
 
-      /*
+      // Ensure we hit the end time perfectly
       if (!_app.halfTransient())
       {
-        auto params = _factory.getValidParams("TimeBoundsStepper");
-        params.set<StepperName>("incoming_stepper") = last_name;
-        params.set<Real>("start") = getStartTime();
-        params.set<Real>("end") = endTime();
-        _fe_problem->addStepper("TimeBoundsStepper", "_final_limit", params);
+        auto params = _app.getFactory().getValidParams("FixedTimesStepper");
+
+        // Hook up to the correct previous stepper
+        if (_app.getOutputWarehouse().getSyncTimes().size() > 0)
+          params.set<StepperName>("incoming_stepper") = "_final_sync_times";
+        else
+          params.set<StepperName>("incoming_stepper") = "_final_limit";
+
+        params.set<std::vector<Real> >("times") = { endTime() };
+        _fe_problem.addStepper("FixedTimesStepper", "_final_end_time", params);
       }
-      */
 
       // Re-sort
       stepper_warehouse.sort();

@@ -3478,6 +3478,8 @@ FEProblem::computeDT()
 
   auto & steppers = _steppers.getActiveObjects();
 
+  std::cout<<"\nComputing DT...\n"<<std::endl;
+
   for (auto & stepper : steppers)
   {
     std::cout<<"Computing DT for: "<<stepper->name()<<", producing: "<<stepper->outputName()<<std::endl;;
@@ -3486,6 +3488,8 @@ FEProblem::computeDT()
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeDT();
     else
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeFailedDT();
+
+    std::cout<<"DT: "<<dt<<std::endl;
   }
 
   return dt;

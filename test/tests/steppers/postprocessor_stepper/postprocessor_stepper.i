@@ -40,24 +40,23 @@
 [Executioner]
   # Preconditioned JFNK (default)
   type = Transient
-  num_steps = 10
+  num_steps = 6
   solve_type = PJFNK
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
-
   [./Steppers]
-    [./piecewise]
-      type = PiecewiseStepper
-      times = '0 2 8'
-      dts = '1 2 3'
-      sync_to_times = false
+    [./pp]
+      type = PostprocessorStepper
+      postprocessor = dt_pp
     [../]
-    [./limit]
-      type = LimitStepper
-      incoming_stepper = piecewise
-      min = 1.2
-      max = 2.7
-    [../]
+  [../]
+[]
+
+[Postprocessors]
+  [./dt_pp]
+    type = FunctionValuePostprocessor
+    function = t+1
+    execute_on = 'initial timestep_end'
   [../]
 []
 

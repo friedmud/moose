@@ -38,6 +38,7 @@ PiecewiseStepper::PiecewiseStepper(const InputParameters & parameters) :
     _sync_to_times(getParam<bool>("sync_to_times")),
     _linear_interpolation(_times, _dts)
 {
+  std::cout<<"sync_to_times: "<<_sync_to_times<<std::endl;
 
   if (_sync_to_times)
   {

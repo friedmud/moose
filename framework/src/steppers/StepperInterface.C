@@ -22,19 +22,21 @@ StepperInterface::StepperInterface(const MooseObject * moose_object) :
     _si_name({moose_object->parameters().get<StepperName>("_output_name") != "" ? moose_object->parameters().get<StepperName>("_output_name") : moose_object->parameters().get<std::string>("_object_name")}),
     _si_params(moose_object->parameters()),
     _si_feproblem(*_si_params.getCheckedPointerParam<FEProblem *>("_fe_problem",
-                                                                  "Missing FEProblem Pointer in StepperInterface!"))
+                                                                  "Missing FEProblem Pointer in StepperInterface!")),
+    _default_dt(std::numeric_limits<Real>::max())
 {
 }
 
 const Real &
 StepperInterface::getStepperDT(const std::string & name)
 {
-  std::cout<<"StepperInterface::getStepperDT: "<<name<<std::endl;
-  std::cout<<"StepperInterface::getStepperDT: "<<_si_params.get<StepperName>(name)<<std::endl;
-
-  _depend_steppers.insert(_si_params.get<StepperName>(name));
-
-  return _si_feproblem.getStepperDT(_si_params.get<StepperName>(name));
+  if (_si_params.isParamValid(name))
+  {
+    _depend_steppers.insert(_si_params.get<StepperName>(name));
+    return _si_feproblem.getStepperDT(_si_params.get<StepperName>(name));
+  }
+  else // Send back the default
+    return _default_dt;
 }
 
 const Real &

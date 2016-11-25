@@ -51,16 +51,12 @@ IterationAdaptiveStepper::IterationAdaptiveStepper(const InputParameters & param
 Real
 IterationAdaptiveStepper::computeDT()
 {
-  std::cout<<"step_count: "<<_step_count<<std::endl;
-
   // First time, just use the passed dt
   if (_step_count == 0)
     return _input_dt;
 
   bool can_shrink = true;
   bool can_grow = _converged[0] && _converged[1];
-
-  std::cout<<"can_grow: "<<can_grow<<std::endl;
 
   unsigned int growth_nl_its = 0;
   unsigned int growth_l_its = 0;
@@ -73,15 +69,21 @@ IterationAdaptiveStepper::computeDT()
     growth_l_its = _linear_iteration_ratio * (_optimal_iterations - _iteration_window);
   }
 
-  std::cout<<"growth_nl_its: "<<growth_nl_its<<std::endl;
-  std::cout<<"growth_l_its: "<<growth_l_its<<std::endl;
-
   if (can_grow && (_nonlin_iters < growth_nl_its && _lin_iters < growth_l_its))
+  {
+    std::cout<<"Growing... "<<_dt[0]<<" * "<<_growth_factor<<std::endl;
     return _dt[0] * _growth_factor;
+  }
   else if (can_shrink && (_nonlin_iters > shrink_nl_its || _lin_iters > shrink_l_its))
+  {
+    std::cout<<"Shrinking..."<<std::endl;
     return _dt[0] * _cutback_factor;
+  }
   else
+  {
+    std::cout<<"Staying the same..."<<std::endl;
     return _dt[0];
+  }
 }
 
 Real

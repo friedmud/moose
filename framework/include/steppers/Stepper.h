@@ -18,6 +18,7 @@
 #include "MooseObject.h"
 #include "Restartable.h"
 #include "StepperInterface.h"
+#include "PostprocessorInterface.h"
 
 class Stepper;
 class FEProblem;
@@ -34,7 +35,8 @@ InputParameters validParams<Stepper>();
 class Stepper :
   public MooseObject,
   public Restartable,
-  public StepperInterface
+  public StepperInterface,
+  public PostprocessorInterface
 {
 public:
   Stepper(const InputParameters & parameters);
