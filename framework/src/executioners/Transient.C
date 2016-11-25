@@ -183,6 +183,14 @@ Transient::Transient(const InputParameters & parameters) :
 void
 Transient::init()
 {
+  // If there are no TimeSteppers then add in SimpleStepper
+  if (!_time_stepper.get() && !_fe_problem.hasSteppers())
+  {
+    auto params = _app.getFactory().getValidParams("SimpleStepper");
+    params.set<Real>("dt") = getParam<Real>("dt");
+    _fe_problem.addStepper("SimpleStepper", "_simple", params);
+  }
+
   if (!_time_stepper.get() && !_fe_problem.hasSteppers())
   {
     InputParameters pars = _app.getFactory().getValidParams("ConstantDT");

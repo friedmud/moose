@@ -33,11 +33,7 @@ ConstantDT::ConstantDT(const InputParameters & parameters) :
     _growth_factor(getParam<Real>("growth_factor")),
     _last_dt(declareRestartableData<Real>("last_dt", 0))
 {
-  {
-    auto params = _app.getFactory().getValidParams("BetterCuttingGrowingStepper");
-    params.set<Real>("dt") = _constant_dt;
-    _fe_problem.addStepper("ConstantStepper", name() + "_cg", params);
-  }
+  mooseError("ConstantDT is deprecated use SimpleStepper");
 }
 
 StepperBlock *
