@@ -31,10 +31,15 @@ class SolutionTimeAdaptiveDT : public TimeStepper
 {
 public:
   SolutionTimeAdaptiveDT(const InputParameters & parameters);
+  virtual ~SolutionTimeAdaptiveDT();
 
-  virtual StepperBlock * buildStepper() override;
+  virtual void step() override;
 
-private:
+  virtual void rejectStep() override;
+
+protected:
+  virtual Real computeInitialDT() override;
+  virtual Real computeDT() override;
 
   /**
    * Multiplier specifying the direction the timestep is currently going.
@@ -44,6 +49,15 @@ private:
 
   /// Percentage to change the timestep by either way.
   Real _percent_change;
+
+  timeval _solve_start, _solve_end;
+
+  Real _older_sol_time_vs_dt, _old_sol_time_vs_dt, _sol_time_vs_dt;
+
+  bool _adapt_log;
+
+  std::ofstream _adaptive_log;
+
 };
 
 #endif /* SOLUTIONTIMEADAPTIVEDT_H */
