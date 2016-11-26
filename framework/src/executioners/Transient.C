@@ -234,6 +234,7 @@ Transient::init()
     stepper_warehouse.sort();
 
     // Add these steppers to the end.  They apply to every simulation.
+    if(stepper_warehouse.getActiveObjects().size())
     {
       auto & steppers = stepper_warehouse.getActiveObjects();
 
