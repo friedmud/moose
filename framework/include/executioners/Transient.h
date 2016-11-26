@@ -244,7 +244,7 @@ protected:
   bool & _multiapps_converged;
 
   /// Whether or not the last solve converged
-  bool & _last_solve_converged;
+  bool _last_solve_converged;
 
   /// Whether step should be repeated due to xfem modifying the mesh
   bool _xfem_repeat_step;

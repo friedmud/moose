@@ -1135,7 +1135,7 @@ protected:
   MooseObjectWarehouseBase<Stepper> _steppers;
 
   /// Stepper DT values
-  std::map<StepperName, Real> & _stepper_dt_values;
+  std::map<StepperName, Real> _stepper_dt_values;
 
   /// Data for Steppers
   StepperInfo _stepper_info;

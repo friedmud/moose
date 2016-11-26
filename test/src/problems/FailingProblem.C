@@ -43,7 +43,10 @@ bool
 FailingProblem::converged()
 {
   if (_solves_at_fail_step == 1 && (_t_step == static_cast<int>(_fail_step)))
+  {
+    _converged = false;
     return false;
+  }
 
   return FEProblem::converged();
 }

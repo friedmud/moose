@@ -108,7 +108,7 @@ Transient::Transient(const InputParameters & parameters) :
     _at_sync_point(declareRecoverableData<bool>("at_sync_point", false)),
     _first(declareRecoverableData<bool>("first", true)),
     _multiapps_converged(declareRecoverableData<bool>("multiapps_converged", true)),
-    _last_solve_converged(declareRecoverableData<bool>("last_solve_converged", true)),
+  _last_solve_converged(/*declareRecoverableData<bool>("last_solve_converged", */true/*)*/),
     _xfem_repeat_step(false),
     _xfem_update_count(0),
     _max_xfem_update(getParam<unsigned int>("max_xfem_update")),
@@ -244,6 +244,8 @@ Transient::init()
       {
         auto params = _app.getFactory().getValidParams("LimitStepper");
         params.set<StepperName>("incoming_stepper") = last_name;
+        _console<<"dtMin(): "<<dtMin()<<std::endl;
+        _console<<"dtMax(): "<<dtMax()<<std::endl;
         params.set<Real>("min") = dtMin();
         params.set<Real>("max") = dtMax();
         _fe_problem.addStepper("LimitStepper", "_final_limit", params);
@@ -526,6 +528,8 @@ Transient::incrementStepOrReject()
 
     if (_time_stepper)
       _time_stepper->rejectStep();
+    else
+      _fe_problem.restoreSolutions();
 
     _last_solve_converged = false; // TODO: discover why this is not already correctly set...
     _time = _time_old;

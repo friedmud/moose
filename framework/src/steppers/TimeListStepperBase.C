@@ -71,7 +71,7 @@ TimeListStepperBase::setupList(const std::vector<Real> & times)
 
       // step 1: fill in the entries up to current_step
       int current_step = _executioner.timeStep();
-      for (unsigned int j = 0; j <= current_step; ++j)
+      for (int j = 0; j <= current_step; ++j)
       {
         if (!MooseUtils::absoluteFuzzyEqual(times[j], saved_time_list[j]))
           mooseError("The timesequence provided in the restart file must be identical to "
@@ -81,7 +81,7 @@ TimeListStepperBase::setupList(const std::vector<Real> & times)
       }
 
       // step 2: fill in the entries up after current_step
-      for (unsigned int j = current_step + 1; j < times.size(); ++j)
+      for (auto j = beginIndex(times, current_step + 1); j < times.size(); ++j)
       {
         if (times[j] < end_time)
           _time_list.push_back(times[j]);

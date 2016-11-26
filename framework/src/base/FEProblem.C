@@ -107,7 +107,7 @@ FEProblem::FEProblem(const InputParameters & parameters) :
     _kernel_type(Moose::KT_ALL),
     _current_boundary_id(Moose::INVALID_BOUNDARY_ID),
     _solve(getParam<bool>("solve")),
-    _converged(declareRecoverableData<bool>("converged", true)),
+    _converged(/*declareRecoverableData<bool>("converged", */true/*)*/),
     _transient(false),
     _time(declareRestartableData<Real>("time")),
     _time_old(declareRestartableData<Real>("time_old")),
@@ -120,7 +120,6 @@ FEProblem::FEProblem(const InputParameters & parameters) :
     _coupling(Moose::COUPLING_DIAG),
     _cm(NULL),
     _steppers(/*threaded=*/false),
-    _stepper_dt_values(declareRecoverableData<std::map<StepperName, Real>>("stepper_dt_values")),
     _scalar_ics(/*threaded=*/false),
     _material_props(declareRestartableDataWithContext<MaterialPropertyStorage>("material_props", &_mesh)),
     _bnd_material_props(declareRestartableDataWithContext<MaterialPropertyStorage>("bnd_material_props", &_mesh)),
@@ -3285,6 +3284,7 @@ FEProblem::solve()
   {
     _nl.solve();
     _converged = _nl.converged();
+    _console<<"Setting _converged="<<_converged<<std::endl;
   }
   else
     _converged = true;
@@ -3347,6 +3347,12 @@ bool
 FEProblem::converged()
 {
   return _converged;
+  /*
+  if (_solve)
+    return _nl.converged();
+  else
+    return true;
+  */
 }
 
 unsigned int
@@ -3486,12 +3492,14 @@ FEProblem::computeDT()
   {
     std::cout<<"Computing DT for: "<<stepper->name()<<", producing: "<<stepper->outputName()<<std::endl;;
 
+    std::cout<<"_converged: "<<_converged<<std::endl;
+
     if (_stepper_info.converged())
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeDT();
     else
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeFailedDT();
 
-    std::cout<<"DT: "<<dt<<std::endl;
+    std::cout<<"DT: "<<dt<<" into "<<&_stepper_dt_values[stepper->outputName()]<<std::endl;
   }
 
   return dt;

@@ -73,7 +73,7 @@ PiecewiseStepper::computeDT()
   if (MooseUtils::relativeFuzzyGreaterEqual(_time, _times.back()))
     return _dts.back();
 
-  for (int i = 0; i < _times.size() - 1; i++)
+  for (auto i = beginIndex(_times); i < _times.size() - 1; i++)
     if (MooseUtils::relativeFuzzyLessThan(_time, _times[i + 1]))
       return _dts[i];
 
