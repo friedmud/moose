@@ -187,7 +187,17 @@ Transient::init()
   if (!_time_stepper.get() && !_fe_problem.hasSteppers())
   {
     auto params = _app.getFactory().getValidParams("SimpleStepper");
-    params.set<Real>("dt") = getParam<Real>("dt");
+
+    /**
+     * We have a default "dt" set in the Transient parameters but it's possible for users to set other
+     * parameters explicitly that could provide a better calculated "dt". Rather than provide difficult
+     * to understand behavior using the default "dt" in this case, we'll calculate "dt" properly.
+     */
+    if (!_pars.isParamSetByAddParam("end_time") && !_pars.isParamSetByAddParam("num_steps") && _pars.isParamSetByAddParam("dt"))
+      params.set<Real>("dt") = (getParam<Real>("end_time") - getParam<Real>("start_time")) / static_cast<Real>(getParam<unsigned int>("num_steps"));
+    else
+      params.set<Real>("dt") = getParam<Real>("dt");
+
     _fe_problem.addStepper("SimpleStepper", "_simple", params);
   }
 
@@ -246,7 +256,8 @@ Transient::init()
         // Copy the sync_times out into the parameter
         auto & sync_times = _app.getOutputWarehouse().getSyncTimes();
         auto & parameter = params.set<std::vector<Real> >("times");
-        std::copy(sync_times.begin(), sync_times.end(), parameter.begin());
+        for (auto & time : sync_times)
+          parameter.push_back(time);
 
         _fe_problem.addStepper("FixedTimesStepper", "_final_sync_times", params);
       }
@@ -442,7 +453,12 @@ Transient::computeDT(bool first)
   // Steppers
   {
     updateStepperInfo(first);
+
+    if (!_fe_problem.getStepperInfo().converged() && _fe_problem.getStepperInfo().dt() <= dtMin())
+      mooseError("Solve failed and timestep already at or below dtmin, cannot continue!");
+
     _new_dt = _fe_problem.computeDT();
+
     auto & si = _fe_problem.getStepperInfo();
     if (si.wantSnapshot())
       // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
