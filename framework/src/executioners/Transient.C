@@ -341,6 +341,8 @@ Transient::execute()
   if (!_app.isRecovering())
     _problem.advanceState();
 
+  std::cout<<"1 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
+
   // Start time loop...
   bool first = true; // needs to not be restartable data
   while (true)
@@ -349,11 +351,20 @@ Transient::execute()
 
     if (_first != true)
       incrementStepOrReject();
+
+    std::cout<<"1.1 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
+
     _first = false;
 
     if (!keepGoing())
       break;
+
+    std::cout<<"1.2 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
+
     preStep();
+
+    std::cout<<"2 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
+
     computeDT(first);
     takeStep();
 
@@ -391,6 +402,8 @@ Transient::updateStepperInfo(bool first)
 
   if (first)
     si.pushHistory(_prev_dt, true, 0);
+
+  std::cout<<"_last_solve_converged: "<<_last_solve_converged<<std::endl;
 
   si.update(_steps_taken, _time, _dt, _nl_its, _l_its, _last_solve_converged,
             _solve_time, _soln_nonlin, _soln_aux, _soln_predicted);
@@ -505,6 +518,8 @@ Transient::incrementStepOrReject()
   }
   else
   {
+    std::cout<<"Last solve did NOT converge!"<<std::endl;
+
     _problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN, true);
     _problem.restoreMultiApps(EXEC_TIMESTEP_END, true);
 

@@ -1110,6 +1110,9 @@ protected:
   /// Whether or not to actually solve the nonlinear system
   bool _solve;
 
+  /// Whether the last solve converged
+  bool _converged;
+
   bool _transient;
   Real & _time;
   Real & _time_old;

@@ -107,7 +107,7 @@ FEProblem::FEProblem(const InputParameters & parameters) :
     _kernel_type(Moose::KT_ALL),
     _current_boundary_id(Moose::INVALID_BOUNDARY_ID),
     _solve(getParam<bool>("solve")),
-
+    _converged(declareRecoverableData<bool>("converged", true)),
     _transient(false),
     _time(declareRestartableData<Real>("time")),
     _time_old(declareRestartableData<Real>("time_old")),
@@ -3282,7 +3282,12 @@ FEProblem::solve()
   _fail_next_linear_convergence_check = false;
 
   if (_solve)
+  {
     _nl.solve();
+    _converged = _nl.converged();
+  }
+  else
+    _converged = true;
 
   if (_solve)
     _nl.update();
@@ -3341,10 +3346,7 @@ FEProblem::checkExceptionAndStopSolve()
 bool
 FEProblem::converged()
 {
-  if (_solve)
-    return _nl.converged();
-  else
-    return true;
+  return _converged;
 }
 
 unsigned int
