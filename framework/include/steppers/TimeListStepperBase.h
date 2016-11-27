@@ -44,7 +44,7 @@ protected:
 
 private:
   /// stores the sequence of time points.  Must be set by calling setupList()
-  std::vector<Real> &  _time_list;
+  std::vector<Real> _time_list;
 };
 
 #endif //TIMELISTSTEPPERBASE_H

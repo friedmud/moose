@@ -28,8 +28,7 @@ InputParameters validParams<TimeListStepperBase>()
 
 TimeListStepperBase::TimeListStepperBase(const InputParameters & parameters) :
     Stepper(parameters),
-    _incoming_stepper_dt(getStepperDT("incoming_stepper")),
-    _time_list(declareRestartableData<std::vector<Real> >("time_list"))
+    _incoming_stepper_dt(getStepperDT("incoming_stepper"))
 {
 }
 
@@ -45,8 +44,10 @@ TimeListStepperBase::setupList(const std::vector<Real> & times)
   if (!_app.isRecovering())
   {
     // also we need to do something different when restarting
+    /*
     if (!_app.isRestarting())
     {
+    */
       _time_list.push_back(start_time);
       for (unsigned int j = 0; j < times.size(); ++j)
       {
@@ -54,7 +55,8 @@ TimeListStepperBase::setupList(const std::vector<Real> & times)
           _time_list.push_back(times[j]);
       }
       _time_list.push_back(end_time);
-    }
+//    }
+    /*
     else
     {
       // in case of restart it should be allowed to modify _time_list if it follows the following rule:
@@ -88,6 +90,7 @@ TimeListStepperBase::setupList(const std::vector<Real> & times)
       }
       _time_list.push_back(end_time);
     }
+    */
   }
 
   if (_app.halfTransient())
