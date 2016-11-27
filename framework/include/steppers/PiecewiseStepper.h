@@ -32,6 +32,8 @@ public:
   PiecewiseStepper(const InputParameters & parameters);
   virtual ~PiecewiseStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

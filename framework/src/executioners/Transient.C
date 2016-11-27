@@ -453,15 +453,15 @@ Transient::computeDT(bool first)
   if (_stepper)
   {
     _new_dt = _stepper->next(_si);
-    if (_si.wantSnapshot())
+    if (_si.wantBackup())
       // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
-      _snapshots[_si.time()] = _app.backup();
-    if (_si.rewindTime() != -1)
+      _backups[_si.time()] = _app.backup();
+    if (_si.restoreTime() != -1)
     {
-      if (_snapshots.count(_si.rewindTime()) == 0)
-        mooseError("no snapshot available for requested rewind time");
-      _app.restore(_snapshots[_si.rewindTime()]);
-      computeDT(); // recursive call necessary because rewind modifies state _si depends on
+      if (_backups.count(_si.restoreTime()) == 0)
+        mooseError("no backup available for requested restore time");
+      _app.restore(_backups[_si.restoreTime()]);
+      computeDT(); // recursive call necessary because restore modifies state _si depends on
     }
   }
   */
@@ -476,15 +476,15 @@ Transient::computeDT(bool first)
     _new_dt = _fe_problem.computeDT();
 
     auto & si = _fe_problem.getStepperInfo();
-    if (si.wantSnapshot())
+    if (si.wantBackup())
       // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
-      _snapshots[si.time()] = _app.backup();
-    if (si.rewindTime() != -1)
+      _backups[si.time()] = _app.backup();
+    if (si.restoreTime() != -1)
     {
-      if (_snapshots.count(_si.rewindTime()) == 0)
-        mooseError("no snapshot available for requested rewind time");
-      _app.restore(_snapshots[_si.rewindTime()]);
-      computeDT(); // recursive call necessary because rewind modifies state _si depends on
+      if (_backups.count(_si.restoreTime()) == 0)
+        mooseError("no backup available for requested restore time");
+      _app.restore(_backups[_si.restoreTime()]);
+      computeDT(); // recursive call necessary because restore modifies state _si depends on
     }
   }
 }

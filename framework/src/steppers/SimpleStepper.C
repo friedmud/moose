@@ -38,6 +38,12 @@ SimpleStepper::SimpleStepper(const InputParameters & parameters) :
 }
 
 Real
+SimpleStepper::computeInitialDT()
+{
+  return _prev_dt = _input_dt;
+}
+
+Real
 SimpleStepper::computeDT()
 {
   return _prev_dt = std::min(_input_dt, _growth_factor * _prev_dt);

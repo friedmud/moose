@@ -31,6 +31,8 @@ class TimeListStepperBase : public Stepper
 public:
   TimeListStepperBase(const InputParameters & parameters);
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

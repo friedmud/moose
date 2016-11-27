@@ -28,6 +28,8 @@ public:
   ConstantStepper(const InputParameters & parameters);
   virtual ~ConstantStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

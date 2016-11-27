@@ -37,6 +37,8 @@ public:
   SimpleStepper(const InputParameters & parameters);
   virtual ~SimpleStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

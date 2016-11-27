@@ -36,6 +36,12 @@ FixedTimesStepper::FixedTimesStepper(const InputParameters & parameters) :
 }
 
 Real
+FixedTimesStepper::computeInitialDT()
+{
+  return computeDT();
+}
+
+Real
 FixedTimesStepper::computeDT()
 {
   if (_times.size() == 0)

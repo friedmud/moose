@@ -38,6 +38,8 @@ public:
   IterationAdaptiveStepper(const InputParameters & parameters);
   virtual ~IterationAdaptiveStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

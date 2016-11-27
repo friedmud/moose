@@ -111,6 +111,12 @@ TimeListStepperBase::setupList(const std::vector<Real> & times)
 }
 
 Real
+TimeListStepperBase::computeInitialDT()
+{
+  return _incoming_stepper_dt;
+}
+
+Real
 TimeListStepperBase::computeDT()
 {
   // Keep in mind that if this wasn't coupled in, this will be max()

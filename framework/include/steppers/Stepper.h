@@ -43,6 +43,11 @@ public:
   virtual ~Stepper();
 
   /**
+   * Compute the timestep size for the the first timestep
+   */
+  virtual Real computeInitialDT() = 0;
+
+  /**
    * Compute the size of the next timestep
    */
   virtual Real computeDT() = 0;
@@ -90,6 +95,20 @@ private:
   StepperInfo & _stepper_info;
 
 protected:
+  /**
+   * A Stepper can call this to cause MOOSE to backup the system state at the current time.
+   * Later, restore() can be called to restore the system at at particular time.
+   */
+  void backup() { _backup = true; }
+
+  /**
+   * Restore the system state at a previous time.
+   * That previous time must exactly match the time at which a backup() was made
+   *
+   * @param restore_time The time to restore the system to
+   */
+  void restore(Real restore_time) { _restore = true; _restore = restore_time; }
+
   ////// Information from StepperInfo //////
   int & _step_count;
   Real & _time;
@@ -104,9 +123,10 @@ protected:
   std::unique_ptr<NumericVector<Number>> & _soln_aux;
   std::unique_ptr<NumericVector<Number>> & _soln_predicted;
 
-  bool & _snapshot;
-  bool & _rewind;
-  Real & _rewind_time;
+private:
+  bool & _backup;
+  bool & _restore;
+  Real & _restore_time;
 };
 
 #endif /* STEPPER_H */

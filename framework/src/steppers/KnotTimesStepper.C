@@ -49,6 +49,12 @@ KnotTimesStepper::KnotTimesStepper(const InputParameters & parameters) :
 }
 
 Real
+KnotTimesStepper::computeInitialDT()
+{
+  return computeDT();
+}
+
+Real
 KnotTimesStepper::computeDT()
 {
   auto tol = _executioner.timestepTol();

@@ -32,6 +32,8 @@ public:
   PostprocessorStepper(const InputParameters & parameters);
   virtual ~PostprocessorStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

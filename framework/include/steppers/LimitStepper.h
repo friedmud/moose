@@ -32,6 +32,8 @@ public:
   LimitStepper(const InputParameters & parameters);
   virtual ~LimitStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

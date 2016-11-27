@@ -37,6 +37,8 @@ public:
   SolutionTimeAdaptiveStepper(const InputParameters & parameters);
   virtual ~SolutionTimeAdaptiveStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

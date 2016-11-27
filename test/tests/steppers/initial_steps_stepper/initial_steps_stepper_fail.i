@@ -59,6 +59,7 @@
     [./initial]
       type = InitialStepsStepper
       incoming_stepper = simple
+      dt = 0.5
       n_steps = 4
     [../]
   [../]

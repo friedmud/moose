@@ -31,12 +31,16 @@ public:
   InitialStepsStepper(const InputParameters & parameters);
   virtual ~InitialStepsStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;
 
 protected:
   const Real & _incoming_stepper_dt;
+
+  const Real & _input_dt;
 
   const unsigned int & _n_steps;
 };

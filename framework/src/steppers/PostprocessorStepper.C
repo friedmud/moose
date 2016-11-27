@@ -39,6 +39,12 @@ PostprocessorStepper::PostprocessorStepper(const InputParameters & parameters) :
 }
 
 Real
+PostprocessorStepper::computeInitialDT()
+{
+  return computeDT();
+}
+
+Real
 PostprocessorStepper::computeDT()
 {
   std::cout<<"incoming_stepper: "<<_incoming_stepper_dt<<std::endl;

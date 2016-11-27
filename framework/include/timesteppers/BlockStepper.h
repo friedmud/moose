@@ -38,7 +38,7 @@ public:
   StepperInfo& operator=(StepperInfo&&) = delete;
 
   /// Updates internal state to match new changes to the simulation state (i.e.
-  /// for a new time step). Flags relating to snapshotting/rewind, etc. are all reset.
+  /// for a new time step). Flags relating to backupting/restore, etc. are all reset.
   void update(int step_count, Real time, Real dt, unsigned int nonlin_iters,
               unsigned int lin_iters, bool converged, Real solve_time_secs,
               std::vector<Real> soln_nonlin, std::vector<Real> soln_aux,
@@ -87,23 +87,23 @@ public:
   /// soln_nonlin.
   NumericVector<Number> * solnPredicted();
 
-  /// Instructs the executioner to snapshot the current simulation state
+  /// Instructs the executioner to backup the current simulation state
   /// *before* any upcomming dt is applied.  Save the current simulation time as
-  /// the key for rewinding.
-  void snapshot();
+  /// the key for restoreing.
+  void backup();
 
-  /// Returns true if a snapshot has been requested.
-  bool wantSnapshot();
+  /// Returns true if a backup has been requested.
+  bool wantBackup();
 
-  /// Instructs the executioner to rewind the simulation to the specified
-  /// target_time.  snapshot() must have been previously called for the
-  /// target_time.  The rewind does not occur when this function is called -
+  /// Instructs the executioner to restore the simulation to the specified
+  /// target_time.  backup() must have been previously called for the
+  /// target_time.  The restore does not occur when this function is called -
   /// instead it occurs when the executioner inspects the StepperInfo object.
-  void rewind(Real target_time);
+  void restore(Real target_time);
 
-  /// Returns the requested rewind time if any has been set.  Otherwise, it
+  /// Returns the requested restore time if any has been set.  Otherwise, it
   /// returns -1.
-  Real rewindTime();
+  Real restoreTime();
 
 private:
   int _step_count;
@@ -119,9 +119,9 @@ private:
   std::unique_ptr<NumericVector<Number>> _soln_aux;
   std::unique_ptr<NumericVector<Number>> _soln_predicted;
 
-  bool _snapshot;
-  bool _rewind;
-  Real _rewind_time;
+  bool _backup;
+  bool _restore;
+  Real _restore_time;
 
   libMesh::Parallel::Communicator _dummy_comm;
 
@@ -427,7 +427,7 @@ public:
   /// is within time_tol of the calculated values for those times.  e_tol is the
   /// target error between the smaller and larger time step solutions.  e_max is
   /// the error between the smaller and larger time step solutions above which
-  /// the solution is considered not converged and a rewind is performed to the
+  /// the solution is considered not converged and a restore is performed to the
   /// start of the window and the b endpoint of the window is shrunk by a factor
   /// of two.
   DT2Block(Real time_tol, Real e_tol, Real e_max, int integrator_order);

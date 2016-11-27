@@ -324,10 +324,10 @@ protected:
 
   // using a Real here is okay because the key is the simulation time as specified in StepperInfo
   // the moment after StepperBlock::next is called.  This time should be "saved" by steppers that
-  // want to rewind, and they will need to specify the rewind time from this "saved".  There are no
-  // operations on the time between the stepper requesting a snapshot and it being used as a key
+  // want to restore, and they will need to specify the restore time from this "saved".  There are no
+  // operations on the time between the stepper requesting a backup and it being used as a key
   // in this map.
-  std::map<Real, MooseSharedPointer<Backup>> _snapshots;
+  std::map<Real, MooseSharedPointer<Backup>> _backups;
 };
 
 #endif //TRANSIENTEXECUTIONER_H

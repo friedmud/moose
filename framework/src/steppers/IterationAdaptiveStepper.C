@@ -49,12 +49,14 @@ IterationAdaptiveStepper::IterationAdaptiveStepper(const InputParameters & param
 }
 
 Real
+IterationAdaptiveStepper::computeInitialDT()
+{
+  return _input_dt;
+}
+
+Real
 IterationAdaptiveStepper::computeDT()
 {
-  // First time, just use the passed dt
-  if (_step_count == 0)
-    return _input_dt;
-
   bool can_shrink = true;
   bool can_grow = _converged[0] && _converged[1];
 

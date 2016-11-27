@@ -32,6 +32,8 @@ public:
   FixedTimesStepper(const InputParameters & parameters);
   virtual ~FixedTimesStepper();
 
+  virtual Real computeInitialDT() override;
+
   virtual Real computeDT() override;
 
   virtual Real computeFailedDT() override;

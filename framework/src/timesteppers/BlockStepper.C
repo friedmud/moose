@@ -25,9 +25,9 @@ StepperInfo::StepperInfo()
     _soln_nonlin(nullptr),
     _soln_aux(nullptr),
     _soln_predicted(nullptr),
-    _snapshot(false),
-    _rewind(false),
-    _rewind_time(-1),
+    _backup(false),
+    _restore(false),
+    _restore_time(-1),
     _dummy_comm()
 {
   const unsigned int max_history = 3;
@@ -59,9 +59,9 @@ StepperInfo::StepperInfo(const StepperInfo& si)
   _soln_aux.reset(si._soln_aux->clone().release());
   _soln_predicted.reset(si._soln_predicted->clone().release());
 
-  _snapshot = false;
-  _rewind = false;
-  _rewind_time = -1;
+  _backup = false;
+  _restore = false;
+  _restore_time = -1;
 }
 
 StepperInfo&
@@ -79,9 +79,9 @@ StepperInfo::operator=(const StepperInfo& si)
   _soln_aux.reset(si._soln_aux->clone().release());
   _soln_predicted.reset(si._soln_predicted->clone().release());
 
-  _snapshot = false;
-  _rewind = false;
-  _rewind_time = -1;
+  _backup = false;
+  _restore = false;
+  _restore_time = -1;
   return *this;
 }
 
@@ -121,9 +121,9 @@ StepperInfo::update(
   _solve_time_secs.push_front(solve_time_secs);
   _solve_time_secs.pop_back();
 
-  _snapshot = false;
-  _rewind = false;
-  _rewind_time = -1;
+  _backup = false;
+  _restore = false;
+  _restore_time = -1;
 
   if (_soln_nonlin->size() != soln_nonlin.size())
   {
@@ -207,28 +207,28 @@ StepperInfo::solnPredicted()
 }
 
 void
-StepperInfo::snapshot()
+StepperInfo::backup()
 {
-  _snapshot = true;
+  _backup = true;
 }
 
 bool
-StepperInfo::wantSnapshot()
+StepperInfo::wantBackup()
 {
-  return _snapshot;
+  return _backup;
 }
 
 void
-StepperInfo::rewind(Real target_time)
+StepperInfo::restore(Real target_time)
 {
-  _rewind = true;
-  _rewind_time = target_time;
+  _restore = true;
+  _restore_time = target_time;
 }
 
 Real
-StepperInfo::rewindTime()
+StepperInfo::restoreTime()
 {
-  return _rewind_time;
+  return _restore_time;
 }
 
 StepperBlock *
@@ -701,21 +701,21 @@ DT2Block::next(StepperInfo & si)
     Real err = calcErr(si);
     if (err > _e_max)
     {
-      si.rewind(_start_time);
-      return resetWindow(si.rewindTime(), dt() / 2);
+      si.restore(_start_time);
+      return resetWindow(si.restoreTime(), dt() / 2);
     }
 
     Real new_dt = dt() * std::pow(_e_tol / err, 1.0 / _order);
-    si.snapshot();
+    si.backup();
     return resetWindow(si.time(), new_dt);
   }
   else if (std::abs(si.time() - _end_time) < _tol && !_big_soln && si.converged())
   {
-    // collect big dt soln and rewind to collect small dt solns
+    // collect big dt soln and restore to collect small dt solns
     _big_soln.reset(si.solnNonlin()->clone().release());
     _big_soln->close();
-    si.rewind(_start_time);
-    return dt() / 2.0; // doesn't actually matter what we return here because rewind
+    si.restore(_start_time);
+    return dt() / 2.0; // doesn't actually matter what we return here because restore
   }
   else if (std::abs(si.time() - _start_time) < _tol && _big_soln && si.converged())
   {
@@ -730,7 +730,7 @@ DT2Block::next(StepperInfo & si)
   else
   {
     // something went wrong or this is initial call of simulation - start over
-    si.snapshot();
+    si.backup();
     Real ddt = dt();
     if (ddt == 0)
       ddt = si.dt();

@@ -65,6 +65,12 @@ PiecewiseStepper::PiecewiseStepper(const InputParameters & parameters) :
 }
 
 Real
+PiecewiseStepper::computeInitialDT()
+{
+  return _dts[0];
+}
+
+Real
 PiecewiseStepper::computeDT()
 {
   if (_interpolate)

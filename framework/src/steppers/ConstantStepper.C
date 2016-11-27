@@ -34,6 +34,13 @@ ConstantStepper::ConstantStepper(const InputParameters & parameters) :
 }
 
 Real
+ConstantStepper::computeInitialDT()
+{
+  return _input_dt;
+}
+
+
+Real
 ConstantStepper::computeDT()
 {
   return _input_dt;

@@ -38,6 +38,12 @@ SolutionTimeAdaptiveStepper::SolutionTimeAdaptiveStepper(const InputParameters &
 }
 
 Real
+SolutionTimeAdaptiveStepper::computeInitialDT()
+{
+  return _input_dt;
+}
+
+Real
 SolutionTimeAdaptiveStepper::computeDT()
 {
   if (_step_count == 0)

@@ -54,24 +54,10 @@
   end_time = 2.0
   timestep_tolerance = 0.3
   verbose = true
-#  [./TimeStepper]
-#    type = IterationAdaptiveDT
-#    dt = 0.9
-#    optimal_iterations = 10
-#    force_step_every_function_point = true
-#    max_function_change = 1e20
-#    timestep_limiting_function = knot
-#  [../]
 
   [./Steppers]
-    [./adapt]
-      type = IterationAdaptiveStepper
-      dt = 0.9
-      optimal_iterations = 10
-    [../]
     [./fixed]
       type = FixedTimesStepper
-      incoming_stepper = adapt
       times = '0 1 2' # Ensures that these times are hit _exactly_
     [../]
   [../]

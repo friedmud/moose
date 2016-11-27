@@ -51,9 +51,9 @@ Stepper::Stepper(const InputParameters & parameters) :
     _soln_nonlin(_stepper_info._soln_nonlin),
     _soln_aux(_stepper_info._soln_aux),
     _soln_predicted(_stepper_info._soln_predicted),
-    _snapshot(_stepper_info._snapshot),
-    _rewind(_stepper_info._rewind),
-    _rewind_time(_stepper_info._rewind_time)
+    _backup(_stepper_info._backup),
+    _restore(_stepper_info._restore),
+    _restore_time(_stepper_info._restore_time)
 {
 }
 

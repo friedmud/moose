@@ -38,6 +38,12 @@ LimitStepper::LimitStepper(const InputParameters & parameters) :
 }
 
 Real
+LimitStepper::computeInitialDT()
+{
+  return computeDT();
+}
+
+Real
 LimitStepper::computeDT()
 {
   std::cout<<"_incoming_stepper_dt: "<<_incoming_stepper_dt<<" from "<<&_incoming_stepper_dt<<std::endl;
@@ -50,7 +56,7 @@ LimitStepper::computeDT()
 Real
 LimitStepper::computeFailedDT()
 {
-  return _incoming_stepper_dt;
+  return computeDT();
 }
 
 LimitStepper::~LimitStepper()

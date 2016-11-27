@@ -3494,7 +3494,9 @@ FEProblem::computeDT()
 
     std::cout<<"_converged: "<<_converged<<std::endl;
 
-    if (_stepper_info.converged())
+    if (_t_step < 2 && _stepper_info.converged())
+      _stepper_dt_values[stepper->outputName()] = dt = stepper->computeInitialDT();
+    else if (_stepper_info.converged())
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeDT();
     else
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeFailedDT();
