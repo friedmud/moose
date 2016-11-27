@@ -324,6 +324,7 @@
 #include "SolutionTimeAdaptiveStepper.h"
 #include "TimeListStepper.h"
 #include "ExodusTimeListStepper.h"
+#include "DT2Stepper.h"
 
 // time integrators
 #include "SteadyState.h"
@@ -596,6 +597,7 @@ registerObjects(Factory & factory)
   registerStepper(SolutionTimeAdaptiveStepper);
   registerStepper(TimeListStepper);
   registerStepper(ExodusTimeListStepper);
+  registerStepper(DT2Stepper);
 
   // functions
   registerFunction(Axisymmetric2D3DSolutionFunction);

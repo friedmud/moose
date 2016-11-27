@@ -3490,7 +3490,7 @@ FEProblem::computeDT()
 
   for (auto & stepper : steppers)
   {
-    std::cout<<"Computing DT for: "<<stepper->name()<<", producing: "<<stepper->outputName()<<std::endl;;
+    std::cout<<"Computing DT for: "<<stepper->name()<</*", producing: "<<stepper->outputName()<<*/std::endl;;
 
     std::cout<<"_converged: "<<_converged<<std::endl;
 

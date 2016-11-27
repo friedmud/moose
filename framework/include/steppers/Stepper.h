@@ -107,7 +107,7 @@ protected:
    *
    * @param restore_time The time to restore the system to
    */
-  void restore(Real restore_time) { _restore = true; _restore = restore_time; }
+  void restore(Real restore_time) { _restore = true; _restore_time = restore_time; }
 
   ////// Information from StepperInfo //////
   int & _step_count;

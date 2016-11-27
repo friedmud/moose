@@ -320,7 +320,6 @@ protected:
   std::vector<Real> & _soln_aux;
   std::vector<Real> & _soln_predicted;
   Real & _prev_dt;
-  StepperInfo _si;
 
   // using a Real here is okay because the key is the simulation time as specified in StepperInfo
   // the moment after StepperBlock::next is called.  This time should be "saved" by steppers that

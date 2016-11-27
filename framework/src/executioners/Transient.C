@@ -146,8 +146,7 @@ Transient::Transient(const InputParameters & parameters) :
     _soln_nonlin(declareRestartableData<std::vector<Real> >("soln_nonlin", std::vector<Real>())),
     _soln_aux(declareRestartableData<std::vector<Real> >("soln_aux", std::vector<Real>())),
     _soln_predicted(declareRestartableData<std::vector<Real> >("soln_predicted", std::vector<Real>())),
-    _prev_dt(declareRestartableData<Real>("prev_dt", 0)),
-    _si()
+    _prev_dt(declareRestartableData<Real>("prev_dt", 0))
 {
   _problem.getNonlinearSystem().setDecomposition(_splitting);
   _t_step = 0;
@@ -476,14 +475,23 @@ Transient::computeDT(bool first)
     _new_dt = _fe_problem.computeDT();
 
     auto & si = _fe_problem.getStepperInfo();
+
     if (si.wantBackup())
+    {
+      std::cout<<"Backing up at time "<<si.time()<<std::endl;
       // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
       _backups[si.time()] = _app.backup();
+    }
+
+    std::cout<<"si.restoreTime(): "<<si.restoreTime()<<std::endl;
+
     if (si.restoreTime() != -1)
     {
-      if (_backups.count(_si.restoreTime()) == 0)
+      std::cout<<"Restoring at time: "<<si.restoreTime()<<std::endl;
+
+      if (_backups.count(si.restoreTime()) == 0)
         mooseError("no backup available for requested restore time");
-      _app.restore(_backups[_si.restoreTime()]);
+      _app.restore(_backups[si.restoreTime()]);
       computeDT(); // recursive call necessary because restore modifies state _si depends on
     }
   }
