@@ -47,9 +47,6 @@ PostprocessorStepper::computeInitialDT()
 Real
 PostprocessorStepper::computeDT()
 {
-  std::cout<<"incoming_stepper: "<<_incoming_stepper_dt<<std::endl;
-  std::cout<<"pp_value: "<<_pp_value<<std::endl;
-
   return std::min(_incoming_stepper_dt, _pp_value);
 }
 

@@ -72,20 +72,11 @@ IterationAdaptiveStepper::computeDT()
   }
 
   if (can_grow && (_nonlin_iters < growth_nl_its && _lin_iters < growth_l_its))
-  {
-    std::cout<<"Growing... "<<_dt[0]<<" * "<<_growth_factor<<std::endl;
     return _dt[0] * _growth_factor;
-  }
   else if (can_shrink && (_nonlin_iters > shrink_nl_its || _lin_iters > shrink_l_its))
-  {
-    std::cout<<"Shrinking..."<<std::endl;
     return _dt[0] * _cutback_factor;
-  }
   else
-  {
-    std::cout<<"Staying the same..."<<std::endl;
     return _dt[0];
-  }
 }
 
 Real

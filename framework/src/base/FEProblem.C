@@ -1998,16 +1998,6 @@ Real &
 FEProblem::getStepperDT(const StepperName & stepper_name)
 {
   // Can't error check here because objects might still be being built
-  /*
-  auto value = _stepper_dt_values.find(stepper_name);
-
-  if (value == _stepper_dt_values.end())
-    mooseError("Unknown Stepper!");
-
-  return value->second;
-  */
-
-  std::cout<<"Retrieving dt from: "<<stepper_name<<std::endl;
 
   // Using side-effect insertion here on purpose
   // We'll have another round later where we double-check couplings and throw errors if stuff didn't exist
@@ -3486,22 +3476,14 @@ FEProblem::computeDT()
 
   auto & steppers = _steppers.getActiveObjects();
 
-  std::cout<<"\nComputing DT...\n"<<std::endl;
-
   for (auto & stepper : steppers)
   {
-    std::cout<<"Computing DT for: "<<stepper->name()<</*", producing: "<<stepper->outputName()<<*/std::endl;;
-
-    std::cout<<"_converged: "<<_converged<<std::endl;
-
     if (_t_step < 2 && _stepper_info.converged())
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeInitialDT();
     else if (_stepper_info.converged())
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeDT();
     else
       _stepper_dt_values[stepper->outputName()] = dt = stepper->computeFailedDT();
-
-    std::cout<<"DT: "<<dt<<" into "<<&_stepper_dt_values[stepper->outputName()]<<std::endl;
   }
 
   return dt;

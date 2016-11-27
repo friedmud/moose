@@ -343,8 +343,6 @@ Transient::execute()
   if (!_app.isRecovering())
     _problem.advanceState();
 
-  std::cout<<"1 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
-
   // Start time loop...
   bool first = true; // needs to not be restartable data
   while (true)
@@ -354,18 +352,12 @@ Transient::execute()
     if (_first != true)
       incrementStepOrReject();
 
-    std::cout<<"1.1 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
-
     _first = false;
 
     if (!keepGoing())
       break;
 
-    std::cout<<"1.2 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
-
     preStep();
-
-    std::cout<<"2 execute() _last_solve_converged: "<<_last_solve_converged<<std::endl;
 
     computeDT(first);
     takeStep();
@@ -405,8 +397,6 @@ Transient::updateStepperInfo(bool first)
   if (first)
     si.pushHistory(_prev_dt, true, 0);
 
-  std::cout<<"_last_solve_converged: "<<_last_solve_converged<<std::endl;
-
   si.update(_steps_taken, _time, _dt, _nl_its, _l_its, _last_solve_converged,
             _solve_time, _soln_nonlin, _soln_aux, _soln_predicted);
 
@@ -418,52 +408,6 @@ Transient::computeDT(bool first)
 {
   if (_time_stepper)
     _time_stepper->computeStep(); // This is actually when DT gets computed
-
-  /*
-  // initialize new-style stepper here because users of moose may have subclassed Transient
-  // (I'm looking at you Yak!) and overridden functions like init().
-  if (!_stepper)
-  {
-    StepperBlock * inner = _time_stepper->buildStepper();
-    if (inner)
-    {
-      std::vector<Real> sync_times;
-      for (auto val : _app.getOutputWarehouse().getSyncTimes())
-        sync_times.push_back(val);
-
-      // these are global/sim constraints for *every* time stepper:
-      inner = BaseStepper::dtLimit(inner, dtMin(), dtMax());
-      if (sync_times.size() > 0)
-        inner = BaseStepper::min(BaseStepper::fixedTimes(sync_times, timestepTol()), inner, timestepTol());
-      if (!_app.halfTransient())
-        inner = BaseStepper::bounds(inner, getStartTime(), endTime());
-      _stepper.reset(inner);
-    }
-    else
-    {
-      mooseDoOnce(mooseWarning("the time stepper used is based on deprecated functionality"));
-    }
-  }
-  */
-
-  /*
-  updateStepperInfo(first);
-
-  if (_stepper)
-  {
-    _new_dt = _stepper->next(_si);
-    if (_si.wantBackup())
-      // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
-      _backups[_si.time()] = _app.backup();
-    if (_si.restoreTime() != -1)
-    {
-      if (_backups.count(_si.restoreTime()) == 0)
-        mooseError("no backup available for requested restore time");
-      _app.restore(_backups[_si.restoreTime()]);
-      computeDT(); // recursive call necessary because restore modifies state _si depends on
-    }
-  }
-  */
 
   // Steppers
   {
@@ -477,18 +421,11 @@ Transient::computeDT(bool first)
     auto & si = _fe_problem.getStepperInfo();
 
     if (si.wantBackup())
-    {
-      std::cout<<"Backing up at time "<<si.time()<<std::endl;
       // the time used in this key must be *exactly* that on the stepper just saw in StepperInfo
       _backups[si.time()] = _app.backup();
-    }
-
-    std::cout<<"si.restoreTime(): "<<si.restoreTime()<<std::endl;
 
     if (si.restoreTime() != -1)
     {
-      std::cout<<"Restoring at time: "<<si.restoreTime()<<std::endl;
-
       if (_backups.count(si.restoreTime()) == 0)
         mooseError("no backup available for requested restore time");
       _app.restore(_backups[si.restoreTime()]);
@@ -529,8 +466,6 @@ Transient::incrementStepOrReject()
   }
   else
   {
-    std::cout<<"Last solve did NOT converge!"<<std::endl;
-
     _problem.restoreMultiApps(EXEC_TIMESTEP_BEGIN, true);
     _problem.restoreMultiApps(EXEC_TIMESTEP_END, true);
 

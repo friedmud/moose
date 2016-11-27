@@ -43,8 +43,6 @@ DT2Stepper::DT2Stepper(const InputParameters & parameters) :
 Real
 DT2Stepper::computeInitialDT()
 {
-  std::cout<<"DT2Stepper::computeInitialDT() step "<<_step_count<<std::endl;
-
   // On the first step... this means that we are getting ready to start the first small step
   if (std::abs(_time - _start_time) < _tol && _big_soln && _converged[0])
     return computeDT();
@@ -59,34 +57,26 @@ DT2Stepper::computeDT()
 {
   if (std::abs(_time - _end_time) < _tol && !_big_soln && _converged[0]) // Just finished initial big step
   {
-    std::cout<<"Finished big step!!!!!!!!"<<std::endl;
-
     // collect big dt soln and rewind to collect small dt solns
     _big_soln.reset(_soln_nonlin->clone().release());
     _big_soln->close();
-
-    std::cout<<"Setting start_time: "<<_start_time<<std::endl;
 
     restore(_start_time);
 
     return windowDT() / 2.0; // doesn't actually matter what we return here because rewind
   }
-  else if (std::abs(_time - _start_time) < _tol && _big_soln && _converged[0])
+  else if (std::abs(_time - _start_time) < _tol && _big_soln && _converged[0]) // Start of first small step
   {
-    std::cout<<"Starting first small step!!!"<<std::endl;
-
     // we just rewound and need to do small steps
     return windowDT() / 2.0;
   }
-  else if (std::abs(_start_time + windowDT() / 2 - _time) < _tol && _big_soln && _converged[0])
+  else if (std::abs(_start_time + windowDT() / 2 - _time) < _tol && _big_soln && _converged[0]) // Start of second small step
   {
-    std::cout<<"Starting second small step!!!"<<std::endl;
     // we just finished the first of the smaller dt steps
     return windowDT() / 2.0;
   }
-  else if (std::abs(_time - _end_time) < _tol && _big_soln && _converged[0])
+  else if (std::abs(_time - _end_time) < _tol && _big_soln && _converged[0]) // Finished second small step
   {
-    std::cout<<"Finished smaller steps!!!"<<std::endl;
     // we just finished the second of the two smaller dt steps and are ready for error calc
     Real err = calculateError();
     if (err > _e_max)
@@ -104,7 +94,6 @@ DT2Stepper::computeDT()
   }
   else
   {
-    std::cout<<"Something went wrong!!!"<<std::endl;
     // something went wrong or this is initial call of simulation - start over
     backup();
 

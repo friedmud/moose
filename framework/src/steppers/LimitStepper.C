@@ -46,10 +46,6 @@ LimitStepper::computeInitialDT()
 Real
 LimitStepper::computeDT()
 {
-  std::cout<<"_incoming_stepper_dt: "<<_incoming_stepper_dt<<" from "<<&_incoming_stepper_dt<<std::endl;
-  std::cout<<"_min: "<<_min<<std::endl;
-  std::cout<<"_max: "<<_max<<std::endl;
-
   return std::min(std::max(_incoming_stepper_dt, _min), _max);
 }
 
