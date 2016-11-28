@@ -140,7 +140,6 @@ Transient::Transient(const InputParameters & parameters) :
     _picard_abs_tol(getParam<Real>("picard_abs_tol")),
     _verbose(getParam<bool>("verbose")),
     _new_dt(0),
-    _stepper(nullptr),
     _nl_its(declareRestartableData<unsigned int>("nl_its", 0)),
     _l_its(declareRestartableData<unsigned int>("l_its", 0)),
     _soln_nonlin(declareRestartableData<std::vector<Real> >("soln_nonlin", std::vector<Real>())),
@@ -691,7 +690,7 @@ Transient::computeConstrainedDT()
   std::ostringstream diag;
 
   //After startup steps, compute new dt
-  if (_t_step > _n_startup_steps || _stepper)
+  if (_t_step > _n_startup_steps)
     dt_cur = getDT();
   else
   {

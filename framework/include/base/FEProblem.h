@@ -31,7 +31,7 @@
 #include "AuxGroupExecuteMooseObjectWarehouse.h"
 #include "MaterialWarehouse.h"
 #include "Stepper.h"
-#include "BlockStepper.h"
+#include "StepperInfo.h"
 
 // libMesh includes
 #include "libmesh/enum_quadrature_type.h"
