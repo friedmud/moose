@@ -1,8 +1,8 @@
 #ifndef RAY_H
 #define RAY_H
 
-// Local Includes
-#include "Squid.h"
+// MOOSE Includes
+#include "Moose.h"
 
 // libMesh Includes
 #include "libmesh/point.h"

@@ -53,11 +53,6 @@ public:
   virtual void rayStart() {}
 
   /**
-   * Called before tracing a Ray
-   */
-  virtual void rayStart() {}
-
-  /**
    * Called on each Segment
    * @param start The beginning of the segment
    * @param end The end of the segment

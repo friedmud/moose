@@ -17,9 +17,8 @@
 // Local Includes
 #include "RayProblem.h"
 #include "RayKernel.h"
-#include "RayBoundaryCondition.h"
+#include "RayBC.h"
 #include "RayMaterial.h"
-#include "RunStudy.h"
 
 // MOOSE Includes
 #include "MooseMesh.h"
@@ -41,17 +40,12 @@ RaySystem::RaySystem(RayProblem & subproblem, const std::string & name, unsigned
     _sys(_ray_problem.es().add_system<TransientExplicitSystem>(name)),
     _threaded_data(libMesh::n_threads()),
     _num_groups(num_groups),
-    _volume_only(subproblem.volumeOnly()),
-    _fsr_sys(subproblem.es().add_system<ExplicitSystem>("fsr_system")),
-    _fsr_sys_num(_fsr_sys.number()),
-    _fsr_var(_fsr_sys.add_variable("fsr_var", FEType(CONSTANT, MONOMIAL))),
-    _fsr_volumes(
-        dynamic_cast<PetscVector<Number> &>(_fsr_sys.add_vector("fsr_volumes", false, PARALLEL))),
-    _volume(computeVolume())
+    _current_group_solution(dynamic_cast<PetscVector<Number> &>(solution()))
 {
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
-    _threaded_data[tid]._fsr_volumes = dynamic_cast<PetscVector<Number> *>(
-        &_fsr_sys.add_vector("thread_fsr_volumes_" + std::to_string(tid), false, PARALLEL));
+  FEType var_type(CONSTANT, MONOMIAL);
+
+  for (unsigned int g = 0; g < _num_groups; g++)
+    addVariable("group_" + std::to_string(g), var_type, 1.0);
 
   _console << "\nCreated RaySystem!!!\n" << std::endl;
 }
@@ -194,9 +188,9 @@ RaySystem::addRayKernel(const std::string & mk_name,
 }
 
 void
-RaySystem::addRayBoundaryCondition(const std::string & mbc_name,
-                                   const std::string & name,
-                                   InputParameters parameters)
+RaySystem::addRayBC(const std::string & mbc_name,
+                    const std::string & name,
+                    InputParameters parameters)
 {
   _console << "Adding RayBCl!" << std::endl;
 
@@ -206,8 +200,7 @@ RaySystem::addRayBoundaryCondition(const std::string & mbc_name,
 
   for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
-    MooseSharedPointer<RayBoundaryCondition> mbc =
-        _factory.create<RayBoundaryCondition>(mbc_name, name, parameters, tid);
+    MooseSharedPointer<RayBC> mbc = _factory.create<RayBC>(mbc_name, name, parameters, tid);
     _ray_bcs.addObject(mbc, tid);
   }
 }
@@ -256,17 +249,11 @@ RaySystem::solve()
 void
 RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
 {
-  //  std::cout << "RaySystem::reinitElem()" << std::endl;
-
   auto & threaded_data = _threaded_data[tid];
 
   dof_id_type dof_number = elem->dof_number(number(), 0, 0);
 
-  threaded_data._current_offset = _current_scalar_flux.map_global_to_local_index(dof_number);
-
-  dof_id_type fsr_dof_number = elem->dof_number(_fsr_sys_num, 0, 0);
-
-  threaded_data._current_fsr_offset = _fsr_volumes.map_global_to_local_index(fsr_dof_number);
+  threaded_data._current_offset = _current_group_solution.map_global_to_local_index(dof_number);
 
   if (only_sigma_t)
     threaded_data._current_ray_material->reinitSigmaT(elem);

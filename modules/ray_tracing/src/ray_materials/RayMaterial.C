@@ -12,39 +12,40 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "RayKernel.h"
+#include "RayMaterial.h"
 
 // Local Includes
 #include "RayProblem.h"
-#include "RaySystem.h"
 
 // MOOSE Includes
 #include "MooseMesh.h"
 
 template <>
 InputParameters
-validParams<RayKernel>()
+validParams<RayMaterial>()
 {
   InputParameters params = validParams<MooseObject>();
 
   params += validParams<SetupInterface>();
   params += validParams<BlockRestrictable>();
 
-  params.registerBase("RayKernel");
+  params.addParam<bool>("fissionable", false, "Whether or not this material produces fissions");
+
+  params.registerBase("RayMaterial");
 
   return params;
 }
 
-RayKernel::RayKernel(const InputParameters & params)
+RayMaterial::RayMaterial(const InputParameters & params)
   : MooseObject(params),
     SetupInterface(this),
-    Restartable(params, "RayKernels"),
+    Restartable(params, "RayMaterials"),
     BlockRestrictable(params),
     Coupleable(this, false),
+    UserObjectInterface(this),
+    TransientInterface(this),
+    _fissionable(getParam<bool>("fissionable")),
     _ray_problem(dynamic_cast<RayProblem &>(*params.get<FEProblem *>("_fe_problem"))),
-    _ray_sys(_ray_problem.raySystem()),
     _tid(params.get<THREAD_ID>("_tid"))
 {
 }
-
-RayKernel::~RayKernel() {}

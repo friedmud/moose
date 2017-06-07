@@ -11,7 +11,7 @@ class FEProblem;
 class RayKernel;
 class RayProblem;
 
-namespace Squid
+namespace TraceRay
 {
 void traceRay(const std::shared_ptr<Ray> & ray,
               RayProblem & ray_problem,
