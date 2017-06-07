@@ -17,8 +17,6 @@
 
 // Local Includes
 #include "RaySystem.h"
-#include "RayAuxSystem.h"
-#include "PKESystem.h"
 
 // MOOSE Includes
 #include "FEProblem.h"
@@ -44,13 +42,7 @@ public:
   RayProblem(const InputParameters & params);
   virtual ~RayProblem() override;
 
-  void createRaySystem()
-  {
-    if (_pke)
-      _ray_system = std::make_shared<PKESystem>(*this, "Ray", _num_groups);
-    else
-      _ray_system = std::make_shared<RaySystem>(*this, "Ray", _num_groups);
-  }
+  void createRaySystem() { _ray_system = std::make_shared<RaySystem>(*this, "Ray", _num_groups); }
 
   virtual void initialSetup() override;
   virtual void timestepSetup() override;
@@ -91,11 +83,6 @@ public:
   RaySystem & raySystem() { return *_ray_system; }
 
   /**
-   * Get the RayAuxSystem for this Problem
-   */
-  RayAuxSystem & rayAuxSystem() { return _ray_aux_system; }
-
-  /**
    * Called during the ray tracing process when the subdomain changes
    */
   void subdomainChanged(SubdomainID current_subdomain, THREAD_ID tid);
@@ -111,68 +98,18 @@ public:
   unsigned int numPolar() { return _num_polar; }
 
   /**
-   * Whether or not we're doing TRRM
-   */
-  bool & isTRRM() { return _trrm; }
-
-  /**
-   * Whether or not we're doing a volume only calculation
-   */
-  bool volumeOnly() { return _volume_only; }
-
-  /**
    * Maximum length through the domain
    */
   Real domainMaxLength() { return _domain_max_length; }
 
   /**
-   * Get the RayTracingStudy for TRRM
+   * Get the RayTracingStudy
    */
-  RayTracingStudy & TRRMRayTracingStudy()
+  virtual RayTracingStudy & rayTracingStudy()
   {
     return const_cast<RayTracingStudy &>(
         getUserObject<RayTracingStudy>(_pars.get<UserObjectName>("trrm_study")));
   }
-
-  /**
-   * Get the RayTracingStudy
-   */
-  RayTracingStudy & deterministicRayTracingStudy()
-  {
-    return const_cast<RayTracingStudy &>(
-        getUserObject<RayTracingStudy>(_pars.get<UserObjectName>("deterministic_study")));
-  }
-
-  /**
-   * Swap the Ray banks
-   */
-  void swapRayBanks() { std::swap(_current_ray_banks, _old_ray_banks); }
-
-  /**
-   * Get the Ray banks
-   */
-  std::vector<std::vector<std::shared_ptr<Ray>>> & oldRayBanks() { return *_old_ray_banks; }
-
-  /**
-   * Get the Ray banks
-   */
-  std::vector<std::vector<std::shared_ptr<Ray>>> & currentRayBanks() { return *_current_ray_banks; }
-
-  /**
-   * Bank a Ray
-   */
-  void bankRay(const std::shared_ptr<Ray> & ray, THREAD_ID tid)
-  {
-    (*_current_ray_banks)[tid].emplace_back(ray);
-  }
-
-  /**
-   * Get a reference to the dead zone value.
-   *
-   * Note: This is a reference and it should be captured as one since it can change during the
-   * simulation.
-   */
-  const Real & deadZone() { return _dead_zone; }
 
   /**
    * Get the bounding box for the domain
@@ -183,67 +120,17 @@ protected:
   unsigned int _num_groups;
   unsigned int _num_polar;
 
-  bool _trrm;
-
-  bool _deterministic_active;
-
-  bool _volume_only;
-
-  unsigned int _max_rays;
-
-  unsigned int _k_window_size;
-  Real _k_window_tolerance;
-  unsigned int _k_window_bumps;
-  Real _k_tolerance;
-
-  Real _ray_growth;
-  Real _ray_length_growth;
-
-  Real _growth_convergence_multiplier;
-
-  Real _scalar_flux_tolerance;
-
-  Real _kappa_source_tolerance;
-  Real _kappa_source_growth_tolerance;
-
   bool _solve_ray;
 
   bool _solve_fe;
-  Real _max_fe_norm;
-  Real _fe_tolerance;
-  Real _fe_active_tolerance;
-
-  unsigned int _power_iterations;
-  unsigned int _conditioning_iterations;
-
-  unsigned int _physics_iterations;
-
-  bool _active_after_converged;
-  bool _terminate_after_ray_converged;
-
-  bool _fe_converged = false;
-  bool _fe_active = false;
-  bool _ray_converged = false;
-
-  Real _dead_zone;
 
   /// The System that holds all of data for Ray
   std::shared_ptr<RaySystem> _ray_system;
 
-  RayAuxSystem _ray_aux_system;
-
   Real _domain_max_length;
-
-  /// One for each thread
-  std::shared_ptr<std::vector<std::vector<std::shared_ptr<Ray>>>> _current_ray_banks;
-
-  std::shared_ptr<std::vector<std::vector<std::shared_ptr<Ray>>>> _old_ray_banks;
 
   /// Bounding box for the domain
   MeshTools::BoundingBox _b_box;
-
-  /// Whether or not we're doing a PKE solve
-  bool _pke;
 
   friend class RaySystem;
   friend class RayAuxSystem;

@@ -1,6 +1,7 @@
 // Local Includes
 #include "RayTracingStudy.h"
 #include "RayProblem.h"
+#include "TraceRay.h"
 
 // MOOSE Includes
 #include "ParallelUniqueId.h"
@@ -52,7 +53,6 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _comm(_mesh.comm()),
     _halo_size(getParam<unsigned int>("halo_size")),
     _total_rays(getParam<unsigned int>("num_rays")),
-    _volume(_ray_problem.raySystem().volume()),
     _max_buffer_size(getParam<unsigned int>("send_buffer_size")),
     _chunk_size(getParam<unsigned int>("chunk_size")),
     _my_pid(_comm.rank()),
@@ -63,8 +63,6 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _clicks_per_root_communication(getParam<unsigned int>("clicks_per_root_communication")),
     _clicks_per_receive(getParam<unsigned int>("clicks_per_receive")),
     _ray_max_distance(getParam<Real>("ray_distance")),
-    _average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
-    _old_average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
     _method((RayTracingMethod)(int)(getParam<MooseEnum>("method")))
 {
   setMethod(_method);
@@ -230,13 +228,13 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
     if (ray->startingElem()->processor_id() == _my_pid) // This will be false if we've picked up a
                                                         // banked ray that needs to start on another
                                                         // processor
-      Squid::traceRay(ray,
-                      _ray_problem,
-                      _mesh,
-                      _halo_size,
-                      _ray_max_distance,
-                      _ray_length,
-                      omp_get_thread_num());
+      TraceRay::traceRay(ray,
+                         _ray_problem,
+                         _mesh,
+                         _halo_size,
+                         _ray_max_distance,
+                         _ray_length,
+                         omp_get_thread_num());
   }
 
   // Figure out where they went

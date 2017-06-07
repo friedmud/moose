@@ -1,7 +1,6 @@
 // Local Includes
-#include "Squid.h"
 #include "RayKernel.h"
-#include "RayBoundaryCondition.h"
+#include "RayBC.h"
 #include "RayProblem.h"
 
 // Moose Includes
@@ -27,7 +26,7 @@
 #include <list>
 #include <unistd.h>
 
-namespace Squid
+namespace TraceRay
 {
 
 unsigned long int ray_count = 0;
@@ -189,7 +188,7 @@ intersectQuad(const Point & O,
               Real & u,
               Real & v,
               Real & t,
-              const std::shared_ptr<Ray> & ray)
+              const std::shared_ptr<Ray> & /*ray*/)
 {
   // Reject rays using the barycentric coordinates of // the intersection point with respect to T.
   auto E01 = V10;
@@ -608,7 +607,7 @@ void
 find_point_neighbors(const Elem * current_elem,
                      const Point & p,
                      std::set<const Elem *> & neighbor_set,
-                     const std::shared_ptr<Ray> & ray)
+                     const std::shared_ptr<Ray> & /*ray*/)
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());
@@ -1205,12 +1204,11 @@ current_elem->n_nodes()) + i)<<std::endl;
 
         for (const auto & bid : ids)
         {
-          if (ray_system.hasRayBoundaryConditions(bid, tid))
+          if (ray_system.hasRayBCs(bid, tid))
           {
             applied_ids.insert(bid);
 
-            const std::vector<MooseSharedPointer<RayBoundaryCondition>> & ray_bcs =
-                ray_system.getRayBoundaryConditions(bid, tid);
+            const std::vector<MooseSharedPointer<RayBC>> & ray_bcs = ray_system.getRayBCs(bid, tid);
 
             for (auto & bc : ray_bcs)
             {
@@ -1285,12 +1283,12 @@ current_elem->n_nodes()) + i)<<std::endl;
                   if (applied_ids.find(bid) ==
                       applied_ids.end()) // Don't reapply the same BC twice!
                   {
-                    if (ray_system.hasRayBoundaryConditions(bid, tid))
+                    if (ray_system.hasRayBCs(bid, tid))
                     {
                       applied_ids.insert(bid);
 
-                      const std::vector<MooseSharedPointer<RayBoundaryCondition>> & ray_bcs =
-                          ray_system.getRayBoundaryConditions(bid, tid);
+                      const std::vector<MooseSharedPointer<RayBC>> & ray_bcs =
+                          ray_system.getRayBCs(bid, tid);
 
                       for (auto & bc : ray_bcs)
                       {

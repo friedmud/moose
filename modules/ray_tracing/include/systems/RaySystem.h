@@ -15,8 +15,8 @@
 #ifndef RAYSYSTEM_H
 #define RAYSYSTEM_H
 
-// Local Includes
-#include "ElementRays.h"
+// local includes
+#include "RayTracingStudy.h"
 
 // MOOSE includes
 #include "SystemBase.h"
@@ -34,7 +34,7 @@ class TimeIntegrator;
 class AuxScalarKernel;
 class AuxKernel;
 class RayKernel;
-class RayBoundaryCondition;
+class RayBC;
 class RayMaterial;
 
 // libMesh forward declarations
@@ -69,15 +69,8 @@ public:
     /// The index into the solution vectors for the current element
     dof_id_type _current_offset;
 
-    /// The index into the FSR solution vectors for the current element
-    dof_id_type _current_fsr_offset;
-
     /// The current element being operated on
     const Elem * _current_elem;
-
-    /// FSR Volumes
-    PetscVector<Number> * _fsr_volumes;
-    PetscScalar * _fsr_volumes_values;
 
     /// Storage for the scalar flux
     PetscVector<Number> * _scalar_flux;
@@ -110,9 +103,7 @@ public:
 
   void
   addRayKernel(const std::string & mk_name, const std::string & name, InputParameters parameters);
-  void addRayBoundaryCondition(const std::string & mbc_name,
-                               const std::string & name,
-                               InputParameters parameters);
+  void addRayBC(const std::string & mbc_name, const std::string & name, InputParameters parameters);
   void
   addRayMaterial(const std::string & mk_name, const std::string & name, InputParameters parameters);
 
@@ -134,7 +125,7 @@ public:
   /**
    * Whether or not there are RayBCs for this boundary
    */
-  bool hasRayBoundaryConditions(BoundaryID id, THREAD_ID tid = 0)
+  bool hasRayBCs(BoundaryID id, THREAD_ID tid = 0)
   {
     return _ray_bcs.hasActiveBoundaryObjects(id, tid);
   }
@@ -142,8 +133,7 @@ public:
   /**
    * Get the RayBCs for this boundary
    */
-  const std::vector<MooseSharedPointer<RayBoundaryCondition>> &
-  getRayBoundaryConditions(BoundaryID id, THREAD_ID tid = 0) const
+  const std::vector<MooseSharedPointer<RayBC>> & getRayBCs(BoundaryID id, THREAD_ID tid = 0) const
   {
     return _ray_bcs.getActiveBoundaryObjects(id, tid);
   }
@@ -194,92 +184,9 @@ public:
   dof_id_type & currentOffset(THREAD_ID tid) { return _threaded_data[tid]._current_offset; }
 
   /**
-   * The current offset into the FSR solution vectors
-   */
-  dof_id_type & currentFSROffset(THREAD_ID tid) { return _threaded_data[tid]._current_fsr_offset; }
-
-  /**
-   * Get the raw PETSc vector that holds current scalar flux values
-   */
-  PetscScalar *& currentScalarFluxValues() { return _current_scalar_flux_values; }
-
-  /**
-   * Get the raw PETSc vector that holds Q values
-   */
-  PetscScalar *& QValues() { return _Q_values; }
-
-  /**
-   * Get the raw PETSc vector that holds F values
-   */
-  PetscScalar *& FValues() { return _F_values; }
-
-  /**
-   * Get the raw PETSc vector that holds scalar flux values for one thread
-   * Use this to actually set the value of the scalar flux within RayKernels
-   */
-  PetscScalar *& scalarFluxValues(THREAD_ID tid) { return _threaded_data[tid]._scalar_flux_values; }
-
-  /**
-   * Get the raw PETSc vector that holds volume values for one thread
-   * Use this to actually set the value of the volume in RayKernels
-   */
-  PetscScalar *& FSRVolumesValues(THREAD_ID tid) { return _threaded_data[tid]._fsr_volumes_values; }
-
-  /**
-   * Get the raw PETSc vector that holds average scalar flux values for one thread
-   * Use this for READ ONLY access!
-   */
-  PetscScalar *& averageScalarFluxValues() { return _average_scalar_flux_values; }
-
-  /**
-   * The current eigenvalue
-   */
-  Real k() { return _k; }
-
-  /**
-   * The average eigenvalue
-   */
-  Real averageK() { return _average_k; }
-
-  /**
-   * The current eigenvalue change
-   */
-  Real kResidual() { return _k_residual; }
-
-  /**
-   * The current scalar flux residual
-   */
-  Real scalarFluxResidual() { return _scalar_flux_residual; }
-
-  /**
-   * The current kappa residual
-   */
-  Real kappaResidual() { return _kappa_residual; }
-
-  /**
    * Get the ray tracing results
    */
   std::map<std::string, std::vector<Real>> & rayTracingResults() { return _results; }
-
-  /**
-   * Total number of power iterations taken
-   */
-  unsigned int totalIterations() { return _total_its; }
-
-  /**
-   * Total number of inactive power iterations taken
-   */
-  unsigned int inactiveIterations() { return _inactive_its; }
-
-  /**
-   * Total number of growth power iterations taken
-   */
-  unsigned int growthIterations() { return _growth_its; }
-
-  /**
-   * Total number of active power iterations taken
-   */
-  unsigned int activeIterations() { return _active_its; }
 
   /**
    * Total number of integrations done in the last transport sweep
@@ -290,11 +197,6 @@ public:
    * The element currently being operated on by each thread
    */
   const Elem *& currentElem(THREAD_ID tid) { return _threaded_data[tid]._current_elem; }
-
-  /**
-   * The volume of the entire domain
-   */
-  Real volume() { return _volume; }
 
   /**
    * Set the RayTracingStudy
@@ -308,14 +210,16 @@ protected:
 
   std::vector<ThreadedData> _threaded_data;
 
-  /// FSR Data
-  ExplicitSystem & _fsr_sys;
-  unsigned int _fsr_sys_num;
-  unsigned int _fsr_var;
+  /// Number of groups
+  unsigned int _num_groups;
+
+  /// These are the values that are used internally in the solver
+  PetscVector<Number> & _current_group_solution;
+  PetscScalar * _current_group_solution_values = NULL;
 
   /// Storage for RayKernels
   MooseObjectWarehouse<RayKernel> _ray_kernels;
-  MooseObjectWarehouse<RayBoundaryCondition> _ray_bcs;
+  MooseObjectWarehouse<RayBC> _ray_bcs;
   MooseObjectWarehouse<RayMaterial> _ray_materials;
 
   /// Ghosted current solution
@@ -327,10 +231,10 @@ protected:
   /// The UserObject that propogates Rays
   RayTracingStudy * _study = nullptr;
 
-  /// The amount of integrated distance from the last transport sweep
+  /// The amount of integrated distance from the last sweep
   Real _total_integrated_distance;
 
-  /// The total number of "integrations" done during a transport sweep
+  /// The total number of "integrations" done during a sweep
   Real _total_integrations;
 };
 

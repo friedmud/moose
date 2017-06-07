@@ -3,8 +3,7 @@
 
 // Local Includes
 #include "Ray.h"
-#include "Squid.h"
-#include "RayRayTracing.h"
+#include "RayTracing.h"
 #include "SendBuffer.h"
 #include "ReceiveBuffer.h"
 #include "RayTracingMethod.h"
