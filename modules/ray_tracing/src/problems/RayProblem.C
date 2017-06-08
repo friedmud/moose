@@ -35,6 +35,8 @@ validParams<RayProblem>()
   params.addParam<bool>("solve_ray", true, "Whether or not to solve the Ray problem");
   params.addParam<bool>("solve_fe", false, "Whether or not to actually solve the FE problem!");
 
+  params.addRequiredParam<UserObjectName>("study", "The RayTracing study");
+
   return params;
 }
 
@@ -76,56 +78,17 @@ RayProblem::solve()
 {
   _console << "0 Nonlinear |R|" << std::endl;
 
-  /*
-  for (unsigned int i = 0; i < _physics_iterations; i++)
+  // Solve the finite-element problem
+  if (_solve_fe)
   {
-    if (_solve_ray)
-    {
-      // Solve the Ray problem
-      _ray_system->solve();
-
-      computeUserObjects(EXEC_CUSTOM, Moose::PRE_AUX);
-      _aux->compute(EXEC_CUSTOM);
-      computeUserObjects(EXEC_CUSTOM, Moose::POST_AUX);
-    }
-
-    // Solve the finite-element problem
-    if (_solve_fe)
-    {
-      Real fe_norm = computeResidualL2Norm();
-
-      _max_fe_norm = std::max(fe_norm, _max_fe_norm);
-
-      _console << "\n FE Relative Residual Norm: " << fe_norm / _max_fe_norm << "\n" << std::endl;
-
-      if (fe_norm / _max_fe_norm < _fe_active_tolerance)
-      {
-        _console << "Ray can enter Active" << std::endl;
-        _fe_active = true;
-      }
-      else
-      {
-        _console << "Ray can't enter Active" << std::endl;
-        _fe_active = false;
-      }
-
-      if (fe_norm / _max_fe_norm < _fe_tolerance)
-      {
-        _console << "FE Converged!" << std::endl;
-        _fe_converged = true;
-      }
-
-      // Are we finished?
-      if (// _fe_converged // && _ray_converged)
-        break;
-
-      FEProblem::solve();
-
-      // Update the element average temperature
-      computeAuxiliaryKernels(EXEC_TIMESTEP_END);
-    }
+    FEProblem::solve();
   }
-*/
+
+  if (_solve_ray)
+  {
+    // Solve the Ray problem
+    _ray_system->solve();
+  }
 }
 
 bool

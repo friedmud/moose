@@ -73,8 +73,8 @@ public:
     const Elem * _current_elem;
 
     /// Storage for the scalar flux
-    PetscVector<Number> * _scalar_flux;
-    PetscScalar * _scalar_flux_values;
+    PetscVector<Number> * _group_solution;
+    PetscScalar * _group_solution_values;
 
   protected:
     /// Because of portability issues with alignas() > 16 bytes I'm also going to pad with
@@ -184,6 +184,15 @@ public:
   dof_id_type & currentOffset(THREAD_ID tid) { return _threaded_data[tid]._current_offset; }
 
   /**
+   * Get the raw PETSc vector that holds group values for one thread
+   * Use this to actually set the value of the scalar flux within RayKernels
+   */
+  PetscScalar *& groupSolutionValues(THREAD_ID tid)
+  {
+    return _threaded_data[tid]._group_solution_values;
+  }
+
+  /**
    * Get the ray tracing results
    */
   std::map<std::string, std::vector<Real>> & rayTracingResults() { return _results; }
@@ -204,6 +213,19 @@ public:
   void setRayTracingStudy(RayTracingStudy * study) { _study = study; }
 
 protected:
+  /**
+   * Sweep over all the Rays, applying the Kernels/BCs
+   */
+  virtual void sweep();
+
+  /**
+   * Called after a sweep() has been completed
+   *
+   * The default is that the values from the threaded group solutions will be accumulated into the
+   * true solution vector
+   */
+  virtual void postSweep();
+
   RayProblem & _ray_problem;
 
   TransientExplicitSystem & _sys;

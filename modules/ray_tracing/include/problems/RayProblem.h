@@ -108,7 +108,7 @@ public:
   virtual RayTracingStudy & rayTracingStudy()
   {
     return const_cast<RayTracingStudy &>(
-        getUserObject<RayTracingStudy>(_pars.get<UserObjectName>("trrm_study")));
+        getUserObject<RayTracingStudy>(_pars.get<UserObjectName>("study")));
   }
 
   /**

@@ -16,7 +16,7 @@ using namespace libMesh;
 #define RAY_BUFFER 22000
 #define STOP_TRACING 23000
 
-extern std::chrono::steady_clock::duration global_packing_time;
-extern std::chrono::steady_clock::duration global_unpacking_time;
+// extern std::chrono::steady_clock::duration global_packing_time;
+// extern std::chrono::steady_clock::duration global_unpacking_time;
 
 #endif // RAYTRACINGCOMMON_H

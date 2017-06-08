@@ -29,13 +29,13 @@
 namespace TraceRay
 {
 
-unsigned long int ray_count = 0;
+unsigned long int ray_count = 99999999999;
 
-unsigned int debug_ray = 700000;
+unsigned int debug_ray = 99999999999;
 
-unsigned int debug_ray_id = 7;
+unsigned int debug_ray_id = 99999999999;
 
-unsigned int debug_ray_pid = 2000000;
+unsigned int debug_ray_pid = 99999999999;
 
 // #define USE_DEBUG_RAY
 
@@ -63,7 +63,11 @@ sideIntersectedByLine2D(const Elem * current_elem,
 
 #ifdef USE_DEBUG_RAY
     if (ray->id() == debug_ray_id)
+    {
       std::cerr << "Incoming point: " << incoming_point << std::endl;
+      std::cerr << "Ray end: " << ray->end() << std::endl;
+    }
+
 #endif
 
     // Bump the starting point down the path a bit
@@ -188,7 +192,7 @@ intersectQuad(const Point & O,
               Real & u,
               Real & v,
               Real & t,
-              const std::shared_ptr<Ray> & /*ray*/)
+              const std::shared_ptr<Ray> & ray)
 {
   // Reject rays using the barycentric coordinates of // the intersection point with respect to T.
   auto E01 = V10;
@@ -273,7 +277,8 @@ intersectQuad(const Point & O,
     }
   */
 
-  // Reject rays using the barycentric coordinates of // the intersection point with respect to T′.
+  // Reject rays using the barycentric coordinates of // the intersection point with respect to
+  // T′.
   if ((alpha + beta) > 1)
   {
     auto E23 = V01;
@@ -504,7 +509,8 @@ sideIntersectedByLineHex8(const Elem * current_elem,
  *
  * @param elem The elem to search
  * @param not_side Sides to _not_ search (Use -1 if you want to search all sides)
- * @param intersection_point If an intersection is found this will be filled with the x,y,z position
+ * @param intersection_point If an intersection is found this will be filled with the x,y,z
+ * position
  * of that intersection
  * @return The side that is intersected by the line.  Will return -1 if it doesn't intersect any
  * side
@@ -607,7 +613,7 @@ void
 find_point_neighbors(const Elem * current_elem,
                      const Point & p,
                      std::set<const Elem *> & neighbor_set,
-                     const std::shared_ptr<Ray> & /*ray*/)
+                     const std::shared_ptr<Ray> & ray)
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());
@@ -789,7 +795,8 @@ traceRay(const std::shared_ptr<Ray> & ray,
 #endif
 
   do
-  { // Find the side of this element that the Ray intersects... while ignoring the incoming side (we
+  { // Find the side of this element that the Ray intersects... while ignoring the incoming side
+    // (we
     // don't want to move backward!)
     int intersected_side = -1;
 
@@ -826,7 +833,8 @@ traceRay(const std::shared_ptr<Ray> & ray,
       {
 //        libMesh::err<<"Elem nodes: "<<*debug_mesh->node_ptr((debug_node_count -
 current_elem->n_nodes()) + i)<<std::endl;
-        debug_elem->set_node(i) = debug_mesh->node_ptr((debug_node_count - current_elem->n_nodes())
+        debug_elem->set_node(i) = debug_mesh->node_ptr((debug_node_count -
+current_elem->n_nodes())
 + i);
       }
 
@@ -865,8 +873,20 @@ current_elem->n_nodes()) + i)<<std::endl;
                                                    intersection_point,
                                                    boundary_intersection_point);
 
-    if (intersected_side ==
-        -1) // If we failed to find a side... try harder (as long as the ray has moved a bit
+    bool ends_in_elem = false;
+
+    // If we didn't find a side, it could be because the Ray actually ends within this element
+    if (intersected_side == -1) // -1 means that we didn't find any side
+    {
+      if (current_elem->contains_point(ray->end()))
+      {
+        ends_in_elem = true;
+        intersection_point = ray->end();
+      }
+    }
+
+    if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder (as
+                                                 // long as the ray has moved a bit
     {
 #ifdef USE_DEBUG_RAY
       if (ray->id() == debug_ray_id)
@@ -1088,7 +1108,7 @@ current_elem->n_nodes()) + i)<<std::endl;
     #endif
     */
 
-    if (intersected_side != -1) // -1 means that we didn't find any side
+    if (intersected_side != -1 || ends_in_elem) // -1 means that we didn't find any side
     {
 #ifdef USE_DEBUG_RAY
       if (ray->id() == debug_ray_id)
@@ -1128,7 +1148,7 @@ current_elem->n_nodes()) + i)<<std::endl;
       ray_system.reinitElem(current_elem, tid, true);
 
       for (auto & ray_kernel : *ray_kernels)
-        ray_kernel->onSegment(current_elem, incoming_point, intersection_point);
+        ray_kernel->onSegment(current_elem, incoming_point, intersection_point, ends_in_elem);
 
       // If the Ray is beyond the max distance we need to kill it
       if (ray->distance() >= ray_max_distance)
@@ -1142,208 +1162,220 @@ current_elem->n_nodes()) + i)<<std::endl;
         break;
       }
 
-      // Get the neighbor on that side
-      Elem * neighbor = current_elem->neighbor(intersected_side);
-
-#ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
-        std::cerr << "Neighbor: " << neighbor << std::endl;
-#endif
-
-      if (neighbor)
+      if (ends_in_elem)
       {
-#ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
-          std::cerr << "Neighbor_id: " << neighbor->id() << std::endl;
-#endif
-        // Note: This is finding the side the current_elem is on for the neighbor.  That's the
-        // "incoming_side" for the neighbor
-        incoming_side = sideNeighborIsOn(neighbor, current_elem);
-
-        // Recurse
-        current_elem = neighbor;
-        incoming_point = intersection_point;
-
-        // If the neighbor is off-processor... we need to set up the Ray data to be passed to the
-        // next processor
-        if (neighbor->processor_id() != pid)
-        {
-          halo_count++;
-
-          if (halo_count == halo_size)
-          {
-            ray->setStartingElem(neighbor);
-            ray->setIncomingSide(incoming_side);
-            ray->setStart(incoming_point);
-            break;
-          }
-        }
+        ray->setShouldContinue(false);
+        break;
       }
-      else // Edge of the domain
+
+      if (intersected_side != -1)
       {
+        // Get the neighbor on that side
+        Elem * neighbor = current_elem->neighbor(intersected_side);
+
 #ifdef USE_DEBUG_RAY
         if (ray->id() == debug_ray_id)
-          std::cerr << "At edge of domain!" << std::endl;
+          std::cerr << "Neighbor: " << neighbor << std::endl;
 #endif
 
-        /*
-
-                  libMesh::err<<"Reflecting!"<<std::endl;
-        */
-
-        //        libMesh::err<<"Original:\n Start: "<<ray->start()<<"\n End:
-        //        "<<ray->end()<<std::endl;
-
-        // Need to see if this is a reflective BC
-        // Get the "direction" of the Ray
-        // Use work_point so no temporaries are created
-
-        //        libMesh::err<<" Direction: "<<work_point<<std::endl;
-
-        mesh.getMesh().get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
-
-        for (const auto & bid : ids)
+        if (neighbor)
         {
-          if (ray_system.hasRayBCs(bid, tid))
-          {
-            applied_ids.insert(bid);
-
-            const std::vector<MooseSharedPointer<RayBC>> & ray_bcs = ray_system.getRayBCs(bid, tid);
-
-            for (auto & bc : ray_bcs)
-            {
 #ifdef USE_DEBUG_RAY
-              if (ray->id() == debug_ray_id)
-                std::cerr << ray_count << " Applying BC!" << std::endl;
+          if (ray->id() == debug_ray_id)
+            std::cerr << "Neighbor_id: " << neighbor->id() << std::endl;
 #endif
+          // Note: This is finding the side the current_elem is on for the neighbor.  That's the
+          // "incoming_side" for the neighbor
+          incoming_side = sideNeighborIsOn(neighbor, current_elem);
 
-              bc->apply(current_elem, intersected_side, intersection_point, ray);
+          // Recurse
+          current_elem = neighbor;
+          incoming_point = intersection_point;
+
+          // If the neighbor is off-processor... we need to set up the Ray data to be passed to
+          // the
+          // next processor
+          if (neighbor->processor_id() != pid)
+          {
+            halo_count++;
+
+            if (halo_count == halo_size)
+            {
+              ray->setStartingElem(neighbor);
+              ray->setIncomingSide(incoming_side);
+              ray->setStart(incoming_point);
+              break;
             }
           }
         }
-
-        // Need to see if the ray hit _right_ on the "corner" of the domain
-        // If it did, then we're going to apply all of the boundary conditions for each
-        // side at that corner
-
-        // First determine if we hit a corner.
-        // Subtract off the current point from the min/max of the bounding box
-        // If any two entries from that subtraction are (near) zero then we're at a corner
-        work_point = intersection_point - b_box.min();
-        work_point2 = intersection_point - b_box.max();
-
-        unsigned int num_zero = 0;
-
-        for (unsigned int i = 0; i < mesh_dim; i++)
-          if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point(i)), 0., 1e-8))
-            num_zero++;
-
-        for (unsigned int i = 0; i < mesh_dim; i++)
-          if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point2(i)), 0., 1e-8))
-            num_zero++;
-
-        //        if (ray->id() == 4811)
-        //          libMesh::err<<"Here!"<<std::endl;
-
-        if (num_zero > 1)
+        else // Edge of the domain
         {
-          //          if (ray->id() == 4811)
-          //          libMesh::err<<ray_count<<" Ray hit a domain corner!
-          //          "<<intersection_point<<std::endl;
+#ifdef USE_DEBUG_RAY
+          if (ray->id() == debug_ray_id)
+            std::cerr << "At edge of domain!" << std::endl;
+#endif
 
-          find_point_neighbors(current_elem, intersection_point, point_neighbors, ray);
+          /*
 
-          // Try the search on each neighbor and see if something good happens
-          for (auto & neighbor : point_neighbors)
+                    libMesh::err<<"Reflecting!"<<std::endl;
+          */
+
+          //        libMesh::err<<"Original:\n Start: "<<ray->start()<<"\n End:
+          //        "<<ray->end()<<std::endl;
+
+          // Need to see if this is a reflective BC
+          // Get the "direction" of the Ray
+          // Use work_point so no temporaries are created
+
+          //        libMesh::err<<" Direction: "<<work_point<<std::endl;
+
+          mesh.getMesh().get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
+
+          for (const auto & bid : ids)
           {
+            if (ray_system.hasRayBCs(bid, tid))
+            {
+              applied_ids.insert(bid);
+
+              const std::vector<MooseSharedPointer<RayBC>> & ray_bcs =
+                  ray_system.getRayBCs(bid, tid);
+
+              for (auto & bc : ray_bcs)
+              {
+#ifdef USE_DEBUG_RAY
+                if (ray->id() == debug_ray_id)
+                  std::cerr << ray_count << " Applying BC!" << std::endl;
+#endif
+
+                bc->apply(current_elem, intersected_side, intersection_point, ray);
+              }
+            }
+          }
+
+          // Need to see if the ray hit _right_ on the "corner" of the domain
+          // If it did, then we're going to apply all of the boundary conditions for each
+          // side at that corner
+
+          // First determine if we hit a corner.
+          // Subtract off the current point from the min/max of the bounding box
+          // If any two entries from that subtraction are (near) zero then we're at a corner
+          work_point = intersection_point - b_box.min();
+          work_point2 = intersection_point - b_box.max();
+
+          unsigned int num_zero = 0;
+
+          for (unsigned int i = 0; i < mesh_dim; i++)
+            if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point(i)), 0., 1e-8))
+              num_zero++;
+
+          for (unsigned int i = 0; i < mesh_dim; i++)
+            if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point2(i)), 0., 1e-8))
+              num_zero++;
+
+          //        if (ray->id() == 4811)
+          //          libMesh::err<<"Here!"<<std::endl;
+
+          if (num_zero > 1)
+          {
+            //          if (ray->id() == 4811)
+            //          libMesh::err<<ray_count<<" Ray hit a domain corner!
+            //          "<<intersection_point<<std::endl;
+
+            find_point_neighbors(current_elem, intersection_point, point_neighbors, ray);
+
+            // Try the search on each neighbor and see if something good happens
+            for (auto & neighbor : point_neighbors)
+            {
 //            if (neighbor != current_elem) // Don't need to look through this element again
 //            {
 #ifdef USE_DEBUG_RAY
-            if (ray->id() == 4811)
-              libMesh::err << "Looking at neighbor: " << neighbor->id() << std::endl;
+              if (ray->id() == 4811)
+                libMesh::err << "Looking at neighbor: " << neighbor->id() << std::endl;
 #endif
 
-            // First find the side the point is on in the neighbor
-            auto side = -1;
+              // First find the side the point is on in the neighbor
+              auto side = -1;
 
-            auto n_sides = neighbor->n_sides();
+              auto n_sides = neighbor->n_sides();
 
-            for (auto s = 0u; s < n_sides; s++)
-            {
-              auto side_elem = neighbor->build_side(s);
-
-              if (side_elem->contains_point(intersection_point))
+              for (auto s = 0u; s < n_sides; s++)
               {
-                side = s;
+                auto side_elem = neighbor->build_side(s);
 
-                mesh.getMesh().get_boundary_info().boundary_ids(neighbor, side, ids);
-
-                for (const auto & bid : ids)
+                if (side_elem->contains_point(intersection_point))
                 {
-                  if (applied_ids.find(bid) ==
-                      applied_ids.end()) // Don't reapply the same BC twice!
+                  side = s;
+
+                  mesh.getMesh().get_boundary_info().boundary_ids(neighbor, side, ids);
+
+                  for (const auto & bid : ids)
                   {
-                    if (ray_system.hasRayBCs(bid, tid))
+                    if (applied_ids.find(bid) ==
+                        applied_ids.end()) // Don't reapply the same BC twice!
                     {
-                      applied_ids.insert(bid);
-
-                      const std::vector<MooseSharedPointer<RayBC>> & ray_bcs =
-                          ray_system.getRayBCs(bid, tid);
-
-                      for (auto & bc : ray_bcs)
+                      if (ray_system.hasRayBCs(bid, tid))
                       {
-                        //                          libMesh::err<<"Applying BC!"<<std::endl;
+                        applied_ids.insert(bid);
 
-                        bc->apply(neighbor, side, intersection_point, ray);
+                        const std::vector<MooseSharedPointer<RayBC>> & ray_bcs =
+                            ray_system.getRayBCs(bid, tid);
+
+                        for (auto & bc : ray_bcs)
+                        {
+                          //                          libMesh::err<<"Applying BC!"<<std::endl;
+
+                          bc->apply(neighbor, side, intersection_point, ray);
+                        }
                       }
                     }
+                    //                }
                   }
-                  //                }
                 }
               }
             }
           }
+
+          applied_ids.clear();
+
+          // See if Ray was killed by the BC
+          if (!ray->shouldContinue())
+            break;
+          else // TODO: This isn't quite right - should really read what was set by the BC
+               // later...
+          // but this will work for reflective for now
+          {
+            incoming_point = intersection_point;
+            incoming_side = intersected_side;
+          }
+
+          //        libMesh::err<<"Normal: "<<normals[0]<<std::endl;
+
+          /*
+      {
+
+      debug_mesh->add_point(ray->start());
+      debug_node_count++;
+      debug_mesh->add_point(ray->end());
+      debug_node_count++;
+
+      Elem * elem = Elem::build(EDGE2).release();
+      elem->subdomain_id() = 1;
+
+      elem = debug_mesh->add_elem(elem);
+
+      elem->set_node(0) = debug_mesh->node_ptr((debug_node_count - 2));
+      elem->set_node(1) = debug_mesh->node_ptr((debug_node_count - 2) + 1);
+      }
+
+          */
+
+          //        libMesh::err<<"Reflected:\n Start: "<<ray->start()<<"\n End:
+          //        "<<ray->end()<<std::endl;
+          //        libMesh::err<<" Direction: "<<work_point<<std::endl;
+
+          // ray->setStartingElem(NULL);
+          // keep_tracing = false;
         }
-
-        applied_ids.clear();
-
-        // See if Ray was killed by the BC
-        if (!ray->shouldContinue())
-          break;
-        else // TODO: This isn't quite right - should really read what was set by the BC later...
-             // but this will work for reflective for now
-        {
-          incoming_point = intersection_point;
-          incoming_side = intersected_side;
-        }
-
-        //        libMesh::err<<"Normal: "<<normals[0]<<std::endl;
-
-        /*
-    {
-
-    debug_mesh->add_point(ray->start());
-    debug_node_count++;
-    debug_mesh->add_point(ray->end());
-    debug_node_count++;
-
-    Elem * elem = Elem::build(EDGE2).release();
-    elem->subdomain_id() = 1;
-
-    elem = debug_mesh->add_elem(elem);
-
-    elem->set_node(0) = debug_mesh->node_ptr((debug_node_count - 2));
-    elem->set_node(1) = debug_mesh->node_ptr((debug_node_count - 2) + 1);
-    }
-
-        */
-
-        //        libMesh::err<<"Reflected:\n Start: "<<ray->start()<<"\n End:
-        //        "<<ray->end()<<std::endl;
-        //        libMesh::err<<" Direction: "<<work_point<<std::endl;
-
-        // ray->setStartingElem(NULL);
-        // keep_tracing = false;
       }
     }
     else // Shouldn't ever happen... but we'll just kill this Ray off.  It won't effect anything
@@ -1379,7 +1411,8 @@ current_elem->n_nodes()) + i)<<std::endl;
       #endif
       */
 
-      //      mooseError(ray_count << " Shouldn't be here\n" << ray->start() << "\n" << ray->end());
+      //      mooseError(ray_count << " Shouldn't be here\n" << ray->start() << "\n" <<
+      //      ray->end());
 
       mooseError("Ray ", ray_count, " killed prematurely!");
       std::cerr << "Ray " << ray_count << " killed prematurely! "

@@ -292,6 +292,9 @@ protected:
   /// The RayProblem
   RayProblem & _ray_problem;
 
+  /// Number of groups
+  unsigned int _num_groups;
+
   /// The Mesh
   MooseMesh & _mesh;
 

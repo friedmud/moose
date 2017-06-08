@@ -12,40 +12,27 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "RayMaterial.h"
+#include "AddRayBCAction.h"
 
 // Local Includes
 #include "RayProblem.h"
 
-// MOOSE Includes
-#include "MooseMesh.h"
-
 template <>
 InputParameters
-validParams<RayMaterial>()
+validParams<AddRayBoundaryConditionAction>()
 {
-  InputParameters params = validParams<MooseObject>();
-
-  params += validParams<SetupInterface>();
-  params += validParams<BlockRestrictable>();
-
-  params.addParam<bool>("fissionable", false, "Whether or not this material produces fissions");
-
-  params.registerBase("RayMaterial");
-
-  return params;
+  return validParams<MooseObjectAction>();
 }
 
-RayMaterial::RayMaterial(const InputParameters & params)
-  : MooseObject(params),
-    SetupInterface(this),
-    Restartable(params, "RayMaterials"),
-    BlockRestrictable(params),
-    Coupleable(this, false),
-    UserObjectInterface(this),
-    TransientInterface(this),
-    _ray_problem(dynamic_cast<RayProblem &>(*params.get<FEProblem *>("_fe_problem"))),
-    _num_groups(_ray_problem.numGroups()),
-    _tid(params.get<THREAD_ID>("_tid"))
+AddRayBoundaryConditionAction::AddRayBoundaryConditionAction(InputParameters params)
+  : MooseObjectAction(params)
 {
+}
+
+void
+AddRayBoundaryConditionAction::act()
+{
+  dynamic_cast<RayProblem *>(_problem.get())
+      ->raySystem()
+      .addRayBC(_type, _name, _moose_object_pars);
 }
