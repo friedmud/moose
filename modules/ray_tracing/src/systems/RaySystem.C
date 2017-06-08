@@ -42,6 +42,10 @@ RaySystem::RaySystem(RayProblem & subproblem, const std::string & name, unsigned
     _num_groups(num_groups),
     _current_group_solution(dynamic_cast<PetscVector<Number> &>(solution()))
 {
+  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+    _threaded_data[tid]._group_solution = dynamic_cast<PetscVector<Number> *>(
+        &_sys.add_vector("thread_group_solution_" + std::to_string(tid), false, PARALLEL));
+
   FEType var_type(CONSTANT, MONOMIAL);
 
   for (unsigned int g = 0; g < _num_groups; g++)
@@ -243,6 +247,16 @@ RaySystem::solve()
 {
   Moose::perf_log.push("RaySystem::solve()", "Execution");
 
+  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  {
+    _ray_kernels.updateActive(tid);
+    _ray_materials.updateActive(tid);
+  }
+
+  sweep();
+
+  postSweep();
+
   Moose::perf_log.pop("RaySystem::solve()", "Execution");
 }
 
@@ -261,4 +275,38 @@ RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
     threaded_data._current_ray_material->reinit(elem);
 
   threaded_data._current_elem = elem;
+}
+
+void
+RaySystem::sweep()
+{
+  VecGetArray(_current_group_solution.vec(), &_current_group_solution_values);
+  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+    VecGetArray(_threaded_data[tid]._group_solution->vec(),
+                &_threaded_data[tid]._group_solution_values);
+
+  _ray_problem.rayTracingStudy().executeStudy();
+
+  // Close up all of the vectors
+  VecRestoreArray(_current_group_solution.vec(), &_current_group_solution_values);
+  _current_group_solution.close();
+
+  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  {
+    VecRestoreArray(_threaded_data[tid]._group_solution->vec(),
+                    &_threaded_data[tid]._group_solution_values);
+
+    _threaded_data[tid]._group_solution->close();
+  }
+}
+
+void
+RaySystem::postSweep()
+{
+  _current_group_solution.zero();
+
+  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+    _current_group_solution += (*_threaded_data[tid]._group_solution);
+
+  _current_group_solution.close();
 }

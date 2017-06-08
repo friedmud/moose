@@ -12,35 +12,23 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#ifndef RAYKERNEL_H
-#define RAYKERNEL_H
+#ifndef ACCUMULATEDISTANCE_H
+#define ACCUMULATEDISTANCE_H
 
 // Local Includes
 #include "Ray.h"
+#include "RayKernel.h"
 
-// MOOSE Includes
-#include "MooseObject.h"
-#include "SetupInterface.h"
-#include "Restartable.h"
-#include "BlockRestrictable.h"
-#include "Coupleable.h"
-
-class RayKernel;
-class RayProblem;
-class RaySystem;
+class AccumulateDistance;
 
 template <>
-InputParameters validParams<RayKernel>();
+InputParameters validParams<AccumulateDistance>();
 
-class RayKernel : public MooseObject,
-                  public SetupInterface,
-                  public Restartable,
-                  public BlockRestrictable,
-                  public Coupleable
+class AccumulateDistance : public RayKernel
 {
 public:
-  RayKernel(const InputParameters & params);
-  virtual ~RayKernel();
+  AccumulateDistance(const InputParameters & params);
+  virtual ~AccumulateDistance();
 
   virtual void initialSetup() {}
   virtual void timestepSetup() {}
@@ -63,60 +51,16 @@ public:
   virtual void onSegment(const Elem * /*elem*/,
                          const Point & /*start*/,
                          const Point & /*end*/,
-                         bool /*ends_in_elem*/)
-  {
-  }
+                         bool /*ends_in_elem*/);
 
   /**
    * Set the current Ray that's being worked on
    */
-  virtual void setRay(const std::shared_ptr<Ray> & ray) { _ray = ray.get(); }
-
-  /**
-   * These shouldn't really be used
-   */
-  virtual void initialize(){};
-  virtual void execute(){};
-  virtual void finalize(){};
-
-  /**
-   * This needs to be here to satisfy the MooseObjectWarehouse interface
-   */
-  class DummyVariable
-  {
-  public:
-    std::string name() { return ""; }
-  };
-
-  /**
-   * This needs to be here to satisfy the MooseObjectWarehouse interface
-   */
-  DummyVariable variable() { return DummyVariable(); }
+  virtual void setRay(const std::shared_ptr<Ray> & ray);
 
 protected:
-  /// The Ray Problem
-  RayProblem & _ray_problem;
-
-  /// The Ray System
-  RaySystem & _ray_sys;
-
-  /// The thread ID this object is assigned to
-  THREAD_ID _tid;
-
-  /// Number of groups
-  unsigned int _num_groups;
-
-  /// The Ray that's being worked on
-  Ray * _ray;
-
-  /// Number of polar angles
-  unsigned int _num_polar;
-
-  /// Offest into the vectors associated with the RaySystem
-  dof_id_type & _current_offset;
-
-  /// The current group values for this thread
-  PetscScalar *& _group_solution_values;
+  /// Pointer to the beginning of the Ray's data
+  Real * _ray_data;
 };
 
-#endif /* RAYKERNEL_H */
+#endif /* ACCUMULATEDISTANCE_H */

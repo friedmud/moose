@@ -49,6 +49,7 @@ validParams<RayTracingStudy>()
 RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
   : GeneralUserObject(parameters),
     _ray_problem(dynamic_cast<RayProblem &>(*parameters.get<FEProblem *>("_fe_problem"))),
+    _num_groups(_ray_problem.numGroups()),
     _mesh(_fe_problem.mesh()),
     _comm(_mesh.comm()),
     _halo_size(getParam<unsigned int>("halo_size")),
@@ -125,9 +126,6 @@ RayTracingStudy::executeStudy()
   _root_comm_time = std::chrono::steady_clock::duration::zero();
   _root_time = std::chrono::steady_clock::duration::zero();
 
-  /// Average angular flux for rays that have finished
-  std::fill(_average_finishing_angular_flux.begin(), _average_finishing_angular_flux.end(), 0);
-
   /// Reset HARM stuff
   if (_method == HARM)
   {
@@ -147,8 +145,8 @@ RayTracingStudy::executeStudy()
   auto execution_start_time = std::chrono::steady_clock::now();
   ;
 
-  global_packing_time = std::chrono::steady_clock::duration::zero();
-  global_unpacking_time = std::chrono::steady_clock::duration::zero();
+  // global_packing_time = std::chrono::steady_clock::duration::zero();
+  // global_unpacking_time = std::chrono::steady_clock::duration::zero();
 
   //  _communicator.barrier();
 
@@ -159,14 +157,8 @@ RayTracingStudy::executeStudy()
   propagateRays();
 
   auto execution_end_time = std::chrono::steady_clock::now();
-  ;
-  _execution_time += execution_end_time - execution_start_time;
 
-  /// Compute and keep the average finishing angular flux (to use as the starting values next time)
-  _old_average_finishing_angular_flux = _average_finishing_angular_flux;
-  _comm.sum(_old_average_finishing_angular_flux);
-  for (auto & v : _old_average_finishing_angular_flux)
-    v /= _all_rays_finished;
+  _execution_time += execution_end_time - execution_start_time;
 }
 
 void
@@ -269,9 +261,6 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
       _total_distance += ray->distance();
 
       _total_integrated_distance += ray->integratedDistance();
-
-      for (unsigned int i = 0; i < _ray_problem.numGroups(); i++)
-        _average_finishing_angular_flux[i] += ray->_data[i];
 
       _rays_finished++;
     }

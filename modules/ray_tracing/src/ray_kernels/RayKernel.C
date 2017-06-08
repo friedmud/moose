@@ -43,7 +43,10 @@ RayKernel::RayKernel(const InputParameters & params)
     Coupleable(this, false),
     _ray_problem(dynamic_cast<RayProblem &>(*params.get<FEProblem *>("_fe_problem"))),
     _ray_sys(_ray_problem.raySystem()),
-    _tid(params.get<THREAD_ID>("_tid"))
+    _tid(params.get<THREAD_ID>("_tid")),
+    _num_groups(_ray_problem.numGroups()),
+    _current_offset(_ray_sys.currentOffset(_tid)),
+    _group_solution_values(_ray_sys.groupSolutionValues(_tid))
 {
 }
 

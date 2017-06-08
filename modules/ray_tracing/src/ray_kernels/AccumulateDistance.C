@@ -12,40 +12,45 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
-#include "RayMaterial.h"
+#include "AccumulateDistance.h"
 
 // Local Includes
 #include "RayProblem.h"
+#include "RaySystem.h"
 
 // MOOSE Includes
 #include "MooseMesh.h"
 
 template <>
 InputParameters
-validParams<RayMaterial>()
+validParams<AccumulateDistance>()
 {
-  InputParameters params = validParams<MooseObject>();
-
-  params += validParams<SetupInterface>();
-  params += validParams<BlockRestrictable>();
-
-  params.addParam<bool>("fissionable", false, "Whether or not this material produces fissions");
-
-  params.registerBase("RayMaterial");
+  InputParameters params = validParams<RayKernel>();
 
   return params;
 }
 
-RayMaterial::RayMaterial(const InputParameters & params)
-  : MooseObject(params),
-    SetupInterface(this),
-    Restartable(params, "RayMaterials"),
-    BlockRestrictable(params),
-    Coupleable(this, false),
-    UserObjectInterface(this),
-    TransientInterface(this),
-    _ray_problem(dynamic_cast<RayProblem &>(*params.get<FEProblem *>("_fe_problem"))),
-    _num_groups(_ray_problem.numGroups()),
-    _tid(params.get<THREAD_ID>("_tid"))
+AccumulateDistance::AccumulateDistance(const InputParameters & params) : RayKernel(params) {}
+
+AccumulateDistance::~AccumulateDistance() {}
+
+void
+AccumulateDistance::onSegment(const Elem * /*elem*/,
+                              const Point & start,
+                              const Point & end,
+                              bool ends_in_elem)
 {
+  _ray_data[0] += (end - start).norm();
+
+  // Let's dump the accumulated distance into a field in the final element
+  if (ends_in_elem)
+    _group_solution_values[_current_offset] += _ray_data[0];
+}
+
+void
+AccumulateDistance::setRay(const std::shared_ptr<Ray> & ray)
+{
+  RayKernel::setRay(ray);
+
+  _ray_data = &_ray->data()[0];
 }

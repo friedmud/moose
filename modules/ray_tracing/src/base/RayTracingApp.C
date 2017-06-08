@@ -3,6 +3,23 @@
 #include "AppFactory.h"
 #include "MooseSyntax.h"
 
+// RayTracing Problems
+#include "RayProblem.h"
+
+// RayTracing Studies
+#include "ElementCentroidRays.h"
+
+// Ray Kernels
+#include "AccumulateDistance.h"
+
+// Ray Materials
+#include "ConstantRayMaterial.h"
+
+// Actions
+#include "AddRayMaterialAction.h"
+#include "AddRayKernelAction.h"
+#include "AddRayBCAction.h"
+
 template <>
 InputParameters
 validParams<RayTracingApp>()
@@ -40,9 +57,21 @@ RayTracingApp__registerObjects(Factory & factory)
 {
   RayTracingApp::registerObjects(factory);
 }
+
 void
-RayTracingApp::registerObjects(Factory & /*factory*/)
+RayTracingApp::registerObjects(Factory & factory)
 {
+  // RayTracing Problems
+  registerProblem(RayProblem);
+
+  // RayTracing Studies
+  registerUserObject(ElementCentroidRays);
+
+  // Ray Kernels
+  registerUserObject(AccumulateDistance);
+
+  // Ray Materials
+  registerUserObject(ConstantRayMaterial);
 }
 
 // External entry point for dynamic syntax association
@@ -52,6 +81,23 @@ RayTracingApp__associateSyntax(Syntax & syntax, ActionFactory & action_factory)
   RayTracingApp::associateSyntax(syntax, action_factory);
 }
 void
-RayTracingApp::associateSyntax(Syntax & /*syntax*/, ActionFactory & /*action_factory*/)
+RayTracingApp::associateSyntax(Syntax & syntax, ActionFactory & action_factory)
 {
+  registerAction(AddRayKernelAction, "add_ray_kernel");
+  syntax.registerActionSyntax("AddRayKernelAction", "RayKernels/*");
+  registerMooseObjectTask("add_ray_kernel", RayKernel, false);
+
+  addTaskDependency("add_ray_kernel", "add_kernel");
+
+  registerAction(AddRayBoundaryConditionAction, "add_ray_boundary_condition");
+  syntax.registerActionSyntax("AddRayBoundaryConditionAction", "RayBCs/*");
+  registerMooseObjectTask("add_ray_boundary_condition", RayBoundaryCondition, false);
+
+  addTaskDependency("add_ray_boundary_condition", "add_kernel");
+
+  registerAction(AddRayMaterialAction, "add_ray_material");
+  syntax.registerActionSyntax("AddRayMaterialAction", "RayMaterials/*");
+  registerMooseObjectTask("add_ray_material", RayMaterial, false);
+
+  addTaskDependency("add_ray_material", "add_kernel");
 }
