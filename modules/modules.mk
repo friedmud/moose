@@ -13,6 +13,7 @@ ifeq ($(ALL_MODULES),yes)
         NAVIER_STOKES               := yes
         PHASE_FIELD                 := yes
         POROUS_FLOW                 := yes
+        RAY_TRACING                 := yes
         RDG                         := yes
         RICHARDS                    := yes
         SOLID_MECHANICS             := yes
@@ -46,7 +47,7 @@ ifeq ($(PHASE_FIELD),yes)
 endif
 
 # The master list of all moose modules
-MODULE_NAMES := "chemical_reactions contact fluid_properties functional_expansion_tools heat_conduction level_set misc navier_stokes phase_field porous_flow rdg richards solid_mechanics stochastic_tools tensor_mechanics xfem"
+MODULE_NAMES := "chemical_reactions contact fluid_properties functional_expansion_tools heat_conduction level_set misc navier_stokes phase_field porous_flow ray_tracing rdg richards solid_mechanics stochastic_tools tensor_mechanics xfem"
 
 ###############################################################################
 ########################## MODULE REGISTRATION ################################
@@ -136,6 +137,13 @@ ifeq ($(POROUS_FLOW),yes)
 
   DEPEND_MODULES     := tensor_mechanics fluid_properties chemical_reactions rdg
   SUFFIX             := pflow
+  include $(FRAMEWORK_DIR)/app.mk
+endif
+
+ifeq ($(RAY_TRACING),yes)
+  APPLICATION_DIR    := $(MOOSE_DIR)/modules/ray_tracing
+  APPLICATION_NAME   := ray_tracing
+  SUFFIX             := ray
   include $(FRAMEWORK_DIR)/app.mk
 endif
 
