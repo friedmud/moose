@@ -19,6 +19,7 @@ ifeq ($(ALL_MODULES),yes)
         XFEM                      := yes
         POROUS_FLOW               := yes
         LEVEL_SET                 := yes
+        RAY_TRACING               := yes
 endif
 
 ifeq ($(XFEM),yes)
@@ -45,7 +46,7 @@ ifeq ($(PHASE_FIELD),yes)
 endif
 
 # The master list of all moose modules
-MODULE_NAMES := "chemical_reactions contact fluid_properties heat_conduction linear_elasticity misc navier_stokes phase_field richards solid_mechanics tensor_mechanics water_steam_eos xfem porous_flow rdg level_set"
+MODULE_NAMES := "chemical_reactions contact fluid_properties heat_conduction linear_elasticity misc navier_stokes phase_field richards solid_mechanics tensor_mechanics water_steam_eos xfem porous_flow rdg level_set ray_tracing"
 
 ###############################################################################
 ########################## MODULE REGISTRATION ################################
@@ -176,6 +177,13 @@ ifeq ($(LEVEL_SET),yes)
   APPLICATION_DIR    := $(MOOSE_DIR)/modules/level_set
   APPLICATION_NAME   := level_set
   SUFFIX             := ls
+  include $(FRAMEWORK_DIR)/app.mk
+endif
+
+ifeq ($(RAY_TRACING),yes)
+  APPLICATION_DIR    := $(MOOSE_DIR)/modules/ray_tracing
+  APPLICATION_NAME   := ray_tracing
+  SUFFIX             := ray
   include $(FRAMEWORK_DIR)/app.mk
 endif
 
