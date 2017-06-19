@@ -53,6 +53,19 @@ public:
   {
   }
 
+  Ray(const Point & start,
+      const Point & end,
+      const std::vector<Real> & data,
+      const Elem * starting_elem = NULL,
+      unsigned int incoming_side = -1)
+    : _data(data),
+      _start(start),
+      _end(end),
+      _starting_elem(starting_elem),
+      _incoming_side(incoming_side)
+  {
+  }
+
   bool operator==(const Ray & other);
 
   /**
