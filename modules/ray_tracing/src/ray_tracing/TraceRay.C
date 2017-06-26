@@ -29,13 +29,13 @@
 namespace TraceRay
 {
 
-unsigned long int ray_count = 99999999999;
+unsigned long int ray_count = 0;
 
-unsigned int debug_ray = 99999999999;
+unsigned int debug_ray = 9999999;
 
-unsigned int debug_ray_id = 99999999999;
+unsigned int debug_ray_id = 55;
 
-unsigned int debug_ray_pid = 99999999999;
+unsigned int debug_ray_pid = 0;
 
 // #define USE_DEBUG_RAY
 
@@ -810,79 +810,83 @@ traceRay(const std::shared_ptr<Ray> & ray,
       std::cerr << "current_elem: " << current_elem->id() << std::endl;
 #endif
 
-    /*
-
-      libMesh::err<<"In element: "<<current_elem->id()<<std::endl;
-
-  if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
-//  if ( == 1)
-    {
-      for (unsigned int i=0; i<current_elem->n_nodes(); i++)
-      {
-        debug_mesh->add_point(*current_elem->get_node(i));
-        debug_node_count++;
-      }
-
-//      Elem * debug_elem = Elem::build(QUAD4).release();
-      Elem * debug_elem = Elem::build(HEX8).release();
-      debug_elem->subdomain_id() = 2;
-
-      debug_elem = debug_mesh->add_elem(debug_elem);
-
-      for (unsigned int i=0; i<current_elem->n_nodes(); i++)
-      {
-//        libMesh::err<<"Elem nodes: "<<*debug_mesh->node_ptr((debug_node_count -
-current_elem->n_nodes()) + i)<<std::endl;
-        debug_elem->set_node(i) = debug_mesh->node_ptr((debug_node_count -
-current_elem->n_nodes())
-+ i);
-      }
-
-    }
-
-
-  if (ray->id() == debug_ray_id && pid == debug_ray_pid)
-  {
-    for (unsigned int s=0; s<current_elem->n_sides(); s++)
-    {
-      fe_face->reinit(current_elem, s);
-      libMesh::err<<"Side "<<s<<" normal: "<<normals[0]<<std::endl;
-    }
-  }
-
-    */
-    if (current_elem->type() == QUAD4)
-      intersected_side = sideIntersectedByLine2D<Quad4>(current_elem,
-                                                        incoming_side,
-                                                        incoming_point,
-                                                        ray,
-                                                        intersection_point,
-                                                        boundary_intersection_point);
-    else if (current_elem->type() == TRI3)
-      intersected_side = sideIntersectedByLine2D<Tri3>(current_elem,
-                                                       incoming_side,
-                                                       incoming_point,
-                                                       ray,
-                                                       intersection_point,
-                                                       boundary_intersection_point);
-    if (current_elem->type() == HEX8)
-      intersected_side = sideIntersectedByLineHex8(current_elem,
-                                                   incoming_side,
-                                                   incoming_point,
-                                                   ray,
-                                                   intersection_point,
-                                                   boundary_intersection_point);
-
     bool ends_in_elem = false;
 
-    // If we didn't find a side, it could be because the Ray actually ends within this element
-    if (intersected_side == -1) // -1 means that we didn't find any side
+    // If the ray ends within the mesh... let's see if it ends within this element!
+    if (ray->endsWithinMesh())
     {
       if (current_elem->contains_point(ray->end()))
       {
         ends_in_elem = true;
         intersection_point = ray->end();
       }
+    }
+
+    if (!ends_in_elem)
+    {
+
+      /*
+
+        libMesh::err<<"In element: "<<current_elem->id()<<std::endl;
+
+    if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
+  //  if ( == 1)
+      {
+        for (unsigned int i=0; i<current_elem->n_nodes(); i++)
+        {
+          debug_mesh->add_point(*current_elem->get_node(i));
+          debug_node_count++;
+        }
+
+  //      Elem * debug_elem = Elem::build(QUAD4).release();
+        Elem * debug_elem = Elem::build(HEX8).release();
+        debug_elem->subdomain_id() = 2;
+
+        debug_elem = debug_mesh->add_elem(debug_elem);
+
+        for (unsigned int i=0; i<current_elem->n_nodes(); i++)
+        {
+  //        libMesh::err<<"Elem nodes: "<<*debug_mesh->node_ptr((debug_node_count -
+  current_elem->n_nodes()) + i)<<std::endl;
+          debug_elem->set_node(i) = debug_mesh->node_ptr((debug_node_count -
+  current_elem->n_nodes())
+  + i);
+        }
+
+      }
+
+
+    if (ray->id() == debug_ray_id && pid == debug_ray_pid)
+    {
+      for (unsigned int s=0; s<current_elem->n_sides(); s++)
+      {
+        fe_face->reinit(current_elem, s);
+        libMesh::err<<"Side "<<s<<" normal: "<<normals[0]<<std::endl;
+      }
+    }
+
+      */
+      if (current_elem->type() == QUAD4)
+        intersected_side = sideIntersectedByLine2D<Quad4>(current_elem,
+                                                          incoming_side,
+                                                          incoming_point,
+                                                          ray,
+                                                          intersection_point,
+                                                          boundary_intersection_point);
+      else if (current_elem->type() == TRI3)
+        intersected_side = sideIntersectedByLine2D<Tri3>(current_elem,
+                                                         incoming_side,
+                                                         incoming_point,
+                                                         ray,
+                                                         intersection_point,
+                                                         boundary_intersection_point);
+      if (current_elem->type() == HEX8)
+        intersected_side = sideIntersectedByLineHex8(current_elem,
+                                                     incoming_side,
+                                                     incoming_point,
+                                                     ray,
+                                                     intersection_point,
+                                                     boundary_intersection_point);
     }
 
     if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder (as

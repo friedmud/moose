@@ -38,8 +38,12 @@ ElementCentroidRays::generateRays()
     auto start_elem = _mesh.elemPtr(start_elem_id);
     auto end_elem = _mesh.elemPtr(end_elem_id);
 
-    rays.emplace_back(std::make_shared<Ray>(
-        start_elem->centroid(), end_elem->centroid(), _num_groups, start_elem));
+    auto ray = std::make_shared<Ray>(
+        start_elem->centroid(), end_elem->centroid(), _num_groups, start_elem);
+
+    ray->setEndsWithinMesh();
+
+    rays.emplace_back(ray);
   }
 
   chunkyTraceAndBuffer(rays);
