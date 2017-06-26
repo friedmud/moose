@@ -98,6 +98,9 @@ public:
   void setStartingElem(const Elem * starting_elem) { _starting_elem = starting_elem; }
   const Elem * startingElem() const { return _starting_elem; }
 
+  void setEndsWithinMesh(bool ends_within_mesh = true) { _ends_within_mesh = ends_within_mesh; }
+  bool endsWithinMesh() { return _ends_within_mesh; }
+
   void setIncomingSide(unsigned int incoming_side) { _incoming_side = incoming_side; }
   unsigned int incomingSide() const { return _incoming_side; }
 
@@ -160,6 +163,9 @@ protected:
 
   /// The element the Ray begins in
   const Elem * _starting_elem;
+
+  /// Whether or not the Ray ends within the Mesh, when this is false it means the ray ends on the boundary (or ends at a distance)
+  bool _ends_within_mesh = false;
 
   /// The side of the the _starting element the ray is incoming on.  -1 if the Ray is starting _in_ the element
   unsigned int _incoming_side;
