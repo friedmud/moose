@@ -10,5 +10,6 @@ Ray::operator==(const Ray & other)
          _integrated_distance == other._integrated_distance &&
          _azimuthal_spacing == other._azimuthal_spacing &&
          _azimuthal_weight == other._azimuthal_weight && _polar_spacing == other._polar_spacing &&
-         _polar_sins == other._polar_sins && _polar_weights == other._polar_weights;
+         _polar_sins == other._polar_sins && _polar_weights == other._polar_weights &&
+         _ends_within_mesh == other._ends_within_mesh;
 }

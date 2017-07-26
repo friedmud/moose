@@ -31,9 +31,9 @@ namespace TraceRay
 
 unsigned long int ray_count = 0;
 
-unsigned int debug_ray = 9999999;
+unsigned int debug_ray = 0;
 
-unsigned int debug_ray_id = 55;
+unsigned int debug_ray_id = 0;
 
 unsigned int debug_ray_pid = 0;
 
@@ -815,8 +815,17 @@ traceRay(const std::shared_ptr<Ray> & ray,
     // If the ray ends within the mesh... let's see if it ends within this element!
     if (ray->endsWithinMesh())
     {
+#ifdef USE_DEBUG_RAY
+      if (ray->id() == debug_ray_id)
+        std::cerr << "ends within mesh!" << std::endl;
+#endif
+
       if (current_elem->contains_point(ray->end()))
       {
+#ifdef USE_DEBUG_RAY
+        if (ray->id() == debug_ray_id)
+          std::cerr << " ends within current elem!" << std::endl;
+#endif
         ends_in_elem = true;
         intersection_point = ray->end();
       }
@@ -1205,6 +1214,10 @@ traceRay(const std::shared_ptr<Ray> & ray,
 
             if (halo_count == halo_size)
             {
+#ifdef USE_DEBUG_RAY
+              if (ray->id() == debug_ray_id)
+                std::cerr << "Ray going off processor!" << std::endl;
+#endif
               ray->setStartingElem(neighbor);
               ray->setIncomingSide(incoming_side);
               ray->setStart(incoming_point);
