@@ -260,9 +260,10 @@ public:
     // Points
     total_size += LIBMESH_DIM * 2;
 
-    // Starting element, incoming side, processor crosssings, intersections, distance,
+    // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
+    // distance,
     // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id
-    total_size += 10;
+    total_size += 11;
 
     return total_size;
   }
@@ -292,9 +293,10 @@ public:
     // Points
     total_size += LIBMESH_DIM * 2;
 
-    // Starting element, incoming side, processor crosssings, intersections, distance,
+    // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
+    // distance,
     // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id
-    total_size += 10;
+    total_size += 11;
 
     return total_size;
   }
@@ -325,6 +327,9 @@ public:
 
     // Starting element
     data_out = b->startingElem()->id();
+
+    // Ends within mesh
+    data_out = b->endsWithinMesh();
 
     // Incoming side
     data_out = b->incomingSide();
@@ -394,6 +399,9 @@ public:
     // Starting Element
     auto mesh = static_cast<MeshBase *>(mesh_context);
     ray->setStartingElem(mesh->elem((*in++)));
+
+    // Ends Within Mesh
+    ray->setEndsWithinMesh((*in++));
 
     // Incoming side
     ray->setIncomingSide((*in++));
