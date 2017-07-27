@@ -114,8 +114,6 @@ RayProblem::RaySubdomainSetup(SubdomainID subdomain, THREAD_ID tid)
 void
 RayProblem::reinitElem(const Elem * elem, THREAD_ID tid)
 {
-  //  std::cout << "RayProblem::reinitElem()" << std::endl;
-
   _ray_system->reinitElem(elem, tid);
 
   FEProblem::reinitElem(elem, tid);

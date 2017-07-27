@@ -309,4 +309,7 @@ RaySystem::postSweep()
     _current_group_solution += (*_threaded_data[tid]._group_solution);
 
   _current_group_solution.close();
+
+  // Before exiting... update this in case anyone wants it
+  VecGetArray(_current_group_solution.vec(), &_current_group_solution_values);
 }

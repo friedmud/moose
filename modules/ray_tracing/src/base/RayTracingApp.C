@@ -11,6 +11,7 @@
 
 // Ray Kernels
 #include "AccumulateDistance.h"
+#include "ConstantGroupValues.h"
 
 // Ray Materials
 #include "ConstantRayMaterial.h"
@@ -19,6 +20,9 @@
 #include "AddRayMaterialAction.h"
 #include "AddRayKernelAction.h"
 #include "AddRayBCAction.h"
+
+// AuxKernels
+#include "AverageGroupValueAux.h"
 
 template <>
 InputParameters
@@ -69,9 +73,13 @@ RayTracingApp::registerObjects(Factory & factory)
 
   // Ray Kernels
   registerUserObject(AccumulateDistance);
+  registerUserObject(ConstantGroupValues);
 
   // Ray Materials
   registerUserObject(ConstantRayMaterial);
+
+  // AuxKernels
+  registerAux(AverageGroupValueAux);
 }
 
 // External entry point for dynamic syntax association

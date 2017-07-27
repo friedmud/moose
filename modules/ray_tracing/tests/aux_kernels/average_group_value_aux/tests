@@ -1,0 +1,7 @@
+[Tests]
+  [./test]
+    type = 'Exodiff'
+    input = 'average_group_value_aux.i'
+    exodiff = 'average_group_value_aux_out.e'
+  [../]
+[]
