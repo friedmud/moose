@@ -193,6 +193,12 @@ public:
   }
 
   /**
+   * Get the raw PETSc vector that holds group values
+   * This is for _read only_ access _after_ a sweep has been done!
+   */
+  PetscScalar *& currentGroupSolutionValues() { return _current_group_solution_values; }
+
+  /**
    * Get the ray tracing results
    */
   std::map<std::string, std::vector<Real>> & rayTracingResults() { return _results; }
