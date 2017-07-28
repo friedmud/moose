@@ -1163,6 +1163,10 @@ traceRay(const std::shared_ptr<Ray> & ray,
       for (auto & ray_kernel : *ray_kernels)
         ray_kernel->onSegment(current_elem, incoming_point, intersection_point, ends_in_elem);
 
+      // Check if a kernel set to kill the ray
+      if (!ray->shouldContinue())
+        break;
+
       // If the Ray is beyond the max distance we need to kill it
       if (ray->distance() >= ray_max_distance)
       {
