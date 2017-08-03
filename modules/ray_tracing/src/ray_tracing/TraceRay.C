@@ -510,6 +510,32 @@ sideIntersectedByLineHex8(const Elem * current_elem,
   return intersected_side;
 }
 
+int
+sideIntersectedByLine1D(const Elem * current_elem,
+                        unsigned int /*incoming_side*/,
+                        const Point & /*incoming_point*/,
+                        const std::shared_ptr<Ray> & ray,
+                        Point & intersection_point,
+                        Point & /*boundary_intersection_point*/)
+{
+  Real ray_direction = ray->end()(0) - ray->start()(0);
+
+  // Ray is moving left: node/side 0 is the left node for EDGE elements
+  if (ray_direction < 0)
+  {
+    intersection_point = *current_elem->get_node(0);
+    return 0;
+  }
+  // Ray is moving right: node/side 1 is the right node for EDGE elements
+  else
+  {
+    intersection_point = *current_elem->get_node(1);
+    return 1;
+  }
+
+  return -1;
+}
+
 /**
  * Figure out which (if any) side of an Elem is intersected by a line.
  *
@@ -895,13 +921,21 @@ traceRay(const std::shared_ptr<Ray> & ray,
                                                          ray,
                                                          intersection_point,
                                                          boundary_intersection_point);
-      if (current_elem->type() == HEX8)
+      else if (current_elem->type() == HEX8)
         intersected_side = sideIntersectedByLineHex8(current_elem,
                                                      incoming_side,
                                                      incoming_point,
                                                      ray,
                                                      intersection_point,
                                                      boundary_intersection_point);
+
+      else if (current_elem->type() == EDGE2 || current_elem->type() == EDGE3 || current_elem->type() == EDGE4)
+        intersected_side = sideIntersectedByLine1D(current_elem,
+                                                   incoming_side,
+                                                   incoming_point,
+                                                   ray,
+                                                   intersection_point,
+                                                   boundary_intersection_point);
     }
 
     if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder (as
@@ -1021,7 +1055,7 @@ traceRay(const std::shared_ptr<Ray> & ray,
                                                                ray,
                                                                intersection_point,
                                                                boundary_intersection_point);
-            if (current_elem->type() == HEX8)
+            else if (current_elem->type() == HEX8)
               intersected_side = sideIntersectedByLineHex8(neighbor,
                                                            side,
                                                            incoming_point,
