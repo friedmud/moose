@@ -107,10 +107,15 @@ public:
   /**
    * Get the RayTracingStudy
    */
-  virtual RayTracingStudy & rayTracingStudy()
+  template <typename T = RayTracingStudy>
+  T & rayTracingStudy(THREAD_ID tid = 0)
   {
-    return const_cast<RayTracingStudy &>(
-        getUserObject<RayTracingStudy>(_pars.get<UserObjectName>("study")));
+    const std::string & name = _pars.get<UserObjectName>("study");
+    std::shared_ptr<T> ptr =
+        std::dynamic_pointer_cast<T>(_all_user_objects.getActiveObject(name, tid));
+    if (!ptr)
+      mooseError("A RayTracingStudy study object of the given type does not exist.");
+    return *ptr;
   }
 
   /**
