@@ -76,6 +76,15 @@ SubProblem::clearActiveElementalMooseVariables(THREAD_ID tid)
   _active_elemental_moose_variables[tid].clear();
 }
 
+TagID
+SubProblem::addTag(TagName tag_name)
+{
+  if (_tag_name_to_tag_id.find(tag_name) == _tag_name_to_tag_id.end())
+    _tag_name_to_tag_id.insert(tag_name, _tag_name_to_tag_id.size());
+
+  return _tag_name_to_tag_id.at(tag_name);
+}
+
 void
 SubProblem::setActiveMaterialProperties(const std::set<unsigned int> & mat_prop_ids, THREAD_ID tid)
 {

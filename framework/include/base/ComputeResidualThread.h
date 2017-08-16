@@ -33,7 +33,7 @@ class KernelWarehouse;
 class ComputeResidualThread : public ThreadedElementLoop<ConstElemRange>
 {
 public:
-  ComputeResidualThread(FEProblemBase & fe_problem, Moose::KernelType type);
+  ComputeResidualThread(FEProblemBase & fe_problem, TagID tag);
   // Splitting Constructor
   ComputeResidualThread(ComputeResidualThread & x, Threads::split split);
 
@@ -51,7 +51,7 @@ public:
 
 protected:
   NonlinearSystemBase & _nl;
-  Moose::KernelType _kernel_type;
+  TagID _kernel_tag;
   unsigned int _num_cached;
 
   /// Reference to BC storage structures

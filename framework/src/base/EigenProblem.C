@@ -123,11 +123,11 @@ EigenProblem::setEigenproblemType(Moose::EigenProblemType eigen_problem_type)
 void
 EigenProblem::computeJacobian(const NumericVector<Number> & soln,
                               SparseMatrix<Number> & jacobian,
-                              Moose::KernelType kernel_type)
+                              TagID tag)
 {
   // to avoid computing residual
   solverParams()._type = Moose::ST_NEWTON;
-  FEProblemBase::computeJacobian(soln, jacobian, kernel_type);
+  FEProblemBase::computeJacobian(soln, jacobian, tag);
 }
 
 void

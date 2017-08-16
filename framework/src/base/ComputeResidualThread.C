@@ -28,7 +28,7 @@
 // libmesh includes
 #include "libmesh/threads.h"
 
-ComputeResidualThread::ComputeResidualThread(FEProblemBase & fe_problem, Moose::KernelType type)
+ComputeResidualThread::ComputeResidualThread(FEProblemBase & fe_problem, TagID tag)
   : ThreadedElementLoop<ConstElemRange>(fe_problem),
     _nl(fe_problem.getNonlinearSystemBase()),
     _kernel_type(type),

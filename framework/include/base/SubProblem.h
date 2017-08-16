@@ -147,6 +147,16 @@ public:
    */
   virtual void clearActiveMaterialProperties(THREAD_ID tid);
 
+  /**
+   * Create a Tag.  Tags can be associated with Vectors and Matrices and allow objects
+   * (such as Kernels) to arbitrarily contribute values to any set of vectors/matrics
+   *
+   * Note: If the tag is already present then this will simply return the TagID of that Tag
+   *
+   * @param tag_name The name of the tag to create, the TagID will get automatically generated
+   */
+  TagID addTag(TagName tag_name);
+
   virtual Assembly & assembly(THREAD_ID tid) = 0;
   virtual void prepareShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareFaceShapes(unsigned int var, THREAD_ID tid) = 0;

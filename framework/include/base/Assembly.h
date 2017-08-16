@@ -389,11 +389,9 @@ public:
   void copyFaceShapes(unsigned int var);
   void copyNeighborShapes(unsigned int var);
 
-  void addResidual(NumericVector<Number> & residual, Moose::KernelType type = Moose::KT_NONTIME);
-  void addResidualNeighbor(NumericVector<Number> & residual,
-                           Moose::KernelType type = Moose::KT_NONTIME);
-  void addResidualScalar(NumericVector<Number> & residual,
-                         Moose::KernelType type = Moose::KT_NONTIME);
+  void addResidual(NumericVector<Number> & residual, TagID tag);
+  void addResidualNeighbor(NumericVector<Number> & residual, TagID tag);
+  void addResidualScalar(NumericVector<Number> & residual, TagID tag);
 
   /**
    * Takes the values that are currently in _sub_Re and appends them to the cached values.
@@ -406,14 +404,15 @@ public:
    *
    * @param dof The degree of freedom to add the residual contribution to
    * @param value The value of the residual contribution.
-   * @param type Whether the contribution should go to the Time or Non-Time residual
+   * @param tag The residual vector to cache contributions for
    */
-  void cacheResidualContribution(dof_id_type dof, Real value, Moose::KernelType type);
+  void cacheResidualContribution(dof_id_type dof, Real value, TagID tag);
 
   /**
    * Lets an external class cache residual at a set of nodes
    */
-  void cacheResidualNodes(DenseVector<Number> & res, std::vector<dof_id_type> & dof_index);
+  void
+  cacheResidualNodes(DenseVector<Number> & res, std::vector<dof_id_type> & dof_index, TagID tag);
 
   /**
    * Takes the values that are currently in _sub_Ke and appends them to the cached values.
@@ -428,11 +427,10 @@ public:
    *
    * Note that this will also clear the cache.
    */
-  void addCachedResidual(NumericVector<Number> & residual, Moose::KernelType type);
+  void addCachedResidual(NumericVector<Number> & residual, TagID tag);
 
-  void setResidual(NumericVector<Number> & residual, Moose::KernelType type = Moose::KT_NONTIME);
-  void setResidualNeighbor(NumericVector<Number> & residual,
-                           Moose::KernelType type = Moose::KT_NONTIME);
+  void setResidual(NumericVector<Number> & residual, TagID tag);
+  void setResidualNeighbor(NumericVector<Number> & residual, TagID tag);
 
   void addJacobian(SparseMatrix<Number> & jacobian);
   void addJacobianNonlocal(SparseMatrix<Number> & jacobian);
@@ -481,15 +479,13 @@ public:
    */
   void addCachedJacobian(SparseMatrix<Number> & jacobian);
 
-  DenseVector<Number> & residualBlock(unsigned int var_num,
-                                      Moose::KernelType type = Moose::KT_NONTIME)
+  DenseVector<Number> & residualBlock(unsigned int var_num, TagID tag)
   {
-    return _sub_Re[static_cast<unsigned int>(type)][var_num];
+    return _sub_Re[static_cast<unsigned int>(tag)][var_num];
   }
-  DenseVector<Number> & residualBlockNeighbor(unsigned int var_num,
-                                              Moose::KernelType type = Moose::KT_NONTIME)
+  DenseVector<Number> & residualBlockNeighbor(unsigned int var_num, TagID tag)
   {
-    return _sub_Rn[static_cast<unsigned int>(type)][var_num];
+    return _sub_Rn[static_cast<unsigned int>(tag)][var_num];
   }
 
   DenseMatrix<Number> & jacobianBlock(unsigned int ivar, unsigned int jvar);

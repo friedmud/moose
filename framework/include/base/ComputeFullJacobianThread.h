@@ -24,9 +24,7 @@ class NonlinearSystemBase;
 class ComputeFullJacobianThread : public ComputeJacobianThread
 {
 public:
-  ComputeFullJacobianThread(FEProblemBase & fe_problem,
-                            SparseMatrix<Number> & jacobian,
-                            Moose::KernelType kernel_type = Moose::KT_ALL);
+  ComputeFullJacobianThread(FEProblemBase & fe_problem, SparseMatrix<Number> & jacobian, TagID tag);
 
   // Splitting Constructor
   ComputeFullJacobianThread(ComputeFullJacobianThread & x, Threads::split split);
@@ -52,7 +50,7 @@ protected:
   // Reference to interface kernel storage
   const MooseObjectWarehouse<InterfaceKernel> & _interface_kernels;
 
-  Moose::KernelType _kernel_type;
+  TagID _kernel_tag;
 
   const KernelWarehouse * _warehouse;
 };

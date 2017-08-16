@@ -35,14 +35,14 @@ public:
 
   virtual void init() override;
 
-  virtual bool hasResidualVector(Moose::KernelType type) const override
+  virtual bool hasResidualVector(TagID tag) const override
   {
-    return _undisplaced_system.hasResidualVector(type);
+    return _undisplaced_system.hasResidualVector(tag);
   }
 
-  virtual NumericVector<Number> & residualVector(Moose::KernelType type) override
+  virtual NumericVector<Number> & residualVector(TagID tag) override
   {
-    return _undisplaced_system.residualVector(type);
+    return _undisplaced_system.residualVector(tag);
   }
 
   virtual NumericVector<Number> & getVector(const std::string & name) override;

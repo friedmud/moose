@@ -28,40 +28,16 @@
 
 ComputeFullJacobianThread::ComputeFullJacobianThread(FEProblemBase & fe_problem,
                                                      SparseMatrix<Number> & jacobian,
-                                                     Moose::KernelType kernel_type)
-  : ComputeJacobianThread(fe_problem, jacobian),
+                                                     TagID tag)
+  : ComputeJacobianThread(fe_problem, jacobian, tag),
     _nl(fe_problem.getNonlinearSystemBase()),
     _integrated_bcs(_nl.getIntegratedBCWarehouse()),
     _dg_kernels(_nl.getDGKernelWarehouse()),
     _interface_kernels(_nl.getInterfaceKernelWarehouse()),
-    _kernel_type(kernel_type),
+    _kernel_tag(tag),
     _warehouse(NULL)
 {
-  switch (_kernel_type)
-  {
-    case Moose::KT_ALL:
-      _warehouse = &_nl.getKernelWarehouse();
-      break;
-
-    case Moose::KT_TIME:
-      _warehouse = &_nl.getTimeKernelWarehouse();
-      break;
-
-    case Moose::KT_NONTIME:
-      _warehouse = &_nl.getNonTimeKernelWarehouse();
-      break;
-
-    case Moose::KT_EIGEN:
-      _warehouse = &_nl.getEigenKernelWarehouse();
-      break;
-
-    case Moose::KT_NONEIGEN:
-      _warehouse = &_nl.getNonEigenKernelWarehouse();
-      break;
-
-    default:
-      mooseError("Unknown kernel type \n");
-  }
+  _warehouse = &_nl.getKernelWarehouse(_kernel_tag);
 }
 
 // Splitting Constructor
@@ -72,7 +48,7 @@ ComputeFullJacobianThread::ComputeFullJacobianThread(ComputeFullJacobianThread &
     _integrated_bcs(x._integrated_bcs),
     _dg_kernels(x._dg_kernels),
     _interface_kernels(x._interface_kernels),
-    _kernel_type(x._kernel_type),
+    _kernel_tag(x._kernel_tag),
     _warehouse(x._warehouse)
 {
 }

@@ -193,7 +193,9 @@ NonlinearSystemBase::initialSetup()
 {
   for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
-    _kernels.initialSetup(tid);
+    for (auto & kernel_warehouse : _kernels)
+      kernel_warehouse.initialSetup(tid);
+
     _nodal_kernels.initialSetup(tid);
     _dirac_kernels.initialSetup(tid);
     if (_doing_dg)

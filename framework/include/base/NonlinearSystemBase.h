@@ -235,7 +235,7 @@ public:
    * @param residual Residual is formed in here
    * @param type The type of kernels for which the residual is to be computed.
    */
-  void computeResidual(NumericVector<Number> & residual, Moose::KernelType type = Moose::KT_ALL);
+  void computeResidual(NumericVector<Number> & residual, TagID tag);
 
   /**
    * Finds the implicit sparsity graph between geometrically related dofs.
@@ -268,8 +268,7 @@ public:
    * Computes Jacobian
    * @param jacobian Jacobian is formed in here
    */
-  void computeJacobian(SparseMatrix<Number> & jacobian,
-                       Moose::KernelType kernel_type = Moose::KT_ALL);
+  void computeJacobian(SparseMatrix<Number> & jacobian, TagID tag);
 
   /**
    * Computes several Jacobian blocks simultaneously, summing their contributions into smaller
@@ -322,8 +321,8 @@ public:
   virtual void setSolutionUDot(const NumericVector<Number> & udot);
 
   virtual NumericVector<Number> & solutionUDot() override;
-  virtual NumericVector<Number> & residualVector(Moose::KernelType type) override;
-  virtual bool hasResidualVector(Moose::KernelType type) const override;
+  virtual NumericVector<Number> & residualVector(TagID tag) override;
+  virtual bool hasResidualVector(TagID tag) const override;
 
   virtual const NumericVector<Number> *& currentSolution() override { return _current_solution; }
 
@@ -484,11 +483,7 @@ public:
   /**
    * Access functions to Warehouses from outside NonlinearSystemBase
    */
-  const KernelWarehouse & getKernelWarehouse() { return _kernels; }
-  const KernelWarehouse & getTimeKernelWarehouse() { return _time_kernels; }
-  const KernelWarehouse & getNonTimeKernelWarehouse() { return _non_time_kernels; }
-  const KernelWarehouse & getEigenKernelWarehouse() { return _eigen_kernels; }
-  const KernelWarehouse & getNonEigenKernelWarehouse() { return _non_eigen_kernels; }
+  const KernelWarehouse & getKernelWarehouse(TagID tag) { return _kernels[tag]; }
   const MooseObjectWarehouse<DGKernel> & getDGKernelWarehouse() { return _dg_kernels; }
   const MooseObjectWarehouse<InterfaceKernel> & getInterfaceKernelWarehouse()
   {
@@ -543,15 +538,15 @@ protected:
    * Compute the residual
    * @param type The type of kernels for which the residual is to be computed.
    */
-  void computeResidualInternal(Moose::KernelType type = Moose::KT_ALL);
+  void computeResidualInternal(TagID tag);
 
   /**
    * Enforces nodal boundary conditions
    * @param residual Residual where nodal BCs are enforced (input/output)
    */
-  void computeNodalBCs(NumericVector<Number> & residual, Moose::KernelType type = Moose::KT_ALL);
+  void computeNodalBCs(NumericVector<Number> & residual, TagID tag);
 
-  void computeJacobianInternal(SparseMatrix<Number> & jacobian, Moose::KernelType kernel_type);
+  void computeJacobianInternal(SparseMatrix<Number> & jacobian, TagID tag);
 
   void computeDiracContributions(SparseMatrix<Number> * jacobian = NULL);
 
@@ -590,7 +585,7 @@ protected:
 
   ///@{
   /// Kernel Storage
-  KernelWarehouse _kernels;
+  std::vector<KernelWarehouse> _kernels;
   MooseObjectWarehouse<ScalarKernel> _scalar_kernels;
   MooseObjectWarehouse<ScalarKernel> _time_scalar_kernels;
   MooseObjectWarehouse<ScalarKernel> _non_time_scalar_kernels;

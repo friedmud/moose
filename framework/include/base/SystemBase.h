@@ -154,8 +154,8 @@ public:
 
   virtual Number & duDotDu() { return _du_dot_du; }
   virtual NumericVector<Number> & solutionUDot() { return *_dummy_vec; }
-  virtual NumericVector<Number> & residualVector(Moose::KernelType /*type*/) { return *_dummy_vec; }
-  virtual bool hasResidualVector(Moose::KernelType) const { return false; };
+  virtual NumericVector<Number> & residualVector(TagID /*tag*/) { return *_dummy_vec; }
+  virtual bool hasResidualVector(TagID /*tag*/) const { return false; };
 
   virtual void saveOldSolutions();
   virtual void restoreOldSolutions();
@@ -482,6 +482,9 @@ protected:
   MooseMesh & _mesh;
   /// The name of this system
   std::string _name;
+
+  /// Tags
+  std::map<TagName, TagID> _tag_name_to_tag_id;
 
   /// Variable warehouses (one for each thread)
   std::vector<VariableWarehouse> _vars;

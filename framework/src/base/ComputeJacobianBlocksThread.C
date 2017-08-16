@@ -25,8 +25,9 @@
 #include "libmesh/dof_map.h"
 
 ComputeJacobianBlocksThread::ComputeJacobianBlocksThread(FEProblemBase & fe_problem,
-                                                         std::vector<JacobianBlock *> & blocks)
-  : ComputeFullJacobianThread(fe_problem, blocks[0]->_jacobian /* have to pass something */),
+                                                         std::vector<JacobianBlock *> & blocks,
+                                                         TagID tag)
+  : ComputeFullJacobianThread(fe_problem, blocks[0]->_jacobian /* have to pass something */, tag),
     _blocks(blocks)
 {
 }

@@ -884,13 +884,12 @@ public:
                                NumericVector<Number> & residual);
   virtual void computeResidualType(const NumericVector<Number> & soln,
                                    NumericVector<Number> & residual,
-                                   Moose::KernelType type = Moose::KT_ALL);
+                                   TagID tag);
   virtual void computeJacobian(NonlinearImplicitSystem & sys,
                                const NumericVector<Number> & soln,
                                SparseMatrix<Number> & jacobian);
-  virtual void computeJacobian(const NumericVector<Number> & soln,
-                               SparseMatrix<Number> & jacobian,
-                               Moose::KernelType kernel_type = Moose::KT_ALL);
+  virtual void
+  computeJacobian(const NumericVector<Number> & soln, SparseMatrix<Number> & jacobian, TagID tag);
   /**
    * Computes several Jacobian blocks simultaneously, summing their contributions into smaller
    * preconditioning matrices.
@@ -963,7 +962,7 @@ public:
   virtual void computeIndicators();
   virtual void computeMarkers();
 
-  virtual NumericVector<Number> & residualVector(Moose::KernelType type);
+  virtual NumericVector<Number> & residualVector(TagID tag);
 
   virtual void addResidual(THREAD_ID tid) override;
   virtual void addResidualNeighbor(THREAD_ID tid) override;
@@ -1107,7 +1106,7 @@ public:
 
   // debugging iface /////
 
-  void setKernelTypeResidual(Moose::KernelType kt) { _kernel_type = kt; }
+  void setKernelTagResidual(TagID tag) { _kernel_tag = tag; }
 
   /**
    * Set flag that Jacobian is constant (for optimization purposes)
@@ -1300,7 +1299,7 @@ protected:
   MooseMesh & _mesh;
   EquationSystems _eq;
   bool _initialized;
-  Moose::KernelType _kernel_type;
+  TagID _kernel_tag;
 
   /// Whether or not to actually solve the nonlinear system
   bool _solve;

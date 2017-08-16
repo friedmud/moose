@@ -31,7 +31,7 @@
 
 ComputeJacobianThread::ComputeJacobianThread(FEProblemBase & fe_problem,
                                              SparseMatrix<Number> & jacobian,
-                                             Moose::KernelType kernel_type)
+                                             TagID tag)
   : ThreadedElementLoop<ConstElemRange>(fe_problem),
     _jacobian(jacobian),
     _nl(fe_problem.getNonlinearSystemBase()),
@@ -40,7 +40,7 @@ ComputeJacobianThread::ComputeJacobianThread(FEProblemBase & fe_problem,
     _dg_kernels(_nl.getDGKernelWarehouse()),
     _interface_kernels(_nl.getInterfaceKernelWarehouse()),
     _kernels(_nl.getKernelWarehouse()),
-    _kernel_type(kernel_type)
+    _kernel_type(tag)
 {
 }
 
@@ -54,7 +54,7 @@ ComputeJacobianThread::ComputeJacobianThread(ComputeJacobianThread & x, Threads:
     _dg_kernels(x._dg_kernels),
     _interface_kernels(x._interface_kernels),
     _kernels(x._kernels),
-    _kernel_type(x._kernel_type)
+    _kernel_tag(x._kernel_tag)
 {
 }
 
@@ -64,7 +64,7 @@ void
 ComputeJacobianThread::computeJacobian()
 {
   const MooseObjectWarehouse<KernelBase> * warehouse;
-  switch (_kernel_type)
+  switch (_kernel_tag)
   {
     case Moose::KT_ALL:
       warehouse = &_nl.getKernelWarehouse();
