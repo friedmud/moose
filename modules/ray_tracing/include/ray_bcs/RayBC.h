@@ -27,7 +27,7 @@
 #include "GeometricSearchInterface.h"
 
 class RayBC;
-class RayProblem;
+class RayProblemBase;
 class RaySystem;
 
 template <>
@@ -80,7 +80,7 @@ public:
 
 protected:
   /// The Ray Problem
-  RayProblem & _ray_problem;
+  RayProblemBase & _ray_problem;
 
   /// The Ray System
   RaySystem & _ray_sys;

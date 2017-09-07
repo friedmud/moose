@@ -29,7 +29,7 @@ AddRayKernelAction::AddRayKernelAction(InputParameters params) : MooseObjectActi
 void
 AddRayKernelAction::act()
 {
-  dynamic_cast<RayProblem *>(_problem.get())
+  dynamic_cast<RayProblemBase *>(_problem.get())
       ->raySystem()
       .addRayKernel(_type, _name, _moose_object_pars);
 }

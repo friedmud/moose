@@ -9,12 +9,12 @@ class Ray;
 class MooseMesh;
 class FEProblem;
 class RayKernel;
-class RayProblem;
+class RayProblemBase;
 
 namespace TraceRay
 {
 void traceRay(const std::shared_ptr<Ray> & ray,
-              RayProblem & ray_problem,
+              RayProblemBase & ray_problem,
               const MooseMesh & mesh,
               unsigned int halo_size,
               Real ray_max_distance,

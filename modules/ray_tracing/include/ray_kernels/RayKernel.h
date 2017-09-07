@@ -26,7 +26,7 @@
 #include "Coupleable.h"
 
 class RayKernel;
-class RayProblem;
+class RayProblemBase;
 class RaySystem;
 
 template <>
@@ -63,9 +63,7 @@ public:
   virtual void onSegment(const Elem * /*elem*/,
                          const Point & /*start*/,
                          const Point & /*end*/,
-                         bool /*ends_in_elem*/)
-  {
-  }
+                         bool /*ends_in_elem*/) = 0;
 
   /**
    * Set the current Ray that's being worked on
@@ -95,7 +93,7 @@ public:
 
 protected:
   /// The Ray Problem
-  RayProblem & _ray_problem;
+  RayProblemBase & _ray_problem;
 
   /// The Ray System
   RaySystem & _ray_sys;

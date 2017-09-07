@@ -36,13 +36,11 @@ InputParameters validParams<RayProblem>();
  * FEProblem derived class for customization of callbacks. In this instance we only print out
  * something in the c-tor and d-tor, so we know the class was build and used properly.
  */
-class RayProblem : public FEProblem
+class RayProblemBase : public FEProblem
 {
 public:
-  RayProblem(const InputParameters & params);
-  virtual ~RayProblem() override;
-
-  void createRaySystem() { _ray_system = std::make_shared<RaySystem>(*this, "Ray", _num_groups); }
+  RayProblemBase(const InputParameters & params);
+  virtual ~RayProblemBase() override;
 
   virtual void initialSetup() override;
   virtual void timestepSetup() override;
@@ -52,6 +50,10 @@ public:
   virtual bool converged() override;
 
   virtual void subdomainSetup(SubdomainID subdomain, THREAD_ID tid) override;
+
+  bool rayKernelCoverageCheck() { return _ray_kernel_coverage_check; }
+
+  bool rayMaterialCoverageCheck() { return _ray_material_coverage_check; }
 
   /**
    * Run subdomain setup on just the Ray systems
@@ -80,7 +82,7 @@ public:
   /**
    * Get the RaySystem for this Problem
    */
-  RaySystem & raySystem() { return *_ray_system; }
+  virtual RaySystem & raySystem() { return *_ray_system; }
 
   /**
    * Called during the ray tracing process when the subdomain changes
@@ -124,6 +126,12 @@ protected:
 
   bool _solve_fe;
 
+  // Whether or not to check for RayKernel coverage
+  bool _ray_kernel_coverage_check;
+
+  // Whether or not to check for RayKernel coverage
+  bool _ray_material_coverage_check;
+
   /// The System that holds all of data for Ray
   std::shared_ptr<RaySystem> _ray_system;
 
@@ -134,6 +142,12 @@ protected:
 
   friend class RaySystem;
   friend class RayAuxSystem;
+};
+
+class RayProblem : public RayProblemBase
+{
+public:
+  RayProblem(const InputParameters & params);
 };
 
 #endif /* RAYPROBLEM_H */

@@ -192,7 +192,13 @@ intersectQuad(const Point & O,
               Real & u,
               Real & v,
               Real & t,
-              const std::shared_ptr<Ray> & ray)
+              const std::shared_ptr<Ray> &
+#ifdef USE_DEBUG_RAY
+                  ray
+#else
+/* ray */
+#endif
+              )
 {
   // Reject rays using the barycentric coordinates of // the intersection point with respect to T.
   auto E01 = V10;
@@ -613,7 +619,7 @@ void
 find_point_neighbors(const Elem * current_elem,
                      const Point & p,
                      std::set<const Elem *> & neighbor_set,
-                     const std::shared_ptr<Ray> & ray)
+                     const std::shared_ptr<Ray> & /* ray */)
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());
@@ -705,7 +711,7 @@ find_point_neighbors(const Elem * current_elem,
  */
 void
 traceRay(const std::shared_ptr<Ray> & ray,
-         RayProblem & ray_problem,
+         RayProblemBase & ray_problem,
          const MooseMesh & mesh,
          unsigned int halo_size,
          Real ray_max_distance,

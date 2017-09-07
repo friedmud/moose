@@ -29,7 +29,7 @@
 // Forward Declarations
 class FEProblem;
 class RayKernel;
-class RayProblem;
+class RayProblemBase;
 
 /**
  * Base class for Ray tracing studies that will generate Rays and then propoagate
@@ -290,7 +290,7 @@ protected:
   void receiveRaysFinished();
 
   /// The RayProblem
-  RayProblem & _ray_problem;
+  RayProblemBase & _ray_problem;
 
   /// Number of groups
   unsigned int _num_groups;

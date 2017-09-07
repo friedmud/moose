@@ -24,7 +24,7 @@ validParams<GroupValueAuxBase>()
 
 GroupValueAuxBase::GroupValueAuxBase(const InputParameters & parameters)
   : AuxKernel(parameters),
-    _ray_problem(dynamic_cast<RayProblem &>(*parameters.get<FEProblem *>("_fe_problem"))),
+    _ray_problem(dynamic_cast<RayProblemBase &>(*parameters.get<FEProblem *>("_fe_problem"))),
     _ray_sys(_ray_problem.raySystem()),
     _num_groups(_ray_problem.numGroups()),
     _current_offset(_ray_sys.currentOffset(_tid)),
