@@ -33,17 +33,17 @@
 // System Includes
 #include <numeric>
 
-RaySystem::RaySystem(RayProblem & subproblem, const std::string & name, unsigned int num_groups)
+RaySystem::RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned int num_groups)
   : SystemBase(subproblem, name, Moose::VAR_AUXILIARY),
     ConsoleStreamInterface(subproblem.getMooseApp()),
     _ray_problem(subproblem),
     _sys(_ray_problem.es().add_system<TransientExplicitSystem>(name)),
-    _threaded_data(libMesh::n_threads()),
+    _rs_threaded_data(libMesh::n_threads()),
     _num_groups(num_groups),
     _current_group_solution(dynamic_cast<PetscVector<Number> &>(solution()))
 {
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
-    _threaded_data[tid]._group_solution = dynamic_cast<PetscVector<Number> *>(
+    _rs_threaded_data[tid]._group_solution = dynamic_cast<PetscVector<Number> *>(
         &_sys.add_vector("thread_group_solution_" + std::to_string(tid), false, PARALLEL));
 
   FEType var_type(CONSTANT, MONOMIAL);
@@ -67,6 +67,7 @@ RaySystem::initialSetup()
   if (_ray_problem._solve_ray)
   {
     // Check for domain coverage for RayKernels
+    if (_ray_problem.rayKernelCoverageCheck())
     {
       std::set<SubdomainID> subdomains;
       std::set<std::string> variables;
@@ -91,6 +92,7 @@ RaySystem::initialSetup()
     }
 
     // Check for domain coverage for RayMaterials
+    if (_ray_problem.rayMaterialCoverageCheck())
     {
       std::set<SubdomainID> subdomains;
       std::set<std::string> variables;
@@ -224,6 +226,7 @@ RaySystem::addRayMaterial(const std::string & mk_name,
   {
     MooseSharedPointer<RayMaterial> mk =
         _factory.create<RayMaterial>(mk_name, name, parameters, tid);
+
     _ray_materials.addObject(mk, tid);
   }
 }
@@ -231,7 +234,7 @@ RaySystem::addRayMaterial(const std::string & mk_name,
 void
 RaySystem::subdomainSetup(SubdomainID current_subdomain, THREAD_ID tid)
 {
-  _threaded_data[tid]._current_ray_material =
+  _rs_threaded_data[tid]._current_ray_material =
       _ray_materials.getBlockObjects(current_subdomain, tid)[0];
 }
 
@@ -263,7 +266,7 @@ RaySystem::solve()
 void
 RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
 {
-  auto & threaded_data = _threaded_data[tid];
+  auto & threaded_data = _rs_threaded_data[tid];
 
   dof_id_type dof_number = elem->dof_number(number(), 0, 0);
 
@@ -282,8 +285,8 @@ RaySystem::sweep()
 {
   VecGetArray(_current_group_solution.vec(), &_current_group_solution_values);
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
-    VecGetArray(_threaded_data[tid]._group_solution->vec(),
-                &_threaded_data[tid]._group_solution_values);
+    VecGetArray(_rs_threaded_data[tid]._group_solution->vec(),
+                &_rs_threaded_data[tid]._group_solution_values);
 
   _ray_problem.rayTracingStudy().executeStudy();
 
@@ -293,10 +296,10 @@ RaySystem::sweep()
 
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
   {
-    VecRestoreArray(_threaded_data[tid]._group_solution->vec(),
-                    &_threaded_data[tid]._group_solution_values);
+    VecRestoreArray(_rs_threaded_data[tid]._group_solution->vec(),
+                    &_rs_threaded_data[tid]._group_solution_values);
 
-    _threaded_data[tid]._group_solution->close();
+    _rs_threaded_data[tid]._group_solution->close();
   }
 }
 
@@ -306,7 +309,7 @@ RaySystem::postSweep()
   _current_group_solution.zero();
 
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
-    _current_group_solution += (*_threaded_data[tid]._group_solution);
+    _current_group_solution += (*_rs_threaded_data[tid]._group_solution);
 
   _current_group_solution.close();
 

@@ -146,6 +146,9 @@ public:
   bool shouldContinue() { return _should_continue; }
   void setShouldContinue(bool should_continue) { _should_continue = should_continue; }
 
+  bool isReverse() { return _is_reverse; }
+  void setIsReverse(bool is_reverse) { _is_reverse = is_reverse; }
+
   /**
    * Creates a new Ray that is the reverse of this one
    */
@@ -153,6 +156,7 @@ public:
   {
     auto reverse_ray = std::make_shared<Ray>(_end, _start, _data.size());
 
+    reverse_ray->_is_reverse = true;
     reverse_ray->_azimuthal_angle = _azimuthal_angle;
     reverse_ray->_azimuthal_spacing = _azimuthal_spacing;
     reverse_ray->_azimuthal_weight = _azimuthal_weight;
@@ -213,6 +217,9 @@ protected:
   /// The weight for each polar angle (just 1.0 for 3D)
   std::vector<Real> _polar_weights;
 
+  /// True if this Ray was created as the reverse of another ray
+  bool _is_reverse = false;
+
   /// Wether or not the Ray should continue to be traced
   /// NOTE: This is NOT sent with the Ray in parallel!
   /// Only a Ray that is actively being traced will be passed in parallel
@@ -262,8 +269,8 @@ public:
 
     // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
     // distance,
-    // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id
-    total_size += 11;
+    // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id, is_reverse
+    total_size += 12;
 
     return total_size;
   }
@@ -295,8 +302,8 @@ public:
 
     // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
     // distance,
-    // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id
-    total_size += 11;
+    // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id, is_reverse
+    total_size += 12;
 
     return total_size;
   }
@@ -357,6 +364,9 @@ public:
 
     // ID
     data_out = b->id();
+
+    // is_reverse
+    data_out = b->isReverse();
 
     // Copy out data
     std::copy(b->_data.begin(), b->_data.end(), data_out);
@@ -429,6 +439,9 @@ public:
 
     // ID
     ray->setID((*in++));
+
+    // is_reverse
+    ray->setIsReverse((*in++));
 
     // Reserve space for the data
     ray->_data.reserve(data_size);

@@ -42,7 +42,7 @@ RayBC::RayBC(const InputParameters & params)
     BoundaryRestrictableRequired(params, false), // false for sidesets
     Coupleable(this, false),
     GeometricSearchInterface(this),
-    _ray_problem(dynamic_cast<RayProblem &>(*params.get<FEProblem *>("_fe_problem"))),
+    _ray_problem(dynamic_cast<RayProblemBase &>(*params.get<FEProblem *>("_fe_problem"))),
     _ray_sys(_ray_problem.raySystem()),
     _tid(params.get<THREAD_ID>("_tid"))
 {

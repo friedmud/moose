@@ -44,7 +44,7 @@ RayMaterial::RayMaterial(const InputParameters & params)
     Coupleable(this, false),
     UserObjectInterface(this),
     TransientInterface(this),
-    _ray_problem(dynamic_cast<RayProblem &>(*params.get<FEProblem *>("_fe_problem"))),
+    _ray_problem(dynamic_cast<RayProblemBase &>(*params.get<FEProblem *>("_fe_problem"))),
     _num_groups(_ray_problem.numGroups()),
     _tid(params.get<THREAD_ID>("_tid"))
 {

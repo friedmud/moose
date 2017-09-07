@@ -13,7 +13,7 @@
 #include <vector>
 
 class RayMaterial;
-class RayProblem;
+class RayProblemBase;
 
 template <>
 InputParameters validParams<RayMaterial>();
@@ -53,7 +53,7 @@ public:
   DummyVariable variable() { return DummyVariable(); }
 
 protected:
-  RayProblem & _ray_problem;
+  RayProblemBase & _ray_problem;
 
   /// Number of energy groups
   unsigned int _num_groups;

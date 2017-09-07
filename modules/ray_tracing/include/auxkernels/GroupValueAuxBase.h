@@ -35,7 +35,7 @@ public:
 
 protected:
   /// The RAY Problem
-  RayProblem & _ray_problem;
+  RayProblemBase & _ray_problem;
 
   /// The RAY System
   RaySystem & _ray_sys;

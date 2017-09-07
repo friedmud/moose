@@ -29,7 +29,7 @@
 #include "libmesh/petsc_vector.h"
 
 // Forward declarations
-class RayProblem;
+class RayProblemBase;
 class TimeIntegrator;
 class AuxScalarKernel;
 class AuxKernel;
@@ -80,10 +80,10 @@ public:
     /// Because of portability issues with alignas() > 16 bytes I'm also going to pad with
     /// 64 bytes just to REALLY make sure this stuff is spread out!
     /// Note: this is double (instead of Real) on purpose!
-    double padding[8];
+    double padding[16];
   };
 
-  RaySystem(RayProblem & subproblem, const std::string & name, unsigned int num_groups);
+  RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned int num_groups);
   virtual ~RaySystem();
 
   virtual System & system() { return _sys; };
@@ -111,7 +111,7 @@ public:
    * Called during Ray tracing when the subdomain changes
    * Updates the RayMaterial to the correct one for the subdomain
    */
-  void subdomainSetup(SubdomainID current_subdomain, THREAD_ID tid);
+  virtual void subdomainSetup(SubdomainID current_subdomain, THREAD_ID tid);
 
   /**
    * Get the RayKernels associated with this subdomain
@@ -145,7 +145,7 @@ public:
    */
   MooseSharedPointer<RayMaterial> & currentRayMaterial(THREAD_ID tid)
   {
-    return _threaded_data[tid]._current_ray_material;
+    return _rs_threaded_data[tid]._current_ray_material;
   }
 
   virtual const NumericVector<Number> *& currentSolution()
@@ -181,7 +181,7 @@ public:
   /**
    * The current offset into the solution vectors
    */
-  dof_id_type & currentOffset(THREAD_ID tid) { return _threaded_data[tid]._current_offset; }
+  dof_id_type & currentOffset(THREAD_ID tid) { return _rs_threaded_data[tid]._current_offset; }
 
   /**
    * Get the raw PETSc vector that holds group values for one thread
@@ -189,7 +189,7 @@ public:
    */
   PetscScalar *& groupSolutionValues(THREAD_ID tid)
   {
-    return _threaded_data[tid]._group_solution_values;
+    return _rs_threaded_data[tid]._group_solution_values;
   }
 
   /**
@@ -211,7 +211,7 @@ public:
   /**
    * The element currently being operated on by each thread
    */
-  const Elem *& currentElem(THREAD_ID tid) { return _threaded_data[tid]._current_elem; }
+  const Elem *& currentElem(THREAD_ID tid) { return _rs_threaded_data[tid]._current_elem; }
 
   /**
    * Set the RayTracingStudy
@@ -232,11 +232,11 @@ protected:
    */
   virtual void postSweep();
 
-  RayProblem & _ray_problem;
+  RayProblemBase & _ray_problem;
 
   TransientExplicitSystem & _sys;
 
-  std::vector<ThreadedData> _threaded_data;
+  std::vector<ThreadedData> _rs_threaded_data;
 
   /// Number of groups
   unsigned int _num_groups;

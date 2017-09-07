@@ -29,7 +29,7 @@ AddRayMaterialAction::AddRayMaterialAction(InputParameters params) : MooseObject
 void
 AddRayMaterialAction::act()
 {
-  dynamic_cast<RayProblem *>(_problem.get())
+  dynamic_cast<RayProblemBase *>(_problem.get())
       ->raySystem()
       .addRayMaterial(_type, _name, _moose_object_pars);
 }

@@ -99,7 +99,7 @@ RayTracingApp::associateSyntax(Syntax & syntax, ActionFactory & action_factory)
 
   registerAction(AddRayBoundaryConditionAction, "add_ray_boundary_condition");
   syntax.registerActionSyntax("AddRayBoundaryConditionAction", "RayBCs/*");
-  registerMooseObjectTask("add_ray_boundary_condition", RayBoundaryCondition, false);
+  registerMooseObjectTask("add_ray_boundary_condition", RayBC, false);
 
   addTaskDependency("add_ray_boundary_condition", "add_kernel");
 
