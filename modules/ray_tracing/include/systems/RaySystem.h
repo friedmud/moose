@@ -86,7 +86,8 @@ public:
   RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned int num_groups);
   virtual ~RaySystem();
 
-  virtual System & system() { return _sys; };
+  virtual System & system() { return _sys; }
+  virtual const System & system() const { return _sys; }
 
   virtual NumericVector<Number> & solution() { return *_sys.solution; }
   virtual NumericVector<Number> & solutionOld() { return *_sys.old_local_solution; }
