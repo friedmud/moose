@@ -57,10 +57,10 @@ protected:
   double _ray_length;
   THREAD_ID _tid;
 
-  const Elem * _current_elem = NULL;
-  int _intersected_side = -1;
-  Point _intersection_point;
-  Point _boundary_intersection_point;
+  const Elem * current_elem = NULL;
+  int intersected_side = -1;
+  Point intersection_point;
+  Point boundary_intersection_point;
 };
 
 class RayProblemTraceRay : public TraceRay
