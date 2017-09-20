@@ -113,7 +113,7 @@ RayProblemTraceRay::onBoundary(boundary_id_type bid,
           std::cerr << ray_count << " Applying BC!" << std::endl;
 #endif
 
-        bc->apply(_current_elem, _intersected_side, _intersection_point, ray);
+        bc->apply(current_elem, intersected_side, intersection_point, ray);
       }
     }
   }
@@ -137,7 +137,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
                         const Point & incoming_point,
                         const std::shared_ptr<Ray> & ray,
                         Point & intersection_point,
-                        Point & /*boundary_intersection_point*/)
+                        Point & /*boundaryintersection_point*/)
 {
   int intersected_side = -1;
   unsigned int n_sides = current_elem->n_sides();
@@ -485,7 +485,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
                           const Point & incoming_point,
                           const std::shared_ptr<Ray> & ray,
                           Point & intersection_point,
-                          Point & /*boundary_intersection_point*/)
+                          Point & /*boundaryintersection_point*/)
 {
 
   int intersected_side = -1;
@@ -602,7 +602,7 @@ sideIntersectedByLine1D(const Elem * current_elem,
                         const Point & /*incoming_point*/,
                         const std::shared_ptr<Ray> & ray,
                         Point & intersection_point,
-                        Point & /*boundary_intersection_point*/)
+                        Point & /*boundaryintersection_point*/)
 {
   Real ray_direction = ray->end()(0) - ray->start()(0);
 
@@ -872,7 +872,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   Point work_point;
   Point work_point2;
 
-  _current_elem = ray->startingElem();
+  current_elem = ray->startingElem();
 
   unsigned int incoming_side = ray->incomingSide();
 
@@ -942,7 +942,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   { // Find the side of this element that the Ray intersects... while ignoring the incoming side
     // (we
     // don't want to move backward!)
-    _intersected_side = -1;
+    intersected_side = -1;
 
 #ifdef USE_DEBUG_RAY
     if (ray->id() == debug_ray_id)
@@ -964,14 +964,14 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         std::cerr << "ends within mesh!" << std::endl;
 #endif
 
-      if (_current_elem->contains_point(ray->end()))
+      if (current_elem->contains_point(ray->end()))
       {
 #ifdef USE_DEBUG_RAY
         if (ray->id() == debug_ray_id)
           std::cerr << " ends within current elem!" << std::endl;
 #endif
         ends_in_elem = true;
-        _intersection_point = ray->end();
+        intersection_point = ray->end();
       }
     }
 
@@ -1019,40 +1019,40 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     }
 
       */
-      if (_current_elem->type() == QUAD4)
-        _intersected_side = sideIntersectedByLine2D<Quad4>(_current_elem,
-                                                           incoming_side,
-                                                           incoming_point,
-                                                           ray,
-                                                           _intersection_point,
-                                                           _boundary_intersection_point);
-      else if (_current_elem->type() == TRI3)
-        _intersected_side = sideIntersectedByLine2D<Tri3>(_current_elem,
+      if (current_elem->type() == QUAD4)
+        intersected_side = sideIntersectedByLine2D<Quad4>(current_elem,
                                                           incoming_side,
                                                           incoming_point,
                                                           ray,
-                                                          _intersection_point,
-                                                          _boundary_intersection_point);
-      else if (_current_elem->type() == HEX8)
-        _intersected_side = sideIntersectedByLineHex8(_current_elem,
-                                                      incoming_side,
-                                                      incoming_point,
-                                                      ray,
-                                                      _intersection_point,
-                                                      _boundary_intersection_point);
+                                                          intersection_point,
+                                                          boundary_intersection_point);
+      else if (current_elem->type() == TRI3)
+        intersected_side = sideIntersectedByLine2D<Tri3>(current_elem,
+                                                         incoming_side,
+                                                         incoming_point,
+                                                         ray,
+                                                         intersection_point,
+                                                         boundary_intersection_point);
+      else if (current_elem->type() == HEX8)
+        intersected_side = sideIntersectedByLineHex8(current_elem,
+                                                     incoming_side,
+                                                     incoming_point,
+                                                     ray,
+                                                     intersection_point,
+                                                     boundary_intersection_point);
 
-      else if (_current_elem->type() == EDGE2 || _current_elem->type() == EDGE3 ||
-               _current_elem->type() == EDGE4)
-        _intersected_side = sideIntersectedByLine1D(_current_elem,
-                                                    incoming_side,
-                                                    incoming_point,
-                                                    ray,
-                                                    _intersection_point,
-                                                    _boundary_intersection_point);
+      else if (current_elem->type() == EDGE2 || current_elem->type() == EDGE3 ||
+               current_elem->type() == EDGE4)
+        intersected_side = sideIntersectedByLine1D(current_elem,
+                                                   incoming_side,
+                                                   incoming_point,
+                                                   ray,
+                                                   intersection_point,
+                                                   boundary_intersection_point);
     }
 
-    if (_intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder (as
-                                                  // long as the ray has moved a bit
+    if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder (as
+                                                 // long as the ray has moved a bit
     {
 #ifdef USE_DEBUG_RAY
       if (ray->id() == debug_ray_id)
@@ -1062,8 +1062,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       if (ray->distance() > 1e-9) // Only allow this if the ray has moved a bit
       {
         // See if we're on the edge of the domain
-        work_point = _intersection_point - _b_box.min();
-        work_point2 = _intersection_point - _b_box.max();
+        work_point = intersection_point - _b_box.min();
+        work_point2 = intersection_point - _b_box.max();
 
         unsigned int num_zero = 0;
 
@@ -1083,16 +1083,16 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #endif
           //        auto side = -1;
 
-          auto n_sides = _current_elem->n_sides();
+          auto n_sides = current_elem->n_sides();
 
           for (auto s = 0u; s < n_sides; s++)
           {
             if (s != incoming_side) // Don't allow a ray to turn around!
             {
-              if (_current_elem->neighbor(s) ==
+              if (current_elem->neighbor(s) ==
                   NULL) // Only check sides that are up against the domain edge
               {
-                auto side_elem = _current_elem->build_side(s);
+                auto side_elem = current_elem->build_side(s);
 
                 if (side_elem->contains_point(incoming_point))
                 {
@@ -1102,8 +1102,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 //                libMesh::err<<ray_count<<" Boundary intersection point:
 //                "<<incoming_point<<std::endl;
 #endif
-                  _intersected_side = s;
-                  _intersection_point = incoming_point;
+                  intersected_side = s;
+                  intersection_point = incoming_point;
                   break;
                 }
               }
@@ -1112,11 +1112,11 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         }
       }
 
-      if (_intersected_side == -1) // Need to do a more exhaustive search
+      if (intersected_side == -1) // Need to do a more exhaustive search
       {
         // Let's first try grabbing the point_neighbors for this element to see if they are good
         // candidates
-        find_point_neighbors(_current_elem, incoming_point, point_neighbors, ray);
+        find_point_neighbors(current_elem, incoming_point, point_neighbors, ray);
 
 #ifdef USE_DEBUG_RAY
         if (ray->id() == debug_ray_id)
@@ -1130,7 +1130,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         // Try the search on each neighbor and see if something good happens
         for (auto & neighbor : point_neighbors)
         {
-          if (neighbor != _current_elem) // Don't need to look through this element again
+          if (neighbor != current_elem) // Don't need to look through this element again
           {
 #ifdef USE_DEBUG_RAY
             if (ray->id() == debug_ray_id)
@@ -1154,32 +1154,32 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             }
 
             // Now try to find an intersection in that neighbor
-            if (_current_elem->type() == QUAD4)
-              _intersected_side = sideIntersectedByLine2D<Quad4>(neighbor,
-                                                                 side,
-                                                                 incoming_point,
-                                                                 ray,
-                                                                 _intersection_point,
-                                                                 _boundary_intersection_point);
-            else if (_current_elem->type() == TRI3)
-              _intersected_side = sideIntersectedByLine2D<Tri3>(neighbor,
+            if (current_elem->type() == QUAD4)
+              intersected_side = sideIntersectedByLine2D<Quad4>(neighbor,
                                                                 side,
                                                                 incoming_point,
                                                                 ray,
-                                                                _intersection_point,
-                                                                _boundary_intersection_point);
-            else if (_current_elem->type() == HEX8)
-              _intersected_side = sideIntersectedByLineHex8(neighbor,
-                                                            side,
-                                                            incoming_point,
-                                                            ray,
-                                                            _intersection_point,
-                                                            _boundary_intersection_point);
+                                                                intersection_point,
+                                                                boundary_intersection_point);
+            else if (current_elem->type() == TRI3)
+              intersected_side = sideIntersectedByLine2D<Tri3>(neighbor,
+                                                               side,
+                                                               incoming_point,
+                                                               ray,
+                                                               intersection_point,
+                                                               boundary_intersection_point);
+            else if (current_elem->type() == HEX8)
+              intersected_side = sideIntersectedByLineHex8(neighbor,
+                                                           side,
+                                                           incoming_point,
+                                                           ray,
+                                                           intersection_point,
+                                                           boundary_intersection_point);
 
             // If we found an intersection let's go with it
-            if (_intersected_side != -1)
+            if (intersected_side != -1)
             {
-              auto distance = (_intersection_point - incoming_point).norm();
+              auto distance = (intersection_point - incoming_point).norm();
 
               if (distance > longest_distance)
               {
@@ -1203,13 +1203,13 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             std::cerr << "best_neighbor: " << best_neighbor->id() << " best_side: " << best_side
                       << std::endl;
 #endif
-          _current_elem = best_neighbor;
+          current_elem = best_neighbor;
           incoming_side = best_side;
         }
 
-        if (_current_elem->processor_id() != pid)
+        if (current_elem->processor_id() != pid)
         {
-          ray->setStartingElem(_current_elem);
+          ray->setStartingElem(current_elem);
           ray->setIncomingSide(incoming_side);
           ray->setStart(incoming_point);
           break;
@@ -1274,7 +1274,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     #endif
     */
 
-    if (_intersected_side != -1 || ends_in_elem) // -1 means that we didn't find any side
+    if (intersected_side != -1 || ends_in_elem) // -1 means that we didn't find any side
     {
 #ifdef USE_DEBUG_RAY
       if (ray->id() == debug_ray_id)
@@ -1285,7 +1285,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       //      "<<intersection_point<<std::endl;
 
       // Use a work point here so temporaries don't get created
-      work_point = _intersection_point;
+      work_point = intersection_point;
       work_point -= incoming_point;
 
       // The 0.79... is for TY quadrature in 2D
@@ -1300,14 +1300,14 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             fe_problem.reinitElemPhys(current_elem, phys_points, tid);
       */
 
-      if (_current_elem->subdomain_id() != current_subdomain)
+      if (current_elem->subdomain_id() != current_subdomain)
       {
-        current_subdomain = _current_elem->subdomain_id();
+        current_subdomain = current_elem->subdomain_id();
 
         subdomainSetup(current_subdomain, ray);
       }
 
-      onSegment(_current_elem, incoming_point, _intersection_point, ends_in_elem);
+      onSegment(current_elem, incoming_point, intersection_point, ends_in_elem);
 
       // Check if a kernel set to kill the ray
       if (!ray->shouldContinue())
@@ -1331,10 +1331,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         break;
       }
 
-      if (_intersected_side != -1)
+      if (intersected_side != -1)
       {
         // Get the neighbor on that side
-        Elem * neighbor = getNeighbor(_current_elem, _intersected_side, _intersection_point);
+        Elem * neighbor = getNeighbor(current_elem, intersected_side, intersection_point);
 
 // Elem * neighbor = current_elem->neighbor(intersected_side);
 
@@ -1351,11 +1351,11 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #endif
           // Note: This is finding the side the current_elem is on for the neighbor.  That's the
           // "incoming_side" for the neighbor
-          incoming_side = sideNeighborIsOn(neighbor, _current_elem);
+          incoming_side = sideNeighborIsOn(neighbor, current_elem);
 
           // Recurse
-          _current_elem = neighbor;
-          incoming_point = _intersection_point;
+          current_elem = neighbor;
+          incoming_point = intersection_point;
 
           // If the neighbor is off-processor... we need to set up the Ray data to be passed to
           // the
@@ -1398,11 +1398,11 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           //        libMesh::err<<" Direction: "<<work_point<<std::endl;
 
-          _mesh.getMesh().get_boundary_info().boundary_ids(_current_elem, _intersected_side, ids);
+          _mesh.getMesh().get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
 
           for (const auto & bid : ids)
           {
-            onBoundary(bid, NULL, _intersected_side, ray);
+            onBoundary(bid, NULL, intersected_side, ray);
           }
 
           // Need to see if the ray hit _right_ on the "corner" of the domain
@@ -1412,8 +1412,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           // First determine if we hit a corner.
           // Subtract off the current point from the min/max of the bounding box
           // If any two entries from that subtraction are (near) zero then we're at a corner
-          work_point = _intersection_point - _b_box.min();
-          work_point2 = _intersection_point - _b_box.max();
+          work_point = intersection_point - _b_box.min();
+          work_point2 = intersection_point - _b_box.max();
 
           unsigned int num_zero = 0;
 
@@ -1434,7 +1434,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             //          libMesh::err<<ray_count<<" Ray hit a domain corner!
             //          "<<intersection_point<<std::endl;
 
-            find_point_neighbors(_current_elem, _intersection_point, point_neighbors, ray);
+            find_point_neighbors(current_elem, intersection_point, point_neighbors, ray);
 
             // Try the search on each neighbor and see if something good happens
             for (auto & neighbor : point_neighbors)
@@ -1455,7 +1455,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
               {
                 auto side_elem = neighbor->build_side(s);
 
-                if (side_elem->contains_point(_intersection_point))
+                if (side_elem->contains_point(intersection_point))
                 {
                   side = s;
 
@@ -1477,8 +1477,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                // later...
           // but this will work for reflective for now
           {
-            incoming_point = _intersection_point;
-            incoming_side = _intersected_side;
+            incoming_point = intersection_point;
+            incoming_side = intersected_side;
           }
 
           //        libMesh::err<<"Normal: "<<normals[0]<<std::endl;
