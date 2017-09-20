@@ -231,13 +231,12 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
     if (ray->startingElem()->processor_id() == _my_pid) // This will be false if we've picked up a
                                                         // banked ray that needs to start on another
                                                         // processor
-      TraceRay::traceRay(ray,
-                         _ray_problem,
-                         _mesh,
-                         _halo_size,
-                         _ray_max_distance,
-                         _ray_length,
-                         omp_get_thread_num());
+    {
+      RayProblemTraceRay tr(
+          _ray_problem, _mesh, _halo_size, _ray_max_distance, _ray_length, omp_get_thread_num());
+
+      tr.trace(ray);
+    }
   }
 
   // Figure out where they went
@@ -515,15 +514,11 @@ RayTracingStudy::bsPropagate()
   // Get the number of rays that were started in the whole domain
   nonblockingSum(_comm, _rays_started, _all_rays_started, rays_started_request);
 
-  // Use these to try to delay some forced communication
-  unsigned int non_tracing_clicks = 0;
-
   // Keep bouncing the rays around until they've all completed
   while (true)
   {
     bool receiving = false;
     bool sending = false;
-    bool at_barrier = false;
 
     Parallel::Request some_left_request;
     unsigned int some_left = 0;
