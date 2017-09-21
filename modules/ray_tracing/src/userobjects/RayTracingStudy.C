@@ -232,8 +232,12 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
                                                         // banked ray that needs to start on another
                                                         // processor
     {
-      RayProblemTraceRay tr(
-          _ray_problem, _mesh, _halo_size, _ray_max_distance, _ray_length, omp_get_thread_num());
+      RayProblemTraceRay tr(_ray_problem,
+                            _mesh.getMesh(),
+                            _halo_size,
+                            _ray_max_distance,
+                            _ray_length,
+                            omp_get_thread_num());
 
       tr.trace(ray);
     }

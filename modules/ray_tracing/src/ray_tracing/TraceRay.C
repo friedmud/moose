@@ -10,7 +10,6 @@
 #include "Ray.h"
 #include "MooseError.h"
 #include "FEProblem.h"
-#include "MooseMesh.h"
 #include "RayKernel.h"
 
 // libMesh Includes
@@ -42,7 +41,7 @@ unsigned int debug_ray_pid = 0;
 const std::vector<std::vector<unsigned int>> quad4_side_to_children = {
     {0, 1}, {1, 3}, {3, 2}, {2, 0}};
 
-TraceRay::TraceRay(const MooseMesh & mesh,
+TraceRay::TraceRay(const MeshBase & mesh,
                    const BoundingBox & b_box,
                    unsigned int halo_size,
                    Real ray_max_distance,
@@ -58,7 +57,7 @@ TraceRay::TraceRay(const MooseMesh & mesh,
 }
 
 RayProblemTraceRay::RayProblemTraceRay(RayProblemBase & ray_problem,
-                                       const MooseMesh & mesh,
+                                       const MeshBase & mesh,
                                        unsigned int halo_size,
                                        Real ray_max_distance,
                                        Real ray_length,
@@ -910,13 +909,13 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   //    sleep(1000);
   //#endif
 
-  auto mesh_dim = _mesh.getMesh().mesh_dimension();
+  auto mesh_dim = _mesh.mesh_dimension();
 
 #ifdef USE_DEBUG_RAY
   if (true && ray->id() == debug_ray_id && pid == 0)
   //  if (pid == 1)
   {
-    debug_mesh = new Mesh(Parallel::Communicator(), mesh.getMesh().mesh_dimension());
+    debug_mesh = new Mesh(Parallel::Communicator(), mesh.mesh_dimension());
     debug_mesh->skip_partitioning(true);
   }
 #endif
@@ -1405,7 +1404,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           //        libMesh::err<<" Direction: "<<work_point<<std::endl;
 
-          _mesh.getMesh().get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
+          _mesh.get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
 
           for (const auto & bid : ids)
           {
@@ -1466,7 +1465,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                 {
                   side = s;
 
-                  _mesh.getMesh().get_boundary_info().boundary_ids(neighbor, side, ids);
+                  _mesh.get_boundary_info().boundary_ids(neighbor, side, ids);
 
                   for (const auto & bid : ids)
                     onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
