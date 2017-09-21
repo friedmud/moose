@@ -93,9 +93,11 @@ RayProblemTraceRay::onSegment(const Elem * current_elem,
 }
 
 void
-RayProblemTraceRay::onBoundary(boundary_id_type bid,
+RayProblemTraceRay::onBoundary(const Elem * current_elem,
+                               const Point & intersection_point,
+                               unsigned int intersected_side,
+                               boundary_id_type bid,
                                const Elem * /* neighbor */,
-                               unsigned int /* side */,
                                std::shared_ptr<Ray> & ray)
 {
   if (_applied_ids.find(bid) == _applied_ids.end()) // Don't reapply the same BC twice!
@@ -867,6 +869,11 @@ getNeighbor(const Elem * current_elem, unsigned int intersected_side, Point & in
 void
 TraceRay::trace(std::shared_ptr<Ray> & ray)
 {
+  const Elem * current_elem = NULL;
+  int intersected_side = -1;
+  Point intersection_point;
+  Point boundary_intersection_point;
+
   Point incoming_point = ray->start();
 
   Point work_point;
@@ -1402,7 +1409,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           for (const auto & bid : ids)
           {
-            onBoundary(bid, NULL, intersected_side, ray);
+            onBoundary(current_elem, intersection_point, intersected_side, bid, NULL, ray);
           }
 
           // Need to see if the ray hit _right_ on the "corner" of the domain
@@ -1462,7 +1469,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                   _mesh.getMesh().get_boundary_info().boundary_ids(neighbor, side, ids);
 
                   for (const auto & bid : ids)
-                    onBoundary(bid, neighbor, side, ray);
+                    onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
                 }
               }
             }
