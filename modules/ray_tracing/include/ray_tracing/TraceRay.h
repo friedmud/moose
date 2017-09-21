@@ -41,9 +41,11 @@ protected:
   {
   }
 
-  virtual void onBoundary(boundary_id_type /* bid */,
+  virtual void onBoundary(const Elem * /* current_elem */,
+                          const Point & /* intersection_point */,
+                          unsigned int /* intersected_side */,
+                          boundary_id_type /* bid */,
                           const Elem * /* neighbor */,
-                          unsigned int /* side */,
                           std::shared_ptr<Ray> & /* ray */)
   {
   }
@@ -56,11 +58,6 @@ protected:
   double _ray_max_distance;
   double _ray_length;
   THREAD_ID _tid;
-
-  const Elem * current_elem = NULL;
-  int intersected_side = -1;
-  Point intersection_point;
-  Point boundary_intersection_point;
 };
 
 class RayProblemTraceRay : public TraceRay
@@ -81,9 +78,11 @@ public:
                          const Point & intersection_point,
                          bool ends_in_elem) override;
 
-  virtual void onBoundary(boundary_id_type bid,
-                          const Elem * neighbor,
-                          unsigned int side,
+  virtual void onBoundary(const Elem * current_elem,
+                          const Point & intersection_point,
+                          unsigned int intersected_side,
+                          boundary_id_type bid,
+                          const Elem * /* neighbor */,
                           std::shared_ptr<Ray> & ray) override;
 
   virtual void finishedBoundary() override;
