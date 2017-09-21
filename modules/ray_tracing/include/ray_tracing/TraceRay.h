@@ -10,16 +10,20 @@
 
 // forward declares
 class Ray;
-class MooseMesh;
 class FEProblem;
 class RayKernel;
 class RayProblemBase;
 class RaySystem;
 
+namespace libMesh
+{
+class Mesh;
+}
+
 class TraceRay
 {
 public:
-  TraceRay(const MooseMesh & mesh,
+  TraceRay(const MeshBase & mesh,
            const BoundingBox & b_box,
            unsigned int halo_size,
            Real ray_max_distance,
@@ -52,7 +56,7 @@ protected:
 
   virtual void finishedBoundary() {}
 
-  const MooseMesh & _mesh;
+  const MeshBase & _mesh;
   BoundingBox _b_box;
   unsigned int _halo_size;
   double _ray_max_distance;
@@ -64,7 +68,7 @@ class RayProblemTraceRay : public TraceRay
 {
 public:
   RayProblemTraceRay(RayProblemBase & ray_problem,
-                     const MooseMesh & mesh,
+                     const MeshBase & mesh,
                      unsigned int halo_size,
                      Real ray_max_distance,
                      Real ray_length,

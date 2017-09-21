@@ -10,7 +10,7 @@
 # FRAMEWORK_DIR - Location of the MOOSE framework
 #
 ###############################################################################
-MOOSE_DIR          ?= $(shell dirname `pwd`)/../moose
+MOOSE_DIR          ?= $(shell dirname `pwd`)/../../../moose
 FRAMEWORK_DIR      ?= $(MOOSE_DIR)/framework
 ###############################################################################
 
@@ -36,6 +36,7 @@ WATER_STEAM_EOS           := no
 XFEM                      := no
 POROUS_FLOW               := no
 LEVEL_SET                 := no
+RAY_TRACING               := yes
 include           $(MOOSE_DIR)/modules/modules.mk
 ###############################################################################
 
