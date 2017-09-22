@@ -243,7 +243,7 @@ TEST_F(TraceRayTest, trace_adapted_2d_quads_strike_level_mismatch_corner)
 
   ray->setID(0);
 
-  DebugTraceRay tr(*mesh, BoundingBox(Point(0, 0, 0), Point(2, 1, 0)), 1, 1e5, 1e5, 0, true);
+  DebugTraceRay tr(*mesh, BoundingBox(Point(0, 0, 0), Point(2, 1, 0)), 1, 1e5, 1e5, 0, false);
 
   tr.trace(ray);
 

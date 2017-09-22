@@ -64,6 +64,8 @@ public:
   virtual void
   reinitElemPhys(const Elem * elem, std::vector<Point> phys_points_in_elem, THREAD_ID tid) override;
 
+  virtual void reinitNeighbor(const Elem * elem, unsigned int side, THREAD_ID tid) override;
+
   /**
    * Run reinitElem() on just the Ray systems
    */

@@ -136,6 +136,17 @@ RayProblemBase::reinitElemPhys(const Elem * elem,
 }
 
 void
+RayProblemBase::reinitNeighbor(const Elem * elem, unsigned int side, THREAD_ID tid)
+{
+  const Elem * neighbor = elem->neighbor_ptr(side);
+  unsigned int neighbor_side = neighbor->which_neighbor_am_i(elem);
+
+  _ray_system->reinitNeighborFace(neighbor, neighbor_side, 0, tid);
+
+  FEProblem::reinitNeighbor(elem, side, tid);
+}
+
+void
 RayProblemBase::RayReinitElem(const Elem * elem, THREAD_ID tid)
 {
   _ray_system->reinitElem(elem, tid);
