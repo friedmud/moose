@@ -32,6 +32,48 @@ public:
 
   void trace(std::shared_ptr<Ray> & ray);
 
+  /**
+   * Find the child of a refined element that contains the given point
+   *
+   * @return The element containing the point
+   *
+   * @param current_child The children of this element will be searched
+   * @param intersection_point The point to be searched for
+   * @param children_ids The embedding matrix ID of the childred that should be searched.  Useful
+   * for narrowing down the correct children to search when you can rule some out (for instance: if
+   * you only need to search the children on one specific side of the parent element.  Be aware:
+   * these are used all the way down - so make sure what you do makes sense!
+   */
+  static Elem * recursivelyFindChildContainingPoint(Elem * current_child,
+                                                    Point & intersection_point,
+                                                    const std::vector<unsigned int> & children_ids);
+
+  /**
+   * Find the child that contains the point on a side of the current element
+   *
+   * This is an optimization over just using recursivelyFindCHildContinaingPoint that only looks in
+   * children that are on the side specified.
+   *
+   * @param current_elem The elem to search
+   * @param p The physical point to look for
+   * @param side The side of current_elem that should be searched
+   */
+  static Elem * childOnSide(Elem * current_elem, Point & p, unsigned int side);
+
+  /**
+   * Get the neighbor on the intersected_side of current_elem.
+   *
+   * In the case of mesh adaptivity this will return the most refined element that is on the side of
+   * current_elem and contains the intersection_point
+   *
+   * @param current_elem The elem you want to find the neighbor for
+   * @param intersected_side The side of current_elem you want a neighbor for
+   * @param intersection_point The point on the side you want the neighbor for (only used when mesh
+   * adaptivity is active to find the child that contains the point)
+   */
+  static Elem *
+  getNeighbor(const Elem * current_elem, unsigned int intersected_side, Point & intersection_point);
+
 protected:
   virtual void subdomainSetup(subdomain_id_type /* current_subdomain */,
                               std::shared_ptr<Ray> & /* ray */)
@@ -62,6 +104,9 @@ protected:
   double _ray_max_distance;
   double _ray_length;
   THREAD_ID _tid;
+
+  /// Which boundary IDs have already been applied
+  std::set<BoundaryID> _applied_ids;
 };
 
 class RayProblemTraceRay : public TraceRay
@@ -96,8 +141,6 @@ protected:
   RaySystem & _ray_system;
 
   const std::vector<MooseSharedPointer<RayKernel>> * _ray_kernels;
-
-  std::set<BoundaryID> _applied_ids;
 };
 
 #endif
