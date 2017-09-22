@@ -76,6 +76,15 @@ public:
     PetscVector<Number> * _group_solution;
     PetscScalar * _group_solution_values;
 
+    /// The current RayMaterial
+    MooseSharedPointer<RayMaterial> _current_ray_material_neighbor;
+
+    /// The index into the solution vectors for the current element
+    dof_id_type _current_offset_neighbor;
+
+    /// The current element being operated on
+    const Elem * _current_elem_neighbor;
+
   protected:
     /// Because of portability issues with alignas() > 16 bytes I'm also going to pad with
     /// 64 bytes just to REALLY make sure this stuff is spread out!
@@ -180,9 +189,23 @@ public:
   virtual void reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t = false);
 
   /**
+   * Reinit a neighbor
+   */
+  virtual void
+  reinitNeighborFace(const Elem * elem, unsigned int side, BoundaryID bnd_id, THREAD_ID tid);
+
+  /**
    * The current offset into the solution vectors
    */
   dof_id_type & currentOffset(THREAD_ID tid) { return _rs_threaded_data[tid]._current_offset; }
+
+  /**
+   * The current offset into the solution vectors for the neighbor element
+   */
+  dof_id_type & currentOffsetNeighbor(THREAD_ID tid)
+  {
+    return _rs_threaded_data[tid]._current_offset_neighbor;
+  }
 
   /**
    * Get the raw PETSc vector that holds group values for one thread
@@ -250,6 +273,7 @@ protected:
   MooseObjectWarehouse<RayKernel> _ray_kernels;
   MooseObjectWarehouse<RayBC> _ray_bcs;
   MooseObjectWarehouse<RayMaterial> _ray_materials;
+  MooseObjectWarehouse<RayMaterial> _ray_materials_neighbor;
 
   /// Ghosted current solution
   const NumericVector<Number> * _current_solution;

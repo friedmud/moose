@@ -228,6 +228,11 @@ RaySystem::addRayMaterial(const std::string & mk_name,
         _factory.create<RayMaterial>(mk_name, name, parameters, tid);
 
     _ray_materials.addObject(mk, tid);
+
+    MooseSharedPointer<RayMaterial> mk_neighbor =
+        _factory.create<RayMaterial>(mk_name, name + "_neighbor", parameters, tid);
+
+    _ray_materials_neighbor.addObject(mk_neighbor, tid);
   }
 }
 
@@ -278,6 +283,29 @@ RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
     threaded_data._current_ray_material->reinit(elem);
 
   threaded_data._current_elem = elem;
+}
+
+void
+RaySystem::reinitNeighborFace(const Elem * elem,
+                              unsigned int side,
+                              BoundaryID bnd_id,
+                              THREAD_ID tid)
+{
+  std::cout << "Setting up neighbor info!" << std::endl;
+
+  auto & threaded_data = _rs_threaded_data[tid];
+
+  dof_id_type dof_number = elem->dof_number(number(), 0, 0);
+
+  threaded_data._current_offset_neighbor =
+      _current_group_solution.map_global_to_local_index(dof_number);
+
+  _rs_threaded_data[tid]._current_ray_material_neighbor =
+      _ray_materials_neighbor.getBlockObjects(elem->subdomain_id(), tid)[0];
+
+  threaded_data._current_ray_material_neighbor->reinit(elem);
+
+  threaded_data._current_elem_neighbor = elem;
 }
 
 void
