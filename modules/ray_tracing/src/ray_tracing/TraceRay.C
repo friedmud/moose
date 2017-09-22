@@ -99,23 +99,20 @@ RayProblemTraceRay::onBoundary(const Elem * current_elem,
                                const Elem * /* neighbor */,
                                std::shared_ptr<Ray> & ray)
 {
-  if (_applied_ids.find(bid) == _applied_ids.end()) // Don't reapply the same BC twice!
+  if (_ray_system.hasRayBCs(bid, _tid))
   {
-    if (_ray_system.hasRayBCs(bid, _tid))
+    _applied_ids.insert(bid);
+
+    auto & ray_bcs = _ray_system.getRayBCs(bid, _tid);
+
+    for (auto & bc : ray_bcs)
     {
-      _applied_ids.insert(bid);
-
-      auto & ray_bcs = _ray_system.getRayBCs(bid, _tid);
-
-      for (auto & bc : ray_bcs)
-      {
 #ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
-          std::cerr << ray_count << " Applying BC!" << std::endl;
+      if (ray->id() == debug_ray_id)
+        std::cerr << ray_count << " Applying BC!" << std::endl;
 #endif
 
-        bc->apply(current_elem, intersected_side, intersection_point, ray);
-      }
+      bc->apply(current_elem, intersected_side, intersection_point, ray);
     }
   }
 }
@@ -123,7 +120,6 @@ RayProblemTraceRay::onBoundary(const Elem * current_elem,
 void
 RayProblemTraceRay::finishedBoundary()
 {
-  _applied_ids.clear();
 }
 
 /**
@@ -821,9 +817,9 @@ find_point_neighbors(const Elem * current_elem,
 }
 
 Elem *
-recursivelyFindChildContainingPoint(Elem * current_child,
-                                    Point & intersection_point,
-                                    const std::vector<unsigned int> & children_ids)
+TraceRay::recursivelyFindChildContainingPoint(Elem * current_child,
+                                              Point & intersection_point,
+                                              const std::vector<unsigned int> & children_ids)
 {
   for (auto child_id : children_ids)
   {
@@ -842,7 +838,18 @@ recursivelyFindChildContainingPoint(Elem * current_child,
 }
 
 Elem *
-getNeighbor(const Elem * current_elem, unsigned int intersected_side, Point & intersection_point)
+TraceRay::childOnSide(Elem * current_elem, Point & p, unsigned int side)
+{
+  // Get the children on that side
+  auto & children_ids = quad4_side_to_children[side];
+
+  return recursivelyFindChildContainingPoint(current_elem, p, children_ids);
+}
+
+Elem *
+TraceRay::getNeighbor(const Elem * current_elem,
+                      unsigned int intersected_side,
+                      Point & intersection_point)
 {
   auto neighbor = current_elem->neighbor(intersected_side);
 
@@ -853,13 +860,7 @@ getNeighbor(const Elem * current_elem, unsigned int intersected_side, Point & in
     // Get the side the current elem occupies for the neighbor
     auto neighbor_side = sideNeighborIsOn(neighbor, current_elem);
 
-    // Get the children on that side
-    auto & children_ids = quad4_side_to_children[neighbor_side];
-
-    auto correct_child =
-        recursivelyFindChildContainingPoint(neighbor, intersection_point, children_ids);
-
-    return correct_child;
+    return childOnSide(neighbor, intersection_point, neighbor_side);
   }
 }
 
@@ -1408,7 +1409,11 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           for (const auto & bid : ids)
           {
-            onBoundary(current_elem, intersection_point, intersected_side, bid, NULL, ray);
+            if (_applied_ids.find(bid) == _applied_ids.end()) // Don't reapply the same BC twice!
+            {
+              _applied_ids.insert(bid);
+              onBoundary(current_elem, intersection_point, intersected_side, bid, NULL, ray);
+            }
           }
 
           // Need to see if the ray hit _right_ on the "corner" of the domain
@@ -1468,13 +1473,22 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                   _mesh.get_boundary_info().boundary_ids(neighbor, side, ids);
 
                   for (const auto & bid : ids)
-                    onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
+                  {
+                    if (_applied_ids.find(bid) ==
+                        _applied_ids.end()) // Don't reapply the same BC twice!
+                    {
+                      _applied_ids.insert(bid);
+                      onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
+                    }
+                  }
                 }
               }
             }
           }
 
           finishedBoundary();
+
+          _applied_ids.clear();
 
           // See if Ray was killed by the BC
           if (!ray->shouldContinue())
