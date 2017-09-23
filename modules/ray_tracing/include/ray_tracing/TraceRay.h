@@ -28,6 +28,7 @@ public:
            unsigned int halo_size,
            Real ray_max_distance,
            Real ray_length,
+           bool tolerate_failure,
            THREAD_ID tid);
 
   void trace(std::shared_ptr<Ray> & ray);
@@ -103,6 +104,10 @@ protected:
   unsigned int _halo_size;
   double _ray_max_distance;
   double _ray_length;
+
+  /// Whether or not it's ok that a Ray fails tracing
+  bool _tolerate_failure;
+
   THREAD_ID _tid;
 
   /// Which boundary IDs have already been applied
@@ -117,6 +122,7 @@ public:
                      unsigned int halo_size,
                      Real ray_max_distance,
                      Real ray_length,
+                     bool tolerate_failure,
                      THREAD_ID tid);
 
   virtual void subdomainSetup(subdomain_id_type current_subdomain,

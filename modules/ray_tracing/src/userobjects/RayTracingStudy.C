@@ -39,6 +39,9 @@ validParams<RayTracingStudy>()
 
   params.addParam<bool>("blocking", false, "Whether to do blocking or non-blocking receives");
 
+  params.addParam<bool>(
+      "tolerate_failure", false, "Whether or not to tolerate a ray tracing failure");
+
   MooseEnum methods("smart harm bs", "smart");
 
   params.addParam<MooseEnum>("method", methods, "The ray tracing algorithm to use");
@@ -64,6 +67,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _clicks_per_root_communication(getParam<unsigned int>("clicks_per_root_communication")),
     _clicks_per_receive(getParam<unsigned int>("clicks_per_receive")),
     _ray_max_distance(getParam<Real>("ray_distance")),
+    _tolerate_failure(getParam<bool>("tolerate_failure")),
     _average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
     _old_average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
     _method((RayTracingMethod)(int)(getParam<MooseEnum>("method")))
@@ -237,6 +241,7 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
                             _halo_size,
                             _ray_max_distance,
                             _ray_length,
+                            _tolerate_failure,
                             omp_get_thread_num());
 
       tr.trace(ray);
