@@ -402,6 +402,9 @@ protected:
   /// Max distance a Ray can travel before being killed
   Real _ray_max_distance;
 
+  /// Whether or not to tolerate a Ray Tracing failure
+  bool _tolerate_failure;
+
   /// Average angular flux for rays that have finished
   std::vector<Real> _average_finishing_angular_flux;
 

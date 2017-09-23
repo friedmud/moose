@@ -46,12 +46,14 @@ TraceRay::TraceRay(const MeshBase & mesh,
                    unsigned int halo_size,
                    Real ray_max_distance,
                    Real ray_length,
+                   bool tolerate_failure,
                    THREAD_ID tid)
   : _mesh(mesh),
     _b_box(b_box),
     _halo_size(halo_size),
     _ray_max_distance(ray_max_distance),
     _ray_length(ray_length),
+    _tolerate_failure(tolerate_failure),
     _tid(tid)
 {
 }
@@ -61,8 +63,15 @@ RayProblemTraceRay::RayProblemTraceRay(RayProblemBase & ray_problem,
                                        unsigned int halo_size,
                                        Real ray_max_distance,
                                        Real ray_length,
+                                       bool tolerate_failure,
                                        THREAD_ID tid)
-  : TraceRay(mesh, ray_problem.boundingBox(), halo_size, ray_max_distance, ray_length, tid),
+  : TraceRay(mesh,
+             ray_problem.boundingBox(),
+             halo_size,
+             ray_max_distance,
+             ray_length,
+             tolerate_failure,
+             tid),
     _ray_problem(ray_problem),
     _ray_system(ray_problem.raySystem())
 {
@@ -1242,7 +1251,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           libMesh::err << "STUUUUFFFF" << std::endl;
           ray->setShouldContinue(false);
 
-          //      std::abort();
+          if (!_tolerate_failure)
+            std::abort();
 
           break;
         }
@@ -1567,7 +1577,6 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       //      mooseError(ray_count << " Shouldn't be here\n" << ray->start() << "\n" <<
       //      ray->end());
 
-      mooseError("Ray ", ray_count, " killed prematurely!");
       std::cerr << "Ray " << ray_count << " killed prematurely! "
                 << " Unique ID: " << ray->id() << std::endl;
       std::cerr << "STUUUUFFFF" << std::endl;
@@ -1582,7 +1591,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
 #endif
 
-      std::abort();
+      if (!_tolerate_failure)
+        std::abort();
 
       ray->setShouldContinue(false);
       keep_tracing = false;
@@ -1608,7 +1618,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       libMesh::err << "STUUUUFFFF" << std::endl;
       ray->setShouldContinue(false);
 
-      std::abort();
+      if (!_tolerate_failure)
+        std::abort();
 
       break;
     }
