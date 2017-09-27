@@ -826,8 +826,8 @@ find_point_neighbors(const Elem * current_elem,
 }
 
 Elem *
-TraceRay::recursivelyFindChildContainingPoint(Elem * current_child,
-                                              Point & intersection_point,
+TraceRay::recursivelyFindChildContainingPoint(const Elem * current_child,
+                                              const Point & intersection_point,
                                               const std::vector<unsigned int> & children_ids)
 {
   for (auto child_id : children_ids)
@@ -843,11 +843,25 @@ TraceRay::recursivelyFindChildContainingPoint(Elem * current_child,
     }
   }
 
-  mooseError("Unable to find child containing the point!  Should never happen!");
+  std::ostringstream children;
+
+  for (auto child_id : children_ids)
+  {
+    auto child = current_child->child(child_id);
+
+    children << child_id << ":\n" << *child << std::endl;
+  }
+
+  mooseError("Unable to find child containing the point!  Should never happen! Elem:",
+             *current_child,
+             " intersection_point: ",
+             intersection_point,
+             "\nchildren searched: \n",
+             children.str());
 }
 
 Elem *
-TraceRay::childOnSide(Elem * current_elem, Point & p, unsigned int side)
+TraceRay::childOnSide(const Elem * current_elem, const Point & p, unsigned int side)
 {
   // Get the children on that side
   auto & children_ids = quad4_side_to_children[side];
