@@ -20,6 +20,8 @@ namespace libMesh
 class Mesh;
 }
 
+extern const std::vector<std::vector<unsigned int>> quad4_side_to_children;
+
 class TraceRay
 {
 public:
@@ -45,8 +47,8 @@ public:
    * you only need to search the children on one specific side of the parent element.  Be aware:
    * these are used all the way down - so make sure what you do makes sense!
    */
-  static Elem * recursivelyFindChildContainingPoint(Elem * current_child,
-                                                    Point & intersection_point,
+  static Elem * recursivelyFindChildContainingPoint(const Elem * current_child,
+                                                    const Point & intersection_point,
                                                     const std::vector<unsigned int> & children_ids);
 
   /**
@@ -59,7 +61,7 @@ public:
    * @param p The physical point to look for
    * @param side The side of current_elem that should be searched
    */
-  static Elem * childOnSide(Elem * current_elem, Point & p, unsigned int side);
+  static Elem * childOnSide(const Elem * current_elem, const Point & p, unsigned int side);
 
   /**
    * Get the neighbor on the intersected_side of current_elem.
