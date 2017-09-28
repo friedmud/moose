@@ -30,11 +30,15 @@
 
 unsigned long int ray_count = 0;
 
-unsigned int debug_ray = 0;
+// 0 ray_count: 156007 ray_id: 7244 Endless loop!
 
-unsigned int debug_ray_id = 0;
+unsigned int debug_ray = 156007;
+
+unsigned int debug_ray_id = 7244;
 
 unsigned int debug_ray_pid = 0;
+
+#define DEBUG_IF debug_ray_id == ray->id() && ray_count == debug_ray
 
 // #define USE_DEBUG_RAY
 
@@ -117,7 +121,7 @@ RayProblemTraceRay::onBoundary(const Elem * current_elem,
     for (auto & bc : ray_bcs)
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         std::cerr << ray_count << " Applying BC!" << std::endl;
 #endif
 
@@ -154,9 +158,10 @@ sideIntersectedByLine2D(const Elem * current_elem,
 //    int boundary_side = -1;
 
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
     {
       std::cerr << "Incoming point: " << incoming_point << std::endl;
+      std::cerr << "Incoming side: " << incoming_side << std::endl;
       std::cerr << "Ray end: " << ray->end() << std::endl;
     }
 
@@ -192,11 +197,12 @@ sideIntersectedByLine2D(const Elem * current_elem,
 //      bool intersect = false;
 
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
       {
-        std::cerr << "Side nodes: " << std::endl;
-        std::cerr << " " << current_elem->point(T::side_nodes_map[i][0]) << std::endl;
-        std::cerr << " " << current_elem->point(T::side_nodes_map[i][1]) << std::endl;
+        std::cerr << "Side: " << i << std::endl;
+        std::cerr << " Side nodes: " << std::endl;
+        std::cerr << "  " << current_elem->point(T::side_nodes_map[i][0]) << std::endl;
+        std::cerr << "  " << current_elem->point(T::side_nodes_map[i][1]) << std::endl;
       }
 #endif
 
@@ -257,7 +263,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
       else
       {
 #ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
+        if (DEBUG_IF)
         {
           std::cerr << "\nSide: " << i << std::endl;
           std::cerr << " 0 < t + 4e-9: " << t + 4e-9 << std::endl;
@@ -308,7 +314,7 @@ intersectQuad(const Point & O,
   if (std::abs(det) < TOLERANCE)
   {
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
       libMesh::err << "1 Rejecting because " << std::abs(det) << " < " << TOLERANCE << std::endl;
 #endif
     return false;
@@ -322,7 +328,7 @@ intersectQuad(const Point & O,
   if (alpha < -1e-12)
   {
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
       libMesh::err << "2 Rejecting because " << alpha << " < " << 0 << std::endl;
 #endif
     return false;
@@ -346,7 +352,7 @@ intersectQuad(const Point & O,
   if (t < -1e-12)
   {
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
       libMesh::err << "3 Rejecting because " << t << " < " << 0 << std::endl;
 #endif
 
@@ -358,7 +364,7 @@ intersectQuad(const Point & O,
   if (beta < -1e-12)
   {
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
       libMesh::err << "4 Rejecting because " << beta << " < " << 0 << std::endl;
 #endif
 
@@ -392,7 +398,7 @@ intersectQuad(const Point & O,
     if (std::abs(det_prime) < TOLERANCE)
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         libMesh::err << "5 Rejecting because " << std::abs(det_prime) << " < " << TOLERANCE
                      << std::endl;
 #endif
@@ -408,7 +414,7 @@ intersectQuad(const Point & O,
     if (alpha_prime < -1e-12)
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         libMesh::err << "6 Rejecting because " << alpha_prime << " < " << 0 << std::endl;
 #endif
 
@@ -422,7 +428,7 @@ intersectQuad(const Point & O,
     if (beta_prime < -1e-12)
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         libMesh::err << "7 Rejecting because " << beta_prime << " < " << 0 << std::endl;
 #endif
 
@@ -501,7 +507,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
   ray_direction /= ray_direction.norm();
 
 #ifdef USE_DEBUG_RAY
-  if (ray->id() == debug_ray_id)
+  if (DEBUG_IF)
     std::cerr << "Incoming point: " << incoming_point << std::endl;
 #endif
 
@@ -518,7 +524,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
     Point bumped_incoming_point = incoming_point + 1e-9 * ray_direction;
 
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
     {
       //      libMesh::err<<"bumped_incoming_point: "<<bumped_incoming_point<<std::endl;
       libMesh::err << "ray_direction: " << ray_direction << std::endl;
@@ -547,7 +553,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
         continue;
 
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         libMesh::err << "Trying side: " << i << std::endl;
 #endif
 
@@ -593,7 +599,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
   }
 
 #ifdef USE_DEBUG_RAY
-  if (ray->id() == debug_ray_id)
+  if (DEBUG_IF)
   {
     libMesh::err << "Found side: " << intersected_side << std::endl;
     libMesh::err << "Intersection point: " << intersection_point << std::endl;
@@ -719,25 +725,26 @@ candidate
  *
  * Returns -1 if the neighbor can't be found to be a neighbor
  */
+/*
 int
 sideNeighborIsOn(const Elem * elem, const Elem * neighbor)
 {
-  unsigned int n_sides = elem->n_sides();
+ unsigned int n_sides = elem->n_sides();
 
-  for (unsigned int i = 0; i < n_sides; i++)
-  {
-    if (elem->neighbor(i) == neighbor)
-      return i;
-  }
+ for (unsigned int i = 0; i < n_sides; i++)
+ {
+   if (elem->neighbor(i) == neighbor)
+     return i;
+ }
 
-  return -1;
+ return -1;
 }
-
+*/
 void
 find_point_neighbors(const Elem * current_elem,
                      const Point & p,
                      std::set<const Elem *> & neighbor_set,
-                     const std::shared_ptr<Ray> & /* ray */)
+                     const std::shared_ptr<Ray> & ray)
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());
@@ -749,7 +756,7 @@ find_point_neighbors(const Elem * current_elem,
   untested_set.insert(current_elem);
 
 #ifdef USE_DEBUG_RAY
-  if (ray->id() == debug_ray_id)
+  if (DEBUG_IF)
     std::cerr << "find_point_neighbors(" << current_elem->id() << ")" << std::endl;
 #endif
 
@@ -768,7 +775,7 @@ find_point_neighbors(const Elem * current_elem,
       {
         const Elem * current_neighbor = elem->neighbor_ptr(s);
 #ifdef USE_DEBUG_RAY
-        if (current_neighbor && ray->id() == debug_ray_id)
+        if (current_neighbor && DEBUG_IF)
           std::cerr << " Testing neighbor " << current_neighbor->id() << std::endl;
 #endif
 
@@ -785,7 +792,7 @@ find_point_neighbors(const Elem * current_elem,
                 next_untested_set.insert(current_neighbor);
 
 #ifdef USE_DEBUG_RAY
-              if (ray->id() == debug_ray_id)
+              if (ray->id() == debug_ray_id && ray_count == debug_ray)
                 std::cerr << "  Contained in " << current_neighbor->id() << std::endl;
 #endif
               // And add it
@@ -881,7 +888,8 @@ TraceRay::getNeighbor(const Elem * current_elem,
   else // There is adaptivity... need to find the active child that contains the point
   {
     // Get the side the current elem occupies for the neighbor
-    auto neighbor_side = sideNeighborIsOn(neighbor, current_elem);
+    auto neighbor_side =
+        neighbor->which_neighbor_am_i(current_elem); // sideNeighborIsOn(neighbor, current_elem);
 
     return childOnSide(neighbor, intersection_point, neighbor_side);
   }
@@ -936,10 +944,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   auto mesh_dim = _mesh.mesh_dimension();
 
 #ifdef USE_DEBUG_RAY
-  if (true && ray->id() == debug_ray_id && pid == 0)
+  if (false && DEBUG_IF && pid == 0)
   //  if (pid == 1)
   {
-    debug_mesh = new Mesh(Parallel::Communicator(), mesh.mesh_dimension());
+    debug_mesh = new Mesh(Parallel::Communicator(), _mesh.mesh_dimension());
     debug_mesh->skip_partitioning(true);
   }
 #endif
@@ -948,7 +956,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #ifdef USE_DEBUG_RAY
   // Add an element for the ray
 
-  if (debug_mesh && ray->id() == debug_ray_id && pid == 0)
+  if (debug_mesh && DEBUG_IF && pid == 0)
   //  if (pid == 1)
   {
 
@@ -975,13 +983,16 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     intersected_side = -1;
 
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
       std::cerr << "Debug ray UID: " << ray->id() << std::endl;
 #endif
 
 #ifdef USE_DEBUG_RAY
-    if (ray->id() == debug_ray_id)
+    if (DEBUG_IF)
+    {
       std::cerr << "current_elem: " << current_elem->id() << std::endl;
+      std::cerr << *current_elem << std::endl;
+    }
 #endif
 
     bool ends_in_elem = false;
@@ -990,14 +1001,14 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     if (ray->endsWithinMesh())
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         std::cerr << "ends within mesh!" << std::endl;
 #endif
 
       if (current_elem->contains_point(ray->end()))
       {
 #ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
+        if (DEBUG_IF)
           std::cerr << " ends within current elem!" << std::endl;
 #endif
         ends_in_elem = true;
@@ -1085,7 +1096,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                  // long as the ray has moved a bit
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         std::cerr << "Didn't find a side... trying harder" << std::endl;
 #endif
 
@@ -1149,7 +1160,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         find_point_neighbors(current_elem, incoming_point, point_neighbors, ray);
 
 #ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
+        if (DEBUG_IF)
           std::cerr << "Num point_neighbors: " << point_neighbors.size() << std::endl;
 #endif
 
@@ -1163,7 +1174,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           if (neighbor != current_elem) // Don't need to look through this element again
           {
 #ifdef USE_DEBUG_RAY
-            if (ray->id() == debug_ray_id)
+            if (DEBUG_IF)
               std::cerr << "Trying neighbor " << neighbor->id() << std::endl;
 #endif
 
@@ -1229,7 +1240,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         if (best_neighbor)
         {
 #ifdef USE_DEBUG_RAY
-          if (debug_ray_id == ray->id())
+          if (DEBUG_IF)
             std::cerr << "best_neighbor: " << best_neighbor->id() << " best_side: " << best_side
                       << std::endl;
 #endif
@@ -1251,7 +1262,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         {
 
 #ifdef USE_DEBUG_RAY
-          if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
+          if (debug_mesh && DEBUG_IF)
           //  if (pid == 1)
           {
 
@@ -1308,7 +1319,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     if (intersected_side != -1 || ends_in_elem) // -1 means that we didn't find any side
     {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == debug_ray_id)
+      if (DEBUG_IF)
         std::cerr << "Found a side!" << std::endl;
 #endif
 
@@ -1348,7 +1359,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       if (ray->distance() >= _ray_max_distance)
       {
 #ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
+        if (DEBUG_IF)
           std::cerr << "Killing because at max distance!" << std::endl;
 #endif
         //        libMesh::err<<"Ray over max distance: "<<ray->distance()<<std::endl;
@@ -1370,19 +1381,20 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 // Elem * neighbor = current_elem->neighbor(intersected_side);
 
 #ifdef USE_DEBUG_RAY
-        if (ray->id() == debug_ray_id)
+        if (DEBUG_IF)
           std::cerr << "Neighbor: " << neighbor << std::endl;
 #endif
 
         if (neighbor)
         {
 #ifdef USE_DEBUG_RAY
-          if (ray->id() == debug_ray_id)
+          if (DEBUG_IF)
             std::cerr << "Neighbor_id: " << neighbor->id() << std::endl;
 #endif
           // Note: This is finding the side the current_elem is on for the neighbor.  That's the
           // "incoming_side" for the neighbor
-          incoming_side = sideNeighborIsOn(neighbor, current_elem);
+          incoming_side = neighbor->which_neighbor_am_i(
+              current_elem); // sideNeighborIsOn(neighbor, current_elem);
 
           // Recurse
           current_elem = neighbor;
@@ -1398,7 +1410,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             if (halo_count == _halo_size)
             {
 #ifdef USE_DEBUG_RAY
-              if (ray->id() == debug_ray_id)
+              if (DEBUG_IF)
                 std::cerr << "Ray going off processor!" << std::endl;
 #endif
               ray->setStartingElem(neighbor);
@@ -1411,7 +1423,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         else // Edge of the domain
         {
 #ifdef USE_DEBUG_RAY
-          if (ray->id() == debug_ray_id)
+          if (DEBUG_IF)
             std::cerr << "At edge of domain!" << std::endl;
 #endif
 
@@ -1596,7 +1608,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       std::cerr << "STUUUUFFFF" << std::endl;
 
 #ifdef USE_DEBUG_RAY
-      if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
+      if (debug_mesh && DEBUG_IF)
       //  if (pid == 1)
       {
 
@@ -1618,7 +1630,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     {
 
 #ifdef USE_DEBUG_RAY
-      if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
+      if (debug_mesh && DEBUG_IF)
       //  if (pid == 1)
       {
 
