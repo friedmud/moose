@@ -197,12 +197,15 @@ public:
   /**
    * The current offset into the solution vectors
    */
-  dof_id_type & currentOffset(THREAD_ID tid) { return _rs_threaded_data[tid]._current_offset; }
+  virtual dof_id_type & currentOffset(THREAD_ID tid)
+  {
+    return _rs_threaded_data[tid]._current_offset;
+  }
 
   /**
    * The current offset into the solution vectors for the neighbor element
    */
-  dof_id_type & currentOffsetNeighbor(THREAD_ID tid)
+  virtual dof_id_type & currentOffsetNeighbor(THREAD_ID tid)
   {
     return _rs_threaded_data[tid]._current_offset_neighbor;
   }
