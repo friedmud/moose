@@ -529,9 +529,11 @@ Transient::endStep(Real input_time)
 
   if (_last_solve_converged && !_xfem_repeat_step)
   {
+    /*
     // Compute the Error Indicators and Markers
     _problem.computeIndicators();
     _problem.computeMarkers();
+    */
 
     // Perform the output of the current time step
     _problem.outputStep(EXEC_TIMESTEP_END);

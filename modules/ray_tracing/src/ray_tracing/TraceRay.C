@@ -32,13 +32,15 @@ unsigned long int ray_count = 0;
 
 // 0 ray_count: 156007 ray_id: 7244 Endless loop!
 
-unsigned int debug_ray = 156007;
+unsigned int debug_ray = 198357;
 
-unsigned int debug_ray_id = 7244;
+unsigned int debug_ray_id = 10186;
 
-unsigned int debug_ray_pid = 0;
+unsigned int debug_ray_pid = 1;
 
-#define DEBUG_IF debug_ray_id == ray->id() && ray_count == debug_ray
+#define DEBUG_IF ray_count > 197000 && debug_ray_id == ray->id()
+
+// && ray_count == debug_ray
 
 // #define USE_DEBUG_RAY
 
@@ -1097,14 +1099,25 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     {
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
+      {
         std::cerr << "Didn't find a side... trying harder" << std::endl;
+        std::cerr << "ray->distance(): " << ray->distance() << std::endl;
+      }
 #endif
 
       if (ray->distance() > 1e-9) // Only allow this if the ray has moved a bit
       {
         // See if we're on the edge of the domain
-        work_point = intersection_point - _b_box.min();
-        work_point2 = intersection_point - _b_box.max();
+        work_point = incoming_point - _b_box.min();
+        work_point2 = incoming_point - _b_box.max();
+
+#ifdef USE_DEBUG_RAY
+        if (DEBUG_IF)
+        {
+          std::cerr << "Work point: " << work_point << std::endl;
+          std::cerr << "Work point2: " << work_point2 << std::endl;
+        }
+#endif
 
         unsigned int num_zero = 0;
 
@@ -1116,11 +1129,16 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point2(i)), 0., 1e-8))
             num_zero++;
 
+#ifdef USE_DEBUG_RAY
+        if (DEBUG_IF)
+          std::cerr << "Checking to see if by boundary: " << num_zero << std::endl;
+#endif
+
         if (num_zero) // If we are, then let's just call this point good
         {
 #ifdef USE_DEBUG_RAY
-//
-//        libMesh::err<<ray_count<<" On domain boundary!"<<std::endl;
+          if (DEBUG_IF)
+            std::cerr << "On domain boundary!" << std::endl;
 #endif
           //        auto side = -1;
 
@@ -1138,10 +1156,12 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                 if (side_elem->contains_point(incoming_point))
                 {
 #ifdef USE_DEBUG_RAY
-//
-//                libMesh::err<<ray_count<<" Found boundary side: "<<s<<std::endl;
-//                libMesh::err<<ray_count<<" Boundary intersection point:
-//                "<<incoming_point<<std::endl;
+                  if (DEBUG_IF)
+                  {
+                    std::cerr << ray_count << " Found boundary side: " << s << std::endl;
+                    std::cerr << ray_count << " Boundary intersection point: " << incoming_point
+                              << std::endl;
+                  }
 #endif
                   intersected_side = s;
                   intersection_point = incoming_point;
@@ -1272,8 +1292,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #endif
           libMesh::err << pid << " "
                        << "ray_count: " << ray_count << " ray_id: " << ray->id()
-                       << " Endless loop while trying harder!" << std::endl;
-          libMesh::err << "STUUUUFFFF" << std::endl;
+                       << " Endless loop while trying harder!\n"
+                       << " Start: " << ray->start() << "\n"
+                       << " End: " << ray->end() << " Distance: " << ray->distance() << std::endl;
+
           ray->setShouldContinue(false);
 
           if (!_tolerate_failure)
