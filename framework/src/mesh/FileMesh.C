@@ -56,6 +56,9 @@ FileMesh::buildMesh()
 {
   std::string _file_name = getParam<MeshFileName>("file");
 
+  const bool restarting =
+      _file_name.rfind(".cpa") < _file_name.size() || _file_name.rfind(".cpr") < _file_name.size();
+
   Moose::perf_log.push("Read Mesh", "Setup");
   if (_is_nemesis)
   {
@@ -75,7 +78,9 @@ FileMesh::buildMesh()
   }
   else // not reading Nemesis files
   {
-    MooseUtils::checkFileReadable(_file_name);
+    if (!restarting) // Skip this check here if we're restarting
+                     // because libmesh will take care of it
+      MooseUtils::checkFileReadable(_file_name);
 
     // See if the user has requested reading a solution from the file.  If so, we'll need to read
     // the mesh with the exodus reader instead of using mesh.read().  This will read the mesh on
@@ -96,8 +101,6 @@ FileMesh::buildMesh()
       // a solution file that relies on that mesh partitioning and/or
       // numbering.  In that case, we need to turn off repartitioning
       // and renumbering, at least at first.
-      const bool restarting = _file_name.rfind(".cpa") < _file_name.size() ||
-                              _file_name.rfind(".cpr") < _file_name.size();
       const bool skip_partitioning_later = restarting && getMesh().skip_partitioning();
       const bool allow_renumbering_later = restarting && getMesh().allow_renumbering();
 
