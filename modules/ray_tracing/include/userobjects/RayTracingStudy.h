@@ -80,17 +80,27 @@ public:
   /**
    * Total number of Rays started
    */
-  unsigned long int totalRaysStarted() { return _rays_started; }
+  unsigned long int totalRaysStarted() { return _all_rays_started; }
 
   /**
-   * Received rays traced (i.e. total over all processors of how many times a Ray was traced)
+   * Received rays traced on this processor
    */
   unsigned long int raysTraced() { return _rays_traced; }
 
   /**
-   * Total number of received Ray buffers traced
+   * Total number of received Ray buffers traced by this processor
    */
-  unsigned long int rayBuffersTraced() { return _ray_buffers_traced; }
+  unsigned long int rayBuffersReceived() { return _receive_buffer.buffersReceived(); }
+
+  /**
+   * Total number of received Rays by this processor
+   */
+  unsigned long int raysReceived() { return _receive_buffer.raysReceived(); }
+
+  /**
+   * Total number of chunks traced
+   */
+  unsigned long int chunksTraced() { return _chunks_traced; }
 
   /**
    * Max distance of any ray
@@ -103,7 +113,7 @@ public:
   void setRayMaxDistance(Real ray_max_distance) { _ray_max_distance = ray_max_distance; }
 
   /**
-   * Get the total number of rays to run
+   * Get the total number of rays to run on
    */
   unsigned int totalRays() { return _total_rays; }
 
@@ -118,14 +128,27 @@ public:
   void setRayMaxDistance(unsigned int ray_max_distance) { _ray_max_distance = ray_max_distance; }
 
   /**
-   * Duration for execute()
+   * Duration for execute() in seconds
    */
   Real executionTime() { return std::chrono::duration<Real>(_execution_time).count(); }
+
+  /**
+   * Duration for execute() in nanoseconds
+   */
+  Real executionTimeNano()
+  {
+    return std::chrono::duration<Real, std::nano>(_execution_time).count();
+  }
 
   /**
    * Duration for creation of all Rays in seconds
    */
   Real generationTime() { return std::chrono::duration<Real>(_generation_time).count(); }
+
+  /**
+   * Duration for creation of all Rays in seconds
+   */
+  Real propagationTime() { return std::chrono::duration<Real>(_propagation_time).count(); }
 
   /**
    * Duration for tracing of all Rays in seconds
@@ -366,8 +389,8 @@ protected:
   /// Number of times a received Ray was traced
   unsigned long int _rays_traced = 0;
 
-  /// Number of received Ray buffers traced over
-  unsigned long int _ray_buffers_traced = 0;
+  /// Number of received Ray chunks traced over
+  unsigned long int _chunks_traced = 0;
 
   /// How many processors have finished generating all of their rays
   processor_id_type _ranks_finished_generating = 0;
@@ -384,6 +407,8 @@ protected:
   /// Timing
   std::chrono::steady_clock::duration _execution_time = std::chrono::steady_clock::duration::zero();
   std::chrono::steady_clock::duration _generation_time =
+      std::chrono::steady_clock::duration::zero();
+  std::chrono::steady_clock::duration _propagation_time =
       std::chrono::steady_clock::duration::zero();
   std::chrono::steady_clock::duration _tracing_time = std::chrono::steady_clock::duration::zero();
   std::chrono::steady_clock::duration _buffer_time = std::chrono::steady_clock::duration::zero();

@@ -109,8 +109,8 @@ RayTracingStudy::executeStudy()
   /// Number of times a received Ray was traced
   _rays_traced = 0;
 
-  /// Number of received Ray buffers traced over
-  _ray_buffers_traced = 0;
+  /// Number of chunks actually traced on this processor
+  _chunks_traced = 0;
 
   /// How many processors have finished generating all of their rays
   _ranks_finished_generating = 0;
@@ -124,6 +124,7 @@ RayTracingStudy::executeStudy()
   /// Timing
   _execution_time = std::chrono::steady_clock::duration::zero();
   _generation_time = std::chrono::steady_clock::duration::zero();
+  _propagation_time = std::chrono::steady_clock::duration::zero();
   _tracing_time = std::chrono::steady_clock::duration::zero();
   _buffer_time = std::chrono::steady_clock::duration::zero();
   _force_buffer_time = std::chrono::steady_clock::duration::zero();
@@ -159,15 +160,19 @@ RayTracingStudy::executeStudy()
 
   //  _communicator.barrier();
 
+  auto generation_start_time = std::chrono::steady_clock::now();
   generateRays();
+  _generation_time = std::chrono::steady_clock::now() - generation_start_time;
 
   //  _communicator.barrier();
 
+  auto propagation_start_time = std::chrono::steady_clock::now();
   propagateRays();
+  _propagation_time = std::chrono::steady_clock::now() - propagation_start_time;
 
   auto execution_end_time = std::chrono::steady_clock::now();
 
-  _execution_time += execution_end_time - execution_start_time;
+  _execution_time = execution_end_time - execution_start_time;
 
   /// Compute and keep the average finishing angular flux (to use as the starting values next time)
   _old_average_finishing_angular_flux = _average_finishing_angular_flux;
@@ -225,6 +230,8 @@ RayTracingStudy::propagateRays()
 void
 RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
 {
+  _chunks_traced++;
+
   auto num_rays = rays.size();
 
 #pragma omp parallel for schedule(guided)
@@ -358,7 +365,6 @@ RayTracingStudy::receiveAndTrace()
     received_count += rays->size();
 
     _rays_traced += rays->size();
-    _ray_buffers_traced++;
 
     if (_method == SMART)
       chunkyTraceAndBuffer(*rays);

@@ -52,6 +52,16 @@ public:
   bool currentlyReceiving() { return _requests.size(); }
 
   /**
+   * The number of rays received since the last reset
+   */
+  unsigned long int raysReceived() { return _rays_received; }
+
+  /**
+   * The number of buffers received since the last reset
+   */
+  unsigned long int buffersReceived() { return _buffers_received; }
+
+  /**
    * Start receives for all currently available messages
    */
   void receive()
@@ -119,7 +129,12 @@ public:
 
     // Get the total count of Rays
     for (auto & ray_vec : _available_rays)
+    {
+      auto num_rays = ray_vec->size();
+      _rays_received += num_rays;
+      _buffers_received++;
       total_size += ray_vec->size();
+    }
 
     auto rays = std::make_shared<std::vector<std::shared_ptr<Ray>>>();
 
@@ -160,6 +175,9 @@ public:
 
     _receive_loop_time = std::chrono::steady_clock::duration::zero();
     _cleanup_requests_time = std::chrono::steady_clock::duration::zero();
+
+    _rays_received = 0;
+    _buffers_received = 0;
   }
 
   /**
@@ -242,6 +260,12 @@ protected:
 
   /// The current algorithm
   RayTracingMethod _method;
+
+  /// Total rays received
+  unsigned long int _rays_received;
+
+  /// Total ray buffers received
+  unsigned long int _buffers_received;
 
 private:
   template <typename Context, typename OutputIter, typename T>
