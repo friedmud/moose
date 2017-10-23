@@ -163,12 +163,12 @@ public:
   /**
    * Check if the named vector exists in the system.
    */
-  virtual bool hasVector(const std::string & name) const;
+  virtual bool hasVector(const std::string & tag_name);
 
   /**
    * Check if the tagged vector exists in the system.
    */
-  virtual bool hasVector(TagID tag);
+  virtual bool hasVector(TagID tag_id);
 
   /**
    * Get a raw NumericVector
@@ -508,6 +508,13 @@ public:
   virtual NumericVector<Number> & addVector(TagID tag, const bool project, const ParallelType type);
 
   /**
+   * Remove a solution length vector from the system with the specified TagID
+   *
+   * @param tag_id  Tag ID
+   */
+  virtual void removeVector(TagID tag_id);
+
+  /**
    * Adds a jacobian sized vector
    *
    * @param tag_name The name of the tag
@@ -515,6 +522,16 @@ public:
   virtual SparseMatrix<Number> & addMatrix(TagID /* tag */)
   {
     mooseError("Adding a matrix is not supported for this type of system!");
+  }
+
+  /**
+   * Removes a jacobian sized vector
+   *
+   * @param tag_name The name of the tag
+   */
+  virtual void removeMatrix(TagID /* tag */)
+  {
+    mooseError("Removing a matrix is not supported for this type of system!");
   }
 
   virtual const std::string & name() const { return system().name(); }
@@ -561,8 +578,8 @@ protected:
 
   Real _du_dot_du;
 
-  std::vector<NumericVector<Number> *> _tagged_vectors;
-  std::vector<SparseMatrix<Number> *> _tagged_matrices;
+  std::map<TagID, NumericVector<Number> *> _tagged_vectors;
+  std::map<TagID, SparseMatrix<Number> *> _tagged_matrices;
 
   NumericVector<Number> * _dummy_vec; // to satisfy the interface
 
