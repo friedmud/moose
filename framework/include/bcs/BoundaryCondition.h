@@ -24,6 +24,7 @@
 #include "BoundaryRestrictableRequired.h"
 #include "Restartable.h"
 #include "MeshChangedInterface.h"
+#include "TaggingInterface.h"
 
 // Forward declerations
 template <typename>
@@ -54,7 +55,9 @@ class BoundaryCondition : public MooseObject,
                           public VectorPostprocessorInterface,
                           public GeometricSearchInterface,
                           public Restartable,
-                          public MeshChangedInterface
+                          public ZeroInterface,
+                          public MeshChangedInterface,
+                          public TaggingInterface
 {
 public:
   /**
