@@ -72,12 +72,6 @@ protected:
   std::vector<MooseVariableFE *> _diag_save_in;
   std::vector<AuxVariableName> _diag_save_in_strings;
 
-  /// The vectors this Kernel will contribute to
-  std::vector<TagID> _vector_tags;
-
-  /// The matrices this Kernel will contribute to
-  std::vector<TagID> _matrix_tags;
-
   /// Indicate whether or not the boundary condition is applied to the right
   /// hand side of eigenvalue problems
   bool _is_eigen;
