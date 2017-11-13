@@ -128,8 +128,9 @@ Kernel::Kernel(const InputParameters & parameters)
 void
 Kernel::computeResidual()
 {
-  for (auto i = beginIndex(_vector_tags); i < _vector_tags.size(); i++)
-    _re_blocks[i] = &_assembly.residualBlock(_var.number(), _vector_tags[i]);
+  auto vector_tag = _vector_tags.begin();
+  for (auto i = beginIndex(_vector_tags); i < _vector_tags.size(); i++, ++vector_tag)
+    _re_blocks[i] = &_assembly.residualBlock(_var.number(), *vector_tag);
 
   _local_re.resize(_re_blocks[0]->size());
   _local_re.zero();
@@ -153,8 +154,9 @@ Kernel::computeResidual()
 void
 Kernel::computeJacobian()
 {
-  for (auto i = beginIndex(_matrix_tags); i < _matrix_tags.size(); i++)
-    _ke_blocks[i] = &_assembly.jacobianBlock(_var.number(), _var.number(), _matrix_tags[i]);
+  auto mat_vector = _matrix_tags.begin();
+  for (auto i = beginIndex(_matrix_tags); i < _matrix_tags.size(); i++, ++mat_vector)
+    _ke_blocks[i] = &_assembly.jacobianBlock(_var.number(), _var.number(), *mat_vector);
 
   _local_ke.resize(_ke_blocks[0]->m(), _ke_blocks[0]->n());
   _local_ke.zero();
