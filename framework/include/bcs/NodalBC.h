@@ -76,10 +76,6 @@ protected:
   /// hand side of eigenvalue problems
   bool _is_eigen;
 
-  /// Indicate if or not we set the residual be zero at the boundary.
-  /// Certain application require to zero the residual for boundary dofs.
-  bool _zero_residual;
-
   virtual Real computeQpResidual() = 0;
 
   /**

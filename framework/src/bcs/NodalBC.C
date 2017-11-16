@@ -31,8 +31,6 @@ validParams<NodalBC>()
       "contributions to.  Everything about that variable must match everything "
       "about this variable (the type, what blocks it's on, etc.)");
 
-  params.addParam<bool>("zero_residual", false, "If or not zero the residual");
-
   params.addParamNamesToGroup("vector_tags matrix_tags", "Advanced");
 
   return params;
@@ -48,8 +46,7 @@ NodalBC::NodalBC(const InputParameters & parameters)
     _u(_var.nodalValue()),
     _save_in_strings(parameters.get<std::vector<AuxVariableName>>("save_in")),
     _diag_save_in_strings(parameters.get<std::vector<AuxVariableName>>("diag_save_in")),
-    _is_eigen(false),
-    _zero_residual(getParam<bool>("zero_residual"))
+    _is_eigen(false)
 {
   addMooseVariableDependency(mooseVariable());
 
@@ -105,7 +102,7 @@ NodalBC::computeResidual(NumericVector<Number> & residual)
 
     residual.set(dof_idx, res);
 
-    if (_zero_residual)
+    if (_eigen_BC)
       res = 0.0;
 
     for (auto tag_id : _vector_tags)
