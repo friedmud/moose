@@ -45,8 +45,7 @@ NodalBC::NodalBC(const InputParameters & parameters)
     _current_node(_var.node()),
     _u(_var.nodalValue()),
     _save_in_strings(parameters.get<std::vector<AuxVariableName>>("save_in")),
-    _diag_save_in_strings(parameters.get<std::vector<AuxVariableName>>("diag_save_in")),
-    _is_eigen(false)
+    _diag_save_in_strings(parameters.get<std::vector<AuxVariableName>>("diag_save_in"))
 {
   addMooseVariableDependency(mooseVariable());
 
@@ -97,13 +96,10 @@ NodalBC::computeResidual(NumericVector<Number> & residual)
     _qp = 0;
     Real res = 0;
 
-    if (!_is_eigen)
+    if (!_eigen_BC)
       res = computeQpResidual();
 
     residual.set(dof_idx, res);
-
-    if (_eigen_BC)
-      res = 0.0;
 
     for (auto tag_id : _vector_tags)
       _fe_problem.getNonlinearSystemBase().getVector(tag_id).set(dof_idx, res);
