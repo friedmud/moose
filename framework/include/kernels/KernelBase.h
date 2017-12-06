@@ -55,7 +55,6 @@ class KernelBase : public MooseObject,
                    public RandomInterface,
                    protected GeometricSearchInterface,
                    public Restartable,
-                   public ZeroInterface,
                    public MeshChangedInterface,
                    public TaggingInterface
 {
