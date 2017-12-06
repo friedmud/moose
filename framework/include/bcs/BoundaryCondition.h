@@ -55,7 +55,6 @@ class BoundaryCondition : public MooseObject,
                           public VectorPostprocessorInterface,
                           public GeometricSearchInterface,
                           public Restartable,
-                          public ZeroInterface,
                           public MeshChangedInterface,
                           public TaggingInterface
 {
