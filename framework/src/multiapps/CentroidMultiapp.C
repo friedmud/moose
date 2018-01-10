@@ -13,58 +13,50 @@
 /****************************************************************/
 
 // MOOSE includes
-#include "AutoPositionsMultiApp.h"
+#include "CentroidMultiApp.h"
 #include "MooseMesh.h"
 #include "FEProblem.h"
 
+// libMesh includes
+#include "libmesh/parallel_algebra.h"
+
 template <>
 InputParameters
-validParams<AutoPositionsMultiApp>()
+validParams<CentroidMultiApp>()
 {
   InputParameters params = validParams<TransientMultiApp>();
 
-  params += validParams<BoundaryRestrictable>();
+  params += validParams<BlockRestrictable>();
 
   params.suppressParameter<std::vector<Point>>("positions");
   params.suppressParameter<std::vector<FileName>>("positions_file");
 
-  // Turn off the base class position parameter
-  params.set<bool>("use_positions") = false;
-
   return params;
 }
 
-AutoPositionsMultiApp::AutoPositionsMultiApp(const InputParameters & parameters)
-  : TransientMultiApp(parameters), BoundaryRestrictable(this, true) // true for applying to nodesets
+CentroidMultiApp::CentroidMultiApp(const InputParameters & parameters)
+  : TransientMultiApp(parameters), BlockRestrictable(this)
 {
-  fillPositions();
 }
 
 void
-AutoPositionsMultiApp::initialSetup()
-{
-  init(_positions.size());
-
-  MultiApp::initialSetup();
-}
-
-void
-AutoPositionsMultiApp::fillPositions()
+CentroidMultiApp::fillPositions()
 {
   MooseMesh & master_mesh = _fe_problem.mesh();
 
-  const std::set<BoundaryID> & bids = boundaryIDs();
+  auto & bids = blockIDs();
 
-  for (const auto & boundary_id : bids)
+  // Detect if it can be on any block
+  bool any_bid = bids.find(Moose::ANY_BLOCK_ID) != bids.end();
+
+  for (const auto & elem_ptr : master_mesh.getMesh().active_local_element_ptr_range())
   {
-    // Grab the nodes on the boundary ID and add a Sub-App at each one.
-    const std::vector<dof_id_type> & boundary_node_ids = master_mesh.getNodeList(boundary_id);
-
-    for (const auto & boundary_node_id : boundary_node_ids)
-    {
-      Node & node = master_mesh.nodeRef(boundary_node_id);
-
-      _positions.push_back(node);
-    }
+    if (any_bid || bids.find(elem_ptr->subdomain_id()) != bids.end())
+      _positions.push_back(elem_ptr->centroid());
   }
+
+  libMesh::ParallelObject::comm().allgather(_positions);
+
+  // An attempt to try to make this parallel stable
+  std::sort(_positions.begin(), _positions.end());
 }

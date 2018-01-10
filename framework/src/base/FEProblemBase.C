@@ -3147,6 +3147,8 @@ FEProblemBase::addMultiApp(const std::string & multi_app_name,
 
   std::shared_ptr<MultiApp> multi_app = _factory.create<MultiApp>(multi_app_name, name, parameters);
 
+  multi_app->setupPositions();
+
   _multi_apps.addObject(multi_app);
 
   // Store TranseintMultiApp objects in another container, this is needed for calling computeDT

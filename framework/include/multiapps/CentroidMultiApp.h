@@ -11,32 +11,30 @@
 /*                                                              */
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
-#ifndef AUTOPOSITIONSMULTIAPP_H
-#define AUTOPOSITIONSMULTIAPP_H
+#ifndef CENTROIDMULTIAPP_H
+#define CENTROIDMULTIAPP_H
 
 #include "TransientMultiApp.h"
-#include "BoundaryRestrictable.h"
+#include "BlockRestrictable.h"
 
-class AutoPositionsMultiApp;
+class CentroidMultiApp;
 
 template <>
-InputParameters validParams<AutoPositionsMultiApp>();
+InputParameters validParams<CentroidMultiApp>();
 
 /**
- * Automatically generates Sub-App positions from positions in the master app's mesh.
+ * Automatically generates Sub-App positions from centroids of elements in the master mesh.
  */
-class AutoPositionsMultiApp : public TransientMultiApp, public BoundaryRestrictable
+class CentroidMultiApp : public TransientMultiApp, public BlockRestrictable
 {
 public:
-  AutoPositionsMultiApp(const InputParameters & parameters);
+  CentroidMultiApp(const InputParameters & parameters);
 
 protected:
   /**
-   * _must_ fill in _positions with the positions of the sub-aps
+   * fill in _positions with the positions of the sub-aps
    */
-  void fillPositions() override;
-
-  virtual void initialSetup() override;
+  virtual void fillPositions() override;
 };
 
-#endif // AUTOPOSITIONSMULTIAPP_H
+#endif // CENTROID_H
