@@ -169,11 +169,17 @@ protected:
   /// current index for the shape function
   unsigned int _j;
 
-  /// Holds residual entries as they are accumulated by this Kernel
-  DenseVector<Number> _local_re;
+  /// the current test function
+  const VariableTestValue & _test;
 
-  /// Holds residual entries as they are accumulated by this Kernel
-  DenseMatrix<Number> _local_ke;
+  /// gradient of the test function
+  const VariableTestGradient & _grad_test;
+
+  /// the current shape functions
+  const VariablePhiValue & _phi;
+
+  /// gradient of the shape function
+  const VariablePhiGradient & _grad_phi;
 
   /// The aux variables to save the residual contributions to
   bool _has_save_in;
