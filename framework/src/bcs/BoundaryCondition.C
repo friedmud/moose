@@ -58,7 +58,6 @@ BoundaryCondition::BoundaryCondition(const InputParameters & parameters, bool no
     _sys(*getCheckedPointerParam<SystemBase *>("_sys")),
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
-    _var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable"))),
     _mesh(_subproblem.mesh()),
     _eigen_BC(getParam<bool>("eigen_bc"))
 {

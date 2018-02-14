@@ -79,11 +79,10 @@ ComputeResidualThread::subdomainChanged()
   // If we have one tag only,
   // We call tag based storage
   else if (_tags.size() == 1)
-    //_tag_kernels = &
-    _tag_kernels = &(_kernels.getVectorTagKernelWarehouse(_tags[0], _tid));
+    _tag_kernels = &(_kernels.getVectorTagObjectWarehouse(_tags[0], _tid));
   // This one may be expensive
   else
-    _tag_kernels = &(_kernels.getVectorTagsKernelWarehouse(_tags, _tid));
+    _tag_kernels = &(_kernels.getVectorTagsObjectWarehouse(_tags, _tid));
 }
 
 void

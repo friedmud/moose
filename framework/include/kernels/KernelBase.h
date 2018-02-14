@@ -169,18 +169,6 @@ protected:
   /// current index for the shape function
   unsigned int _j;
 
-  /// the current test function
-  const VariableTestValue & _test;
-
-  /// gradient of the test function
-  const VariableTestGradient & _grad_test;
-
-  /// the current shape functions
-  const VariablePhiValue & _phi;
-
-  /// gradient of the shape function
-  const VariablePhiGradient & _grad_phi;
-
   /// The aux variables to save the residual contributions to
   bool _has_save_in;
   std::vector<MooseVariableFE *> _save_in;
