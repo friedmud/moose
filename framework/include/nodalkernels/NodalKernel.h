@@ -59,11 +59,8 @@ class NodalKernel : public MooseObject,
                     public MeshChangedInterface,
                     public RandomInterface,
                     public CoupleableMooseVariableDependencyIntermediateInterface,
-<<<<<<< 750fe815a3b0c19ce86a5726a3938536ca960c23
-                    public MooseVariableInterface<Real>
-=======
+                    public MooseVariableInterface<Real>,
                     public TaggingInterface
->>>>>>> Remove Moose::KT_TIME from NodalKernel
 {
 public:
   /**

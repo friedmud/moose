@@ -672,7 +672,7 @@ SystemBase::nonTimeVectorTag()
 bool
 SystemBase::hasVector(TagID tag)
 {
-  return tag < _tagged_vectors.size() && _tagged_vectors[tag];
+  return _tagged_vectors.find(tag) != _tagged_vectors.end();
 }
 
 /**

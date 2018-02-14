@@ -85,42 +85,6 @@ Kernel::Kernel(const InputParameters & parameters)
 
   _has_diag_save_in = _diag_save_in.size() > 0;
 
-  auto & vector_tag_names = getParam<MultiMooseEnum>("vector_tags");
-
-  if (!vector_tag_names.isValid())
-    mooseError("MUST provide at least one vector_tag for Kernel: ", name());
-
-  for (auto & vector_tag_name : vector_tag_names)
-  {
-    if (!_fe_problem.vectorTagExists(vector_tag_name.name()))
-      mooseError("Kernel, ",
-                 name(),
-                 ", was assigned an invalid vector_tag: '",
-                 vector_tag_name,
-                 "'.  If this is a TimeKernel then this may have happened because you didn't "
-                 "specify a Transient Executioner.");
-
-    _vector_tags.push_back(_fe_problem.getVectorTag(vector_tag_name));
-  }
-
-  auto & matrix_tag_names = getParam<MultiMooseEnum>("matrix_tags");
-
-  if (!matrix_tag_names.isValid())
-    mooseError("MUST provide at least one matrix_tag for Kernel: ", name());
-
-  for (auto & matrix_tag_name : matrix_tag_names)
-  {
-    if (!_fe_problem.matrixTagExists(matrix_tag_name))
-      mooseError("Kernel, ",
-                 name(),
-                 ", was assigned an invalid matrix_tag: '",
-                 matrix_tag_name,
-                 "'.  If this is a TimeKernel then this may have happened because you didn't "
-                 "specify a Transient Executioner.");
-
-    _matrix_tags.push_back(_fe_problem.getMatrixTag(matrix_tag_name));
-  }
-
   _re_blocks.resize(_vector_tags.size());
   _ke_blocks.resize(_matrix_tags.size());
 }
@@ -135,7 +99,7 @@ Kernel::computeResidual()
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
       _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
 
-  appendTaggedLocalResidual();
+  accumulateTaggedLocalResidual();
 
   if (_has_save_in)
   {
@@ -156,7 +120,7 @@ Kernel::computeJacobian()
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
         _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
 
-  appendTaggedLocalMatrix();
+  accumulateTaggedLocalMatrix();
 
   if (_has_diag_save_in)
   {
@@ -206,7 +170,7 @@ Kernel::computeOffDiagJacobian(unsigned int jvar)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
           _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
 
-    appendTaggedLocalMatrix();
+    accumulateTaggedLocalMatrix();
   }
 }
 
@@ -221,5 +185,5 @@ Kernel::computeOffDiagJacobianScalar(unsigned int jvar)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
         _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
 
-  appendTaggedLocalMatrix();
+  accumulateTaggedLocalMatrix();
 }
