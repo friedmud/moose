@@ -4,4 +4,4 @@
 
 [MooseVariables](moose_variables.md)
 
-[Warehouses](/warehouses.md)
+[Warehouses](warehouses.md)
