@@ -33,6 +33,9 @@ validParams<NodalBC>()
 
   params.addParamNamesToGroup("vector_tags matrix_tags", "Advanced");
 
+  params.set<MultiMooseEnum>("vector_tags") = "residual";
+  params.set<MultiMooseEnum>("matrix_tags") = "system";
+
   return params;
 }
 
@@ -88,7 +91,15 @@ NodalBC::NodalBC(const InputParameters & parameters)
 }
 
 void
-NodalBC::computeResidual(NumericVector<Number> & residual)
+NodalBC::computeResidual(NumericVector<Number> & /*residual*/)
+{
+  mooseDeprecated("Please use computeResidual()");
+
+  computeResidual();
+}
+
+void
+NodalBC::computeResidual()
 {
   if (_var.isNodalDefined())
   {
@@ -98,8 +109,6 @@ NodalBC::computeResidual(NumericVector<Number> & residual)
 
     if (!_eigen_BC)
       res = computeQpResidual();
-
-    residual.set(dof_idx, res);
 
     for (auto tag_id : _vector_tags)
       if (_fe_problem.getNonlinearSystemBase().hasVector(tag_id))
