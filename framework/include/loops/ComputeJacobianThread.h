@@ -28,7 +28,7 @@ class ComputeJacobianThread : public ThreadedElementLoop<ConstElemRange>
 public:
   ComputeJacobianThread(FEProblemBase & fe_problem,
                         SparseMatrix<Number> & jacobian,
-                        std::vector<TagID> & tags);
+                        std::set<TagID> & tags);
 
   // Splitting Constructor
   ComputeJacobianThread(ComputeJacobianThread & x, Threads::split split);
@@ -61,12 +61,12 @@ protected:
   const MooseObjectWarehouse<InterfaceKernel> & _interface_kernels;
 
   // Reference to Kernel storage structure
-  const MooseObjectWarehouse<KernelBase> & _kernels;
+  MooseObjectTagWarehouse<KernelBase> & _kernels;
 
   // A pointer to different warehouse
   MooseObjectTagWarehouse<KernelBase> * _warehouse;
 
-  std::vector<TagID> & _tags;
+  std::set<TagID> & _tags;
 
   virtual void computeJacobian();
   virtual void computeFaceJacobian(BoundaryID bnd_id);

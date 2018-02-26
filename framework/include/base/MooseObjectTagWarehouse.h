@@ -41,17 +41,6 @@ public:
 
   MooseObjectTagWarehouse<T> & getMatrixTagsObjectWarehouse(std::vector<TagID> & tags,
                                                             THREAD_ID tid);
-
-  virtual bool hasActiveVariableBlockObjects(unsigned int /*variable_id*/,
-                                             SubdomainID /*block_id*/,
-                                             THREAD_ID /*tid = 0*/) const
-  {
-    return false;
-  }
-
-  virtual const std::vector<std::shared_ptr<T>> & getActiveVariableBlockObjects(
-      unsigned int /*variable_id*/, SubdomainID /*block_id*/, THREAD_ID /*tid = 0*/) const;
-
 protected:
   const THREAD_ID _num_threads;
 
@@ -68,8 +57,6 @@ protected:
   /// std::vector<TagID> based storage
   std::vector<std::map<std::vector<TagID>, MooseObjectTagWarehouse<T>>>
       _matrix_tags_to_object_warehouse;
-
-  std::vector<std::shared_ptr<T>> _variable_objects;
 };
 
 template <typename T>
@@ -217,20 +204,6 @@ MooseObjectTagWarehouse<T>::getMatrixTagsObjectWarehouse(std::vector<TagID> & v_
     }
     return matrix_tags_to_object_warehourse[v_tags];
   }
-}
-
-template <typename T>
-const std::vector<std::shared_ptr<T>> &
-MooseObjectTagWarehouse<T>::getActiveVariableBlockObjects(unsigned int /*variable_id*/,
-                                                          SubdomainID /*block_id*/,
-                                                          THREAD_ID /*tid = 0*/) const
-{
-  // We should always return an empty vector
-  // This will be consistent with  hasActiveVariableBlockObjects
-  // that returns false.
-  // Subclass should override this function
-  mooseError("Please override this function");
-  return _variable_objects;
 }
 
 #endif // MOOSEOBJECTTAGWAREHOUSE_H
