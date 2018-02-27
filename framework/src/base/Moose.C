@@ -19,6 +19,45 @@
 #include "PetscSupport.h"
 #include "Syntax.h"
 
+#include "RegisterActions.h"
+#include "RegisterAuxKernels.h"
+#include "RegisterBCs.h"
+#include "RegisterConstraints.h"
+#include "RegisterControls.h"
+#include "RegisterDampers.h"
+#include "RegisterDGKernels.h"
+#include "RegisterDiracKernels.h"
+#include "RegisterDistributions.h"
+#include "RegisterExecutioners.h"
+#include "RegisterFunctions.h"
+//#include "RegisterGeomsearch.h"
+//#include "RegisterICs.h"
+//#include "RegisterIndicators.h"
+//#include "RegisterInterfaceKernels.h"
+//#include "RegisterKernels.h"
+//#include "RegisterMarkers.h"
+//#include "RegisterMaterials.h"
+//#include "RegisterMesh.h"
+//#include "RegisterMeshmodifiers.h"
+//#include "RegisterMultiapps.h"
+//#include "RegisterNodalKernels.h"
+//#include "RegisterOutputs.h"
+//#include "RegisterParser.h"
+//#include "RegisterPartitioner.h"
+//#include "RegisterPostprocessors.h"
+//#include "RegisterPreconditioners.h"
+//#include "RegisterPredictors.h"
+//#include "RegisterRelationshipManagers.h"
+//#include "RegisterRestart.h"
+//#include "RegisterSamplers.h"
+//#include "RegisterSplits.h"
+//#include "RegisterTimeIntegrators.h"
+//#include "RegisterTimeSteppers.h"
+//#include "RegisterTransfers.h"
+//#include "RegisterUserobject.h"
+//#include "RegisterUtils.h"
+//#include "RegisterVectorPostprocessors.h"
+
 // objects that can be created by MOOSE
 // Mesh
 #include "FileMesh.h"
@@ -73,68 +112,6 @@
 #include "MaterialDerivativeRankTwoTestKernel.h"
 #include "MaterialDerivativeRankFourTestKernel.h"
 
-// bcs
-#include "ConvectiveFluxBC.h"
-#include "DirichletBC.h"
-#include "PenaltyDirichletBC.h"
-#include "PresetBC.h"
-#include "NeumannBC.h"
-#include "PostprocessorNeumannBC.h"
-#include "FunctionDirichletBC.h"
-#include "FunctionPenaltyDirichletBC.h"
-#include "FunctionPresetBC.h"
-#include "FunctionNeumannBC.h"
-#include "MatchedValueBC.h"
-#include "VacuumBC.h"
-#include "SinDirichletBC.h"
-#include "SinNeumannBC.h"
-#include "VectorNeumannBC.h"
-#include "WeakGradientBC.h"
-#include "DiffusionFluxBC.h"
-#include "PostprocessorDirichletBC.h"
-#include "OneDEqualValueConstraintBC.h"
-
-// auxkernels
-#include "ConstantAux.h"
-#include "FunctionAux.h"
-#include "NearestNodeDistanceAux.h"
-#include "NearestNodeValueAux.h"
-#include "PenetrationAux.h"
-#include "ProcessorIDAux.h"
-#include "SelfAux.h"
-#include "GapValueAux.h"
-#include "MaterialRealAux.h"
-#include "MaterialRealVectorValueAux.h"
-#include "MaterialRealTensorValueAux.h"
-#include "MaterialStdVectorAux.h"
-#include "MaterialRealDenseMatrixAux.h"
-#include "MaterialStdVectorRealGradientAux.h"
-#include "DebugResidualAux.h"
-#include "BoundsAux.h"
-#include "SpatialUserObjectAux.h"
-#include "SolutionAux.h"
-#include "VectorMagnitudeAux.h"
-#include "ConstantScalarAux.h"
-#include "QuotientAux.h"
-#include "NormalizationAux.h"
-#include "VariableGradientComponent.h"
-#include "ParsedAux.h"
-#include "VariableTimeIntegrationAux.h"
-#include "ElementLengthAux.h"
-#include "ElementLpNormAux.h"
-#include "ElementL2ErrorFunctionAux.h"
-#include "ElementH1ErrorFunctionAux.h"
-#include "DiffusionFluxAux.h"
-
-// dirac kernels
-#include "ConstantPointSource.h"
-#include "FunctionDiracSource.h"
-
-// DG
-#include "DGDiffusion.h"
-#include "DGFunctionDiffusionDirichletBC.h"
-#include "DGConvection.h"
-
 // ics
 #include "ConstantIC.h"
 #include "BoundingBoxIC.h"
@@ -143,31 +120,6 @@
 #include "ScalarConstantIC.h"
 #include "ScalarComponentIC.h"
 #include "FunctionScalarIC.h"
-
-// executioners
-#include "Steady.h"
-#include "Transient.h"
-#include "InversePowerMethod.h"
-#include "NonlinearEigen.h"
-#include "Eigenvalue.h"
-
-// functions
-#include "Axisymmetric2D3DSolutionFunction.h"
-#include "ConstantFunction.h"
-#include "CompositeFunction.h"
-#include "MooseParsedFunction.h"
-#include "MooseParsedVectorFunction.h"
-#include "MooseParsedGradFunction.h"
-#include "PiecewiseConstant.h"
-#include "PiecewiseLinear.h"
-#include "SolutionFunction.h"
-#include "PiecewiseBilinear.h"
-#include "SplineFunction.h"
-#include "BicubicSplineFunction.h"
-#include "PiecewiseMultilinear.h"
-#include "LinearCombinationFunction.h"
-#include "ImageFunction.h"
-#include "VectorPostprocessorFunction.h"
 
 // materials
 #include "DerivativeParsedMaterial.h"
@@ -291,21 +243,6 @@
 #include "Split.h"
 #include "AddFieldSplitAction.h"
 
-// dampers
-#include "ConstantDamper.h"
-#include "MaxIncrement.h"
-#include "BoundingValueNodalDamper.h"
-#include "BoundingValueElementDamper.h"
-
-// Constraints
-#include "TiedValueConstraint.h"
-#include "CoupledTiedValueConstraint.h"
-#include "AddBoundsVectorsAction.h"
-#include "EqualGradientConstraint.h"
-#include "EqualValueConstraint.h"
-#include "EqualValueBoundaryConstraint.h"
-#include "LinearNodalConstraint.h"
-
 // ScalarKernels
 #include "ODETimeDerivative.h"
 #include "CoupledODETimeDerivative.h"
@@ -385,72 +322,6 @@
 #include "MultiAppScalarToAuxScalarTransfer.h"
 #include "MultiAppVectorPostprocessorTransfer.h"
 
-// Actions
-#include "AddBCAction.h"
-#include "AddDiracKernelAction.h"
-#include "AddICAction.h"
-#include "AddInitialConditionAction.h"
-#include "AddKernelAction.h"
-#include "AddScalarKernelAction.h"
-#include "AddDGKernelAction.h"
-#include "AddInterfaceKernelAction.h"
-#include "AddPeriodicBCAction.h"
-#include "AddVariableAction.h"
-#include "AddAuxVariableAction.h"
-#include "AddPostprocessorAction.h"
-#include "AddVectorPostprocessorAction.h"
-#include "AddDamperAction.h"
-#include "AddFunctionAction.h"
-#include "AddDistributionAction.h"
-#include "AddSamplerAction.h"
-#include "CreateExecutionerAction.h"
-#include "DetermineSystemType.h"
-#include "EmptyAction.h"
-#include "InitProblemAction.h"
-#include "CopyNodalVarsAction.h"
-#include "SetupMeshAction.h"
-#include "AddMeshModifierAction.h"
-#include "SetupMeshCompleteAction.h"
-#include "AddOutputAction.h"
-#include "CommonOutputAction.h"
-#include "AddMaterialAction.h"
-#include "GlobalParamsAction.h"
-#include "AdaptivityAction.h"
-#include "PartitionerAction.h"
-#include "SetupDampersAction.h"
-#include "CheckIntegrityAction.h"
-#include "SetupQuadratureAction.h"
-#include "SetupPreconditionerAction.h"
-#include "SetupDebugAction.h"
-#include "SetupResidualDebugAction.h"
-#include "DeprecatedBlockAction.h"
-#include "AddConstraintAction.h"
-#include "CreateDisplacedProblemAction.h"
-#include "CreateProblemAction.h"
-#include "DynamicObjectRegistrationAction.h"
-#include "AddUserObjectAction.h"
-#include "AddControlAction.h"
-#include "AddElementalFieldAction.h"
-#include "AddIndicatorAction.h"
-#include "AddMarkerAction.h"
-#include "SetAdaptivityOptionsAction.h"
-#include "AddMultiAppAction.h"
-#include "AddTransferAction.h"
-#include "AddNodalNormalsAction.h"
-#include "SetupTimeStepperAction.h"
-#include "SetupTimeIntegratorAction.h"
-#include "SetupPredictorAction.h"
-#include "AddMortarInterfaceAction.h"
-#include "SetupPostprocessorDataAction.h"
-#include "MaterialOutputAction.h"
-#include "CheckOutputAction.h"
-#include "SetupRecoverFileBaseAction.h"
-#include "AddNodalKernelAction.h"
-#include "MaterialDerivativeTestAction.h"
-#include "AddRelationshipManager.h"
-#include "MeshOnlyAction.h"
-#include "SplitMeshAction.h"
-
 // Outputs
 #ifdef LIBMESH_HAVE_EXODUS_API
 #include "Exodus.h"
@@ -470,10 +341,6 @@
 #include "TopResidualDebugOutput.h"
 #include "DOFMapOutput.h"
 #include "ControlOutput.h"
-
-// Controls
-#include "RealFunctionControl.h"
-#include "TimePeriod.h"
 
 // Partitioner
 #include "LibmeshPartitioner.h"
@@ -513,6 +380,17 @@ namespace Moose
 void
 registerObjects(Factory & factory)
 {
+  registerAuxKernels(factory);
+  registerBCs(factory);
+  registerConstraints(factory);
+  registerControls(factory);
+  registerDampers(factory);
+  registerDGKernels(factory);
+  registerDiracKernels(factory);
+  registerDistributions(factory);
+  registerExecutioners(factory);
+  registerFunctions(factory);
+
   // mesh
   registerMesh(FileMesh);
   registerMesh(GeneratedMesh);
@@ -566,65 +444,6 @@ registerObjects(Factory & factory)
   registerKernel(MaterialDerivativeRankTwoTestKernel);
   registerKernel(MaterialDerivativeRankFourTestKernel);
 
-  // bcs
-  registerBoundaryCondition(ConvectiveFluxBC);
-  registerBoundaryCondition(DirichletBC);
-  registerBoundaryCondition(PenaltyDirichletBC);
-  registerBoundaryCondition(PresetBC);
-  registerBoundaryCondition(NeumannBC);
-  registerBoundaryCondition(PostprocessorNeumannBC);
-  registerBoundaryCondition(FunctionDirichletBC);
-  registerBoundaryCondition(FunctionPenaltyDirichletBC);
-  registerBoundaryCondition(FunctionPresetBC);
-  registerBoundaryCondition(FunctionNeumannBC);
-  registerBoundaryCondition(MatchedValueBC);
-  registerBoundaryCondition(VacuumBC);
-
-  registerBoundaryCondition(SinDirichletBC);
-  registerBoundaryCondition(SinNeumannBC);
-  registerBoundaryCondition(VectorNeumannBC);
-  registerBoundaryCondition(WeakGradientBC);
-  registerBoundaryCondition(DiffusionFluxBC);
-  registerBoundaryCondition(PostprocessorDirichletBC);
-  registerBoundaryCondition(OneDEqualValueConstraintBC);
-
-  // dirac kernels
-  registerDiracKernel(ConstantPointSource);
-  registerDiracKernel(FunctionDiracSource);
-
-  // aux kernels
-  registerAux(ConstantAux);
-  registerAux(FunctionAux);
-  registerAux(NearestNodeDistanceAux);
-  registerAux(NearestNodeValueAux);
-  registerAux(PenetrationAux);
-  registerAux(ProcessorIDAux);
-  registerAux(SelfAux);
-  registerAux(GapValueAux);
-  registerAux(MaterialRealAux);
-  registerAux(MaterialRealVectorValueAux);
-  registerAux(MaterialRealTensorValueAux);
-  registerAux(MaterialStdVectorAux);
-  registerAux(MaterialRealDenseMatrixAux);
-  registerAux(MaterialStdVectorRealGradientAux);
-  registerAux(DebugResidualAux);
-  registerAux(BoundsAux);
-  registerAux(SpatialUserObjectAux);
-  registerAux(SolutionAux);
-  registerAux(VectorMagnitudeAux);
-  registerAux(ConstantScalarAux);
-  registerAux(QuotientAux);
-  registerAux(NormalizationAux);
-  registerAux(FunctionScalarAux);
-  registerAux(VariableGradientComponent);
-  registerAux(ParsedAux);
-  registerAux(VariableTimeIntegrationAux);
-  registerAux(ElementLengthAux);
-  registerAux(ElementLpNormAux);
-  registerAux(ElementL2ErrorFunctionAux);
-  registerAux(ElementH1ErrorFunctionAux);
-  registerAux(DiffusionFluxAux);
-
   // Initial Conditions
   registerInitialCondition(ConstantIC);
   registerInitialCondition(BoundingBoxIC);
@@ -633,31 +452,6 @@ registerObjects(Factory & factory)
   registerInitialCondition(ScalarConstantIC);
   registerInitialCondition(ScalarComponentIC);
   registerInitialCondition(FunctionScalarIC);
-
-  // executioners
-  registerExecutioner(Steady);
-  registerExecutioner(Transient);
-  registerExecutioner(InversePowerMethod);
-  registerExecutioner(NonlinearEigen);
-  registerExecutioner(Eigenvalue);
-
-  // functions
-  registerFunction(Axisymmetric2D3DSolutionFunction);
-  registerFunction(ConstantFunction);
-  registerFunction(CompositeFunction);
-  registerNamedFunction(MooseParsedFunction, "ParsedFunction");
-  registerNamedFunction(MooseParsedGradFunction, "ParsedGradFunction");
-  registerNamedFunction(MooseParsedVectorFunction, "ParsedVectorFunction");
-  registerFunction(PiecewiseConstant);
-  registerFunction(PiecewiseLinear);
-  registerFunction(SolutionFunction);
-  registerFunction(PiecewiseBilinear);
-  registerFunction(SplineFunction);
-  registerFunction(BicubicSplineFunction);
-  registerFunction(PiecewiseMultilinear);
-  registerFunction(LinearCombinationFunction);
-  registerFunction(ImageFunction);
-  registerFunction(VectorPostprocessorFunction);
 
   // materials
   registerMaterial(DerivativeParsedMaterial);
@@ -779,23 +573,6 @@ registerObjects(Factory & factory)
 #if defined(LIBMESH_HAVE_PETSC) && !PETSC_VERSION_LESS_THAN(3, 3, 0)
   registerNamedPreconditioner(FieldSplitPreconditioner, "FSP");
 #endif
-  // dampers
-  registerDamper(ConstantDamper);
-  registerDamper(MaxIncrement);
-  registerDamper(BoundingValueNodalDamper);
-  registerDamper(BoundingValueElementDamper);
-  // DG
-  registerDGKernel(DGDiffusion);
-  registerBoundaryCondition(DGFunctionDiffusionDirichletBC);
-  registerDGKernel(DGConvection);
-
-  // Constraints
-  registerConstraint(TiedValueConstraint);
-  registerConstraint(CoupledTiedValueConstraint);
-  registerConstraint(EqualGradientConstraint);
-  registerConstraint(EqualValueConstraint);
-  registerConstraint(EqualValueBoundaryConstraint);
-  registerConstraint(LinearNodalConstraint);
 
   // Scalar kernels
   registerScalarKernel(ODETimeDerivative);
@@ -902,10 +679,6 @@ registerObjects(Factory & factory)
   registerOutput(TopResidualDebugOutput);
   registerNamedOutput(DOFMapOutput, "DOFMap");
   registerOutput(ControlOutput);
-
-  // Controls
-  registerControl(RealFunctionControl);
-  registerControl(TimePeriod);
 
   // Partitioner
   registerPartitioner(LibmeshPartitioner);
@@ -1154,117 +927,7 @@ addActionTypes(Syntax & syntax)
 void
 registerActions(Syntax & syntax, ActionFactory & action_factory)
 {
-
-#undef registerAction
-#define registerAction(tplt, action)                                                               \
-  action_factory.reg<tplt>(stringifyName(tplt), action, __FILE__, __LINE__)
-
-  registerAction(SetupPostprocessorDataAction, "setup_postprocessor_data");
-
-  registerAction(SplitMeshAction, "split_mesh");
-  registerAction(MeshOnlyAction, "mesh_only");
-  registerAction(SetupMeshAction, "setup_mesh");
-  registerAction(SetupMeshAction, "init_mesh");
-  registerAction(SetupMeshCompleteAction, "prepare_mesh");
-  registerAction(AddMeshModifierAction, "add_mesh_modifier");
-  registerAction(AddMortarInterfaceAction, "add_mortar_interface");
-  registerAction(SetupMeshCompleteAction, "execute_mesh_modifiers");
-  registerAction(SetupMeshCompleteAction, "uniform_refine_mesh");
-  registerAction(SetupMeshCompleteAction, "setup_mesh_complete");
-
-  registerAction(AddFunctionAction, "add_function");
-  registerAction(AddDistributionAction, "add_distribution");
-  registerAction(AddSamplerAction, "add_sampler");
-  registerAction(CreateExecutionerAction, "setup_executioner");
-  registerAction(SetupTimeStepperAction, "setup_time_stepper");
-  registerAction(SetupTimeIntegratorAction, "setup_time_integrator");
-  registerAction(CreateDisplacedProblemAction, "init_displaced_problem");
-  registerAction(DetermineSystemType, "determine_system_type");
-  registerAction(CreateProblemAction, "create_problem");
-  registerAction(DynamicObjectRegistrationAction, "dynamic_object_registration");
-  registerAction(AddOutputAction, "add_output");
-  registerAction(CommonOutputAction, "common_output");
-  registerAction(SetupRecoverFileBaseAction, "setup_recover_file_base");
-  registerAction(GlobalParamsAction, "set_global_params");
-  registerAction(SetupPredictorAction, "setup_predictor");
-  registerAction(MaterialOutputAction, "setup_material_output");
-  registerAction(CheckOutputAction, "check_output");
-
-  /// Variable/AuxVariable Actions
-  registerAction(AddVariableAction, "add_variable");
-  registerAction(AddAuxVariableAction, "add_aux_variable");
-
-  registerAction(CopyNodalVarsAction, "check_copy_nodal_vars");
-  registerAction(CopyNodalVarsAction, "copy_nodal_vars");
-  registerAction(CopyNodalVarsAction, "copy_nodal_aux_vars");
-
-  // Initial Condition Actions
-  registerAction(AddICAction, "add_ic");
-  registerAction(AddInitialConditionAction, "add_ic");
-
-  registerAction(AddKernelAction, "add_kernel");
-  registerAction(AddNodalKernelAction, "add_nodal_kernel");
-  registerAction(AddKernelAction, "add_aux_kernel");
-  registerAction(AddScalarKernelAction, "add_scalar_kernel");
-  registerAction(AddScalarKernelAction, "add_aux_scalar_kernel");
-  registerAction(AddDGKernelAction, "add_dg_kernel");
-  registerAction(AddInterfaceKernelAction, "add_interface_kernel");
-  registerAction(AddBCAction, "add_bc");
-  registerAction(EmptyAction, "no_action"); // placeholder
-  registerAction(AddPeriodicBCAction, "add_periodic_bc");
-  registerAction(AddMaterialAction, "add_material");
-  registerAction(AddPostprocessorAction, "add_postprocessor");
-  registerAction(AddVectorPostprocessorAction, "add_vector_postprocessor");
-  registerAction(AddDamperAction, "add_damper");
-  registerAction(AddFieldSplitAction, "add_field_split");
-  registerAction(SetupPreconditionerAction, "add_preconditioning");
-  registerAction(SetupQuadratureAction, "setup_quadrature");
-  registerAction(DeprecatedBlockAction, "deprecated_block");
-  registerAction(AddConstraintAction, "add_constraint");
-  registerAction(AddUserObjectAction, "add_user_object");
-  registerAction(AddControlAction, "add_control");
-  registerAction(AddElementalFieldAction, "add_elemental_field_variable");
-  registerAction(AddIndicatorAction, "add_indicator");
-  registerAction(AddMarkerAction, "add_marker");
-  registerAction(SetAdaptivityOptionsAction, "set_adaptivity_options");
-
-  registerAction(AddNodalNormalsAction, "add_aux_variable");
-  registerAction(AddNodalNormalsAction, "add_postprocessor");
-  registerAction(AddNodalNormalsAction, "add_user_object");
-
-#ifdef LIBMESH_ENABLE_AMR
-  registerAction(AdaptivityAction, "setup_adaptivity");
-#endif
-
-  registerAction(PartitionerAction, "add_partitioner");
-  registerAction(AddDiracKernelAction, "add_dirac_kernel");
-  registerAction(SetupDebugAction, "setup_debug");
-  registerAction(SetupResidualDebugAction, "setup_residual_debug");
-
-  registerAction(AddBoundsVectorsAction, "add_bounds_vectors");
-
-  // NonParsedActions
-  registerAction(SetupDampersAction, "setup_dampers");
-  registerAction(EmptyAction, "ready_to_init");
-  registerAction(AddRelationshipManager, "add_algebraic_rm");
-  registerAction(AddRelationshipManager, "add_geometric_rm");
-
-  registerAction(InitProblemAction, "init_problem");
-  registerAction(CheckIntegrityAction, "check_integrity");
-
-  registerAction(AddMultiAppAction, "add_multi_app");
-  registerAction(AddTransferAction, "add_transfer");
-
-  // TODO: Why is this here?
-  registerTask("finish_input_file_output", false);
-  registerAction(EmptyAction, "finish_input_file_output");
-
-  registerAction(MaterialDerivativeTestAction, "add_variable");
-  registerAction(MaterialDerivativeTestAction, "add_kernel");
-  registerAction(MaterialDerivativeTestAction, "add_preconditioning");
-
-#undef registerAction
-#define registerAction(tplt, action) action_factory.regLegacy<tplt>(stringifyName(tplt), action)
+  registerActionObjects(syntax, action_factory);
 }
 
 void

@@ -155,8 +155,8 @@ bool setColorConsole(bool use_color, bool force = false);
 /**
  * Import libMesh::out, and libMesh::err for use in MOOSE.
  */
-using libMesh::out;
 using libMesh::err;
+using libMesh::out;
 
 /**
  * Register objects that are in MOOSE
@@ -170,7 +170,7 @@ void setSolverDefaults(FEProblemBase & problem);
 
 /**
  * Swap the libMesh MPI communicator out for ours.  Note that you should usually use
-  * the Moose::ScopedCommSwapper class instead of calling this function.
+ * the Moose::ScopedCommSwapper class instead of calling this function.
  */
 MPI_Comm swapLibMeshComm(MPI_Comm new_comm);
 
@@ -186,6 +186,7 @@ public:
   /// was called.  Usually you should not need/use this function because MPI communicators
   /// are swapped automatically when this object is constructed/destructed.
   void forceSwap() { _orig = swapLibMeshComm(_orig); }
+
 private:
   MPI_Comm _orig;
 };
