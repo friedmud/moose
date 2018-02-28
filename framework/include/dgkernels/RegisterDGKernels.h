@@ -10,6 +10,8 @@
 #ifndef REGISTER_DGKERNELS_H
 #define REGISTER_DGKERNELS_H
 
+class Factory;
+
 namespace Moose
 {
 /**

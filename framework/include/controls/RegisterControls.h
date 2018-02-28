@@ -11,8 +11,7 @@
 #define REGISTER_CONTROLS_H
 
 // Forward Declarations
-class Syntax;
-class ActionFactory;
+class Factory;
 
 namespace Moose
 {

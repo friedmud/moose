@@ -9,6 +9,8 @@
 
 #include "RegisterActions.h"
 
+#include "Factory.h"
+
 #include "Syntax.h"
 #include "ActionFactory.h"
 
@@ -76,6 +78,8 @@
 #include "AddRelationshipManager.h"
 #include "MeshOnlyAction.h"
 #include "SplitMeshAction.h"
+#include "AddFieldSplitAction.h"
+#include "AddBoundsVectorsAction.h"
 
 namespace Moose
 {

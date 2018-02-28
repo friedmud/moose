@@ -10,6 +10,8 @@
 #ifndef REGISTER_EXECUTIONERS_H
 #define REGISTER_EXECUTIONERS_H
 
+class Factory;
+
 namespace Moose
 {
 /**

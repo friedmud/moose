@@ -10,6 +10,8 @@
 #ifndef REGISTER_DISTRIBUTIONS_H
 #define REGISTER_DISTRIBUTIONS_H
 
+class Factory;
+
 namespace Moose
 {
 /**

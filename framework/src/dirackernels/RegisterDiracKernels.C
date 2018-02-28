@@ -9,6 +9,8 @@
 
 #include "RegisterDiracKernels.h"
 
+#include "Factory.h"
+
 #include "ConstantPointSource.h"
 #include "FunctionDiracSource.h"
 

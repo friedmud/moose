@@ -9,6 +9,8 @@
 
 #include "RegisterBCs.h"
 
+#include "Factory.h"
+
 #include "ConvectiveFluxBC.h"
 #include "DirichletBC.h"
 #include "PenaltyDirichletBC.h"

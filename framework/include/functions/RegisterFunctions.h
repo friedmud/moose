@@ -10,6 +10,8 @@
 #ifndef REGISTER_FUNCTIONS_H
 #define REGISTER_FUNCTIONS_H
 
+class Factory;
+
 namespace Moose
 {
 /**

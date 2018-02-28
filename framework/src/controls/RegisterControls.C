@@ -9,6 +9,8 @@
 
 #include "RegisterControls.h"
 
+#include "Factory.h"
+
 #include "RealFunctionControl.h"
 #include "TimePeriod.h"
 

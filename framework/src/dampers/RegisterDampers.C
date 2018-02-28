@@ -9,6 +9,8 @@
 
 #include "RegisterDampers.h"
 
+#include "Factory.h"
+
 #include "ConstantDamper.h"
 #include "MaxIncrement.h"
 #include "BoundingValueNodalDamper.h"

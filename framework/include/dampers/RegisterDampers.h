@@ -10,6 +10,8 @@
 #ifndef REGISTER_DAMPERS_H
 #define REGISTER_DAMPERS_H
 
+class Factory;
+
 namespace Moose
 {
 /**

@@ -30,329 +30,34 @@
 #include "RegisterDistributions.h"
 #include "RegisterExecutioners.h"
 #include "RegisterFunctions.h"
-//#include "RegisterGeomsearch.h"
-//#include "RegisterICs.h"
-//#include "RegisterIndicators.h"
-//#include "RegisterInterfaceKernels.h"
-//#include "RegisterKernels.h"
-//#include "RegisterMarkers.h"
-//#include "RegisterMaterials.h"
-//#include "RegisterMesh.h"
-//#include "RegisterMeshmodifiers.h"
-//#include "RegisterMultiapps.h"
-//#include "RegisterNodalKernels.h"
-//#include "RegisterOutputs.h"
-//#include "RegisterParser.h"
-//#include "RegisterPartitioner.h"
-//#include "RegisterPostprocessors.h"
-//#include "RegisterPreconditioners.h"
-//#include "RegisterPredictors.h"
-//#include "RegisterRelationshipManagers.h"
-//#include "RegisterRestart.h"
-//#include "RegisterSamplers.h"
-//#include "RegisterSplits.h"
-//#include "RegisterTimeIntegrators.h"
-//#include "RegisterTimeSteppers.h"
-//#include "RegisterTransfers.h"
-//#include "RegisterUserobject.h"
-//#include "RegisterUtils.h"
-//#include "RegisterVectorPostprocessors.h"
-
-// objects that can be created by MOOSE
-// Mesh
-#include "FileMesh.h"
-#include "GeneratedMesh.h"
-#include "TiledMesh.h"
-#include "ImageMesh.h"
-#include "PatternedMesh.h"
-#include "StitchedMesh.h"
-#include "AnnularMesh.h"
-
-// MeshModifiers
-#include "MeshExtruder.h"
-#include "SideSetsFromPoints.h"
-#include "SideSetsFromNormals.h"
-#include "AddExtraNodeset.h"
-#include "BoundingBoxNodeSet.h"
-#include "Transform.h"
-#include "SideSetsAroundSubdomain.h"
-#include "SideSetsBetweenSubdomains.h"
-#include "AddAllSideSetsByNormals.h"
-#include "SubdomainBoundingBox.h"
-#include "OrientedSubdomainBoundingBox.h"
-#include "RenameBlock.h"
-#include "AssignElementSubdomainID.h"
-#include "ImageSubdomain.h"
-#include "BlockDeleter.h"
-#include "ParsedSubdomainMeshModifier.h"
-#include "BreakBoundaryOnSubdomain.h"
-#include "ParsedAddSideset.h"
-#include "AssignSubdomainID.h"
-#include "MeshSideSet.h"
-#include "AddSideSetsFromBoundingBox.h"
+#include "RegisterICs.h"
+#include "RegisterIndicators.h"
+#include "RegisterInterfaceKernels.h"
+#include "RegisterKernels.h"
+#include "RegisterMarkers.h"
+#include "RegisterMaterials.h"
+#include "RegisterMesh.h"
+#include "RegisterMeshModifiers.h"
+#include "RegisterMultiApps.h"
+#include "RegisterNodalKernels.h"
+#include "RegisterOutputs.h"
+#include "RegisterPartitioners.h"
+#include "RegisterPostprocessors.h"
+#include "RegisterPreconditioners.h"
+#include "RegisterPredictors.h"
+#include "RegisterRelationshipManagers.h"
+#include "RegisterSamplers.h"
+#include "RegisterSplits.h"
+#include "RegisterTimeIntegrators.h"
+#include "RegisterTimeSteppers.h"
+#include "RegisterTransfers.h"
+#include "RegisterUserObjects.h"
+#include "RegisterVectorPostprocessors.h"
 
 // problems
 #include "DisplacedProblem.h"
 #include "FEProblem.h"
 #include "EigenProblem.h"
-
-// kernels
-#include "ConservativeAdvection.h"
-#include "TimeDerivative.h"
-#include "CoupledTimeDerivative.h"
-#include "MassLumpedTimeDerivative.h"
-#include "Diffusion.h"
-#include "AnisotropicDiffusion.h"
-#include "CoupledForce.h"
-#include "BodyForce.h"
-#include "Reaction.h"
-#include "MassEigenKernel.h"
-#include "NullKernel.h"
-#include "MaterialDerivativeTestKernel.h"
-#include "MaterialDerivativeRankTwoTestKernel.h"
-#include "MaterialDerivativeRankFourTestKernel.h"
-
-// ics
-#include "ConstantIC.h"
-#include "BoundingBoxIC.h"
-#include "FunctionIC.h"
-#include "RandomIC.h"
-#include "ScalarConstantIC.h"
-#include "ScalarComponentIC.h"
-#include "FunctionScalarIC.h"
-
-// materials
-#include "DerivativeParsedMaterial.h"
-#include "DerivativeSumMaterial.h"
-#include "GenericConstantMaterial.h"
-#include "GenericConstantRankTwoTensor.h"
-#include "GenericFunctionMaterial.h"
-#include "ParsedMaterial.h"
-#include "PiecewiseLinearInterpolationMaterial.h"
-
-// PPS
-#include "AverageElementSize.h"
-#include "AverageNodalVariableValue.h"
-#include "CumulativeValuePostprocessor.h"
-#include "ChangeOverTimePostprocessor.h"
-#include "ChangeOverTimestepPostprocessor.h"
-#include "NodalSum.h"
-#include "ElementAverageValue.h"
-#include "ElementAverageTimeDerivative.h"
-#include "ElementW1pError.h"
-#include "ElementH1Error.h"
-#include "ElementH1SemiError.h"
-#include "ElementIntegralVariablePostprocessor.h"
-#include "ElementIntegralMaterialProperty.h"
-#include "ElementL2Error.h"
-#include "ElementVectorL2Error.h"
-#include "EmptyPostprocessor.h"
-#include "FindValueOnLine.h"
-#include "FunctionValuePostprocessor.h"
-#include "NodalVariableValue.h"
-#include "NumDOFs.h"
-#include "TimestepSize.h"
-#include "PerformanceData.h"
-#include "MemoryUsage.h"
-#include "NumElems.h"
-#include "NumNodes.h"
-#include "NumNonlinearIterations.h"
-#include "NumLinearIterations.h"
-#include "Residual.h"
-#include "ScalarVariable.h"
-#include "NumVars.h"
-#include "NumResidualEvaluations.h"
-#include "Receiver.h"
-#include "SideAverageValue.h"
-#include "SideFluxIntegral.h"
-#include "SideFluxAverage.h"
-#include "SideIntegralVariablePostprocessor.h"
-#include "NodalMaxValue.h"
-#include "NodalProxyMaxValue.h"
-#include "ScalarL2Error.h"
-#include "ElementalVariableValue.h"
-#include "ElementL2Norm.h"
-#include "NodalL2Norm.h"
-#include "NodalL2Error.h"
-#include "TotalVariableValue.h"
-#include "VolumePostprocessor.h"
-#include "AreaPostprocessor.h"
-#include "PointValue.h"
-#include "NodalExtremeValue.h"
-#include "ElementExtremeValue.h"
-#include "DifferencePostprocessor.h"
-#include "RelativeDifferencePostprocessor.h"
-#include "ScalePostprocessor.h"
-#include "LinearCombinationPostprocessor.h"
-#include "NumPicardIterations.h"
-#include "FunctionSideIntegral.h"
-#include "ExecutionerAttributeReporter.h"
-#include "PercentChangePostprocessor.h"
-#include "ElementL2Difference.h"
-#include "TimeExtremeValue.h"
-#include "RelativeSolutionDifferenceNorm.h"
-#include "AxisymmetricCenterlineAverageValue.h"
-#include "VariableInnerProduct.h"
-#include "VariableResidual.h"
-
-// vector PPS
-#include "CSVReader.h"
-#include "ConstantVectorPostprocessor.h"
-#include "Eigenvalues.h"
-#include "ElementVariablesDifferenceMax.h"
-#include "ElementsAlongLine.h"
-#include "ElementsAlongPlane.h"
-#include "IntersectionPointsAlongLine.h"
-#include "LeastSquaresFit.h"
-#include "LineFunctionSampler.h"
-#include "LineMaterialRealSampler.h"
-#include "LineValueSampler.h"
-#include "MaterialVectorPostprocessor.h"
-#include "NodalValueSampler.h"
-#include "PointValueSampler.h"
-#include "SideValueSampler.h"
-#include "SphericalAverage.h"
-#include "VectorOfPostprocessors.h"
-#include "VolumeHistogram.h"
-
-// user objects
-#include "GeometrySphere.h"
-#include "LayeredIntegral.h"
-#include "LayeredAverage.h"
-#include "LayeredSideIntegral.h"
-#include "LayeredSideAverage.h"
-#include "LayeredSideFluxAverage.h"
-#include "NearestPointLayeredAverage.h"
-#include "ElementIntegralVariableUserObject.h"
-#include "NodalNormalsEvaluator.h"
-#include "NodalNormalsCorner.h"
-#include "NodalNormalsPreprocessor.h"
-#include "SolutionUserObject.h"
-#include "PerflogDumper.h"
-#include "ElementQualityChecker.h"
-#ifdef LIBMESH_HAVE_FPARSER
-#include "Terminator.h"
-#endif
-
-// preconditioners
-#include "PhysicsBasedPreconditioner.h"
-#include "FiniteDifferencePreconditioner.h"
-#include "SingleMatrixPreconditioner.h"
-
-#include "FieldSplitPreconditioner.h"
-#include "Split.h"
-#include "AddFieldSplitAction.h"
-
-// ScalarKernels
-#include "ODETimeDerivative.h"
-#include "CoupledODETimeDerivative.h"
-#include "FunctionScalarAux.h"
-#include "NodalEqualValueConstraint.h"
-#include "ParsedODEKernel.h"
-#include "QuotientScalarAux.h"
-
-// indicators
-#include "AnalyticalIndicator.h"
-#include "LaplacianJumpIndicator.h"
-#include "GradientJumpIndicator.h"
-#include "ValueJumpIndicator.h"
-
-// markers
-#include "ErrorToleranceMarker.h"
-#include "ErrorFractionMarker.h"
-#include "UniformMarker.h"
-#include "BoxMarker.h"
-#include "ComboMarker.h"
-#include "ValueThresholdMarker.h"
-#include "ValueRangeMarker.h"
-#include "OrientedBoxMarker.h"
-
-// time steppers
-#include "ConstantDT.h"
-#include "LogConstantDT.h"
-#include "FunctionDT.h"
-#include "TimeSequenceStepper.h"
-#include "ExodusTimeSequenceStepper.h"
-#include "CSVTimeSequenceStepper.h"
-#include "IterationAdaptiveDT.h"
-#include "SolutionTimeAdaptiveDT.h"
-#include "DT2.h"
-#include "PostprocessorDT.h"
-#include "AB2PredictorCorrector.h"
-
-// time integrators
-#include "ImplicitEuler.h"
-#include "BDF2.h"
-#include "CrankNicolson.h"
-#include "ExplicitEuler.h"
-#include "ExplicitMidpoint.h"
-#include "ExplicitTVDRK2.h"
-#include "LStableDirk2.h"
-#include "LStableDirk3.h"
-#include "AStableDirk4.h"
-#include "LStableDirk4.h"
-#include "ImplicitMidpoint.h"
-#include "Heun.h"
-#include "Ralston.h"
-#include "SimplePredictor.h"
-#include "AdamsPredictor.h"
-
-// MultiApps
-#include "TransientMultiApp.h"
-#include "FullSolveMultiApp.h"
-#include "AutoPositionsMultiApp.h"
-#include "CentroidMultiApp.h"
-
-// Transfers
-#ifdef LIBMESH_TRILINOS_HAVE_DTK
-#include "MultiAppDTKUserObjectTransfer.h"
-#include "MultiAppDTKInterpolationTransfer.h"
-#endif
-#include "MultiAppPostprocessorInterpolationTransfer.h"
-#include "MultiAppVariableValueSampleTransfer.h"
-#include "MultiAppVariableValueSamplePostprocessorTransfer.h"
-#include "MultiAppMeshFunctionTransfer.h"
-#include "MultiAppUserObjectTransfer.h"
-#include "MultiAppNearestNodeTransfer.h"
-#include "MultiAppCopyTransfer.h"
-#include "MultiAppInterpolationTransfer.h"
-#include "MultiAppPostprocessorTransfer.h"
-#include "MultiAppProjectionTransfer.h"
-#include "MultiAppPostprocessorToAuxScalarTransfer.h"
-#include "MultiAppScalarToAuxScalarTransfer.h"
-#include "MultiAppVectorPostprocessorTransfer.h"
-
-// Outputs
-#ifdef LIBMESH_HAVE_EXODUS_API
-#include "Exodus.h"
-#endif
-#include "Nemesis.h"
-#include "Console.h"
-#include "CSV.h"
-#include "VTKOutput.h"
-#include "Checkpoint.h"
-#include "XDA.h"
-#include "GMVOutput.h"
-#include "Tecplot.h"
-#include "Gnuplot.h"
-#include "SolutionHistory.h"
-#include "MaterialPropertyDebugOutput.h"
-#include "VariableResidualNormsDebugOutput.h"
-#include "TopResidualDebugOutput.h"
-#include "DOFMapOutput.h"
-#include "ControlOutput.h"
-
-// Partitioner
-#include "LibmeshPartitioner.h"
-
-// NodalKernels
-#include "ConstantRate.h"
-#include "TimeDerivativeNodalKernel.h"
-#include "UserForcingFunctionNodalKernel.h"
-
-// relationship managers
-#include "ElementSideNeighborLayers.h"
-#include "ElementPointNeighbors.h"
 
 #include <unistd.h>
 
@@ -380,6 +85,11 @@ namespace Moose
 void
 registerObjects(Factory & factory)
 {
+  // The registration of objects in MOOSE is done within the Register*.C files
+  // in each System's subdirectory
+  //
+  // For instance: to register a Kernel add it to framework/src/kernels/RegisterKernels.C
+
   registerAuxKernels(factory);
   registerBCs(factory);
   registerConstraints(factory);
@@ -390,307 +100,34 @@ registerObjects(Factory & factory)
   registerDistributions(factory);
   registerExecutioners(factory);
   registerFunctions(factory);
-
-  // mesh
-  registerMesh(FileMesh);
-  registerMesh(GeneratedMesh);
-  registerMesh(TiledMesh);
-  registerMesh(ImageMesh);
-  registerMesh(PatternedMesh);
-  registerMesh(StitchedMesh);
-  registerMesh(AnnularMesh);
-
-  // mesh modifiers
-  registerMeshModifier(MeshExtruder);
-  registerMeshModifier(SideSetsFromPoints);
-  registerMeshModifier(SideSetsFromNormals);
-  registerMeshModifier(AddExtraNodeset);
-  registerMeshModifier(BoundingBoxNodeSet);
-  registerMeshModifier(Transform);
-  registerMeshModifier(SideSetsAroundSubdomain);
-  registerMeshModifier(SideSetsBetweenSubdomains);
-  registerMeshModifier(AddAllSideSetsByNormals);
-  registerMeshModifier(SubdomainBoundingBox);
-  registerMeshModifier(OrientedSubdomainBoundingBox);
-  registerMeshModifier(RenameBlock);
-  registerMeshModifier(AssignElementSubdomainID);
-  registerMeshModifier(ImageSubdomain);
-  registerMeshModifier(BlockDeleter);
-  registerMeshModifier(ParsedSubdomainMeshModifier);
-  registerMeshModifier(BreakBoundaryOnSubdomain);
-  registerMeshModifier(ParsedAddSideset);
-  registerMeshModifier(AssignSubdomainID);
-  registerMeshModifier(MeshSideSet);
-  registerMeshModifier(AddSideSetsFromBoundingBox);
+  registerICs(factory);
+  registerIndicators(factory);
+  registerInterfaceKernels(factory);
+  registerKernels(factory);
+  registerMarkers(factory);
+  registerMaterials(factory);
+  registerMeshObjects(factory);
+  registerMeshModifiers(factory);
+  registerMultiApps(factory);
+  registerNodalKernels(factory);
+  registerOutputs(factory);
+  registerPartitioners(factory);
+  registerPostprocessors(factory);
+  registerPreconditioners(factory);
+  registerPredictors(factory);
+  registerRelationshipManagers(factory);
+  registerSamplers(factory);
+  registerSplits(factory);
+  registerTimeIntegrators(factory);
+  registerTimeSteppers(factory);
+  registerTransfers(factory);
+  registerUserObjects(factory);
+  registerVectorPostprocessors(factory);
 
   // problems
   registerProblem(DisplacedProblem);
   registerProblem(FEProblem);
   registerProblem(EigenProblem);
-
-  // kernels
-  registerKernel(TimeDerivative);
-  registerKernel(ConservativeAdvection);
-  registerKernel(CoupledTimeDerivative);
-  registerKernel(MassLumpedTimeDerivative);
-  registerKernel(Diffusion);
-  registerKernel(AnisotropicDiffusion);
-  registerKernel(CoupledForce);
-  registerRenamedObject("UserForcingFunction", BodyForce, "04/01/2018 00:00");
-  registerKernel(Reaction);
-  registerKernel(MassEigenKernel);
-  registerKernel(NullKernel);
-  registerKernel(MaterialDerivativeTestKernel);
-  registerKernel(MaterialDerivativeRankTwoTestKernel);
-  registerKernel(MaterialDerivativeRankFourTestKernel);
-
-  // Initial Conditions
-  registerInitialCondition(ConstantIC);
-  registerInitialCondition(BoundingBoxIC);
-  registerInitialCondition(FunctionIC);
-  registerInitialCondition(RandomIC);
-  registerInitialCondition(ScalarConstantIC);
-  registerInitialCondition(ScalarComponentIC);
-  registerInitialCondition(FunctionScalarIC);
-
-  // materials
-  registerMaterial(DerivativeParsedMaterial);
-  registerMaterial(DerivativeSumMaterial);
-  registerMaterial(GenericConstantMaterial);
-  registerMaterial(GenericConstantRankTwoTensor);
-  registerMaterial(GenericFunctionMaterial);
-  registerMaterial(ParsedMaterial);
-  registerMaterial(PiecewiseLinearInterpolationMaterial);
-
-  // PPS
-  registerPostprocessor(AverageElementSize);
-  registerPostprocessor(AverageNodalVariableValue);
-  registerPostprocessor(CumulativeValuePostprocessor);
-  registerPostprocessor(ChangeOverTimePostprocessor);
-  registerPostprocessor(ChangeOverTimestepPostprocessor);
-  registerPostprocessor(NodalSum);
-  registerPostprocessor(ElementAverageValue);
-  registerPostprocessor(ElementAverageTimeDerivative);
-  registerPostprocessor(ElementW1pError);
-  registerPostprocessor(ElementH1Error);
-  registerPostprocessor(ElementH1SemiError);
-  registerPostprocessor(ElementIntegralVariablePostprocessor);
-  registerPostprocessor(ElementIntegralMaterialProperty);
-  registerPostprocessor(ElementL2Error);
-  registerPostprocessor(ElementVectorL2Error);
-  registerPostprocessor(ScalarL2Error);
-  registerPostprocessor(EmptyPostprocessor);
-  registerPostprocessor(FindValueOnLine);
-  registerPostprocessor(NodalVariableValue);
-  registerPostprocessor(NumDOFs);
-  registerPostprocessor(TimestepSize);
-  registerPostprocessor(PerformanceData);
-  registerPostprocessor(MemoryUsage);
-  registerPostprocessor(NumElems);
-  registerPostprocessor(NumNodes);
-  registerPostprocessor(NumNonlinearIterations);
-  registerPostprocessor(NumLinearIterations);
-  registerPostprocessor(Residual);
-  registerPostprocessor(ScalarVariable);
-  registerPostprocessor(NumVars);
-  registerPostprocessor(NumResidualEvaluations);
-  registerPostprocessor(Receiver);
-  registerPostprocessor(SideAverageValue);
-  registerPostprocessor(SideFluxIntegral);
-  registerPostprocessor(SideFluxAverage);
-  registerPostprocessor(SideIntegralVariablePostprocessor);
-  registerPostprocessor(NodalMaxValue);
-  registerPostprocessor(NodalProxyMaxValue);
-  registerPostprocessor(ElementalVariableValue);
-  registerPostprocessor(ElementL2Norm);
-  registerPostprocessor(NodalL2Norm);
-  registerPostprocessor(NodalL2Error);
-  registerPostprocessor(TotalVariableValue);
-  registerPostprocessor(VolumePostprocessor);
-  registerPostprocessor(AreaPostprocessor);
-  registerPostprocessor(PointValue);
-  registerPostprocessor(NodalExtremeValue);
-  registerPostprocessor(ElementExtremeValue);
-  registerPostprocessor(DifferencePostprocessor);
-  registerPostprocessor(RelativeDifferencePostprocessor);
-  registerPostprocessor(ScalePostprocessor);
-  registerPostprocessor(LinearCombinationPostprocessor);
-  registerPostprocessor(FunctionValuePostprocessor);
-  registerPostprocessor(NumPicardIterations);
-  registerPostprocessor(FunctionSideIntegral);
-  registerPostprocessor(ExecutionerAttributeReporter);
-  registerPostprocessor(PercentChangePostprocessor);
-  registerPostprocessor(ElementL2Difference);
-  registerPostprocessor(TimeExtremeValue);
-  registerPostprocessor(RelativeSolutionDifferenceNorm);
-  registerPostprocessor(AxisymmetricCenterlineAverageValue);
-  registerPostprocessor(VariableInnerProduct);
-  registerPostprocessor(VariableResidual);
-
-  // vector PPS
-  registerVectorPostprocessor(CSVReader);
-  registerVectorPostprocessor(ConstantVectorPostprocessor);
-  registerVectorPostprocessor(Eigenvalues);
-  registerVectorPostprocessor(ElementVariablesDifferenceMax);
-  registerVectorPostprocessor(ElementsAlongLine);
-  registerVectorPostprocessor(ElementsAlongPlane);
-  registerVectorPostprocessor(IntersectionPointsAlongLine);
-  registerVectorPostprocessor(LeastSquaresFit);
-  registerVectorPostprocessor(LineFunctionSampler);
-  registerVectorPostprocessor(LineMaterialRealSampler);
-  registerVectorPostprocessor(LineValueSampler);
-  registerVectorPostprocessor(MaterialVectorPostprocessor);
-  registerVectorPostprocessor(NodalValueSampler);
-  registerVectorPostprocessor(PointValueSampler);
-  registerVectorPostprocessor(SideValueSampler);
-  registerVectorPostprocessor(SphericalAverage);
-  registerVectorPostprocessor(VectorOfPostprocessors);
-  registerVectorPostprocessor(VolumeHistogram);
-
-  // user objects
-  registerUserObject(GeometrySphere);
-  registerUserObject(LayeredIntegral);
-  registerUserObject(LayeredAverage);
-  registerUserObject(LayeredSideIntegral);
-  registerUserObject(LayeredSideAverage);
-  registerUserObject(LayeredSideFluxAverage);
-  registerUserObject(NearestPointLayeredAverage);
-  registerUserObject(ElementIntegralVariableUserObject);
-  registerUserObject(NodalNormalsPreprocessor);
-  registerUserObject(NodalNormalsCorner);
-  registerUserObject(NodalNormalsEvaluator);
-  registerUserObject(SolutionUserObject);
-  registerUserObject(PerflogDumper);
-  registerUserObject(ElementQualityChecker);
-#ifdef LIBMESH_HAVE_FPARSER
-  registerUserObject(Terminator);
-#endif
-
-  // preconditioners
-  registerNamedPreconditioner(PhysicsBasedPreconditioner, "PBP");
-  registerNamedPreconditioner(FiniteDifferencePreconditioner, "FDP");
-  registerNamedPreconditioner(SingleMatrixPreconditioner, "SMP");
-#if defined(LIBMESH_HAVE_PETSC) && !PETSC_VERSION_LESS_THAN(3, 3, 0)
-  registerNamedPreconditioner(FieldSplitPreconditioner, "FSP");
-#endif
-
-  // Scalar kernels
-  registerScalarKernel(ODETimeDerivative);
-  registerScalarKernel(CoupledODETimeDerivative);
-  registerScalarKernel(NodalEqualValueConstraint);
-  registerScalarKernel(ParsedODEKernel);
-  registerScalarKernel(QuotientScalarAux);
-
-  // indicators
-  registerIndicator(AnalyticalIndicator);
-  registerIndicator(LaplacianJumpIndicator);
-  registerIndicator(GradientJumpIndicator);
-  registerIndicator(ValueJumpIndicator);
-
-  // markers
-  registerMarker(ErrorToleranceMarker);
-  registerMarker(ErrorFractionMarker);
-  registerMarker(UniformMarker);
-  registerMarker(BoxMarker);
-  registerMarker(OrientedBoxMarker);
-  registerMarker(ComboMarker);
-  registerMarker(ValueThresholdMarker);
-  registerMarker(ValueRangeMarker);
-
-  // splits
-  registerSplit(Split);
-
-  // MultiApps
-  registerMultiApp(TransientMultiApp);
-  registerMultiApp(FullSolveMultiApp);
-  registerMultiApp(AutoPositionsMultiApp);
-  registerMultiApp(CentroidMultiApp);
-
-  // time steppers
-  registerTimeStepper(ConstantDT);
-  registerTimeStepper(LogConstantDT);
-  registerTimeStepper(FunctionDT);
-  registerTimeStepper(TimeSequenceStepper);
-  registerTimeStepper(ExodusTimeSequenceStepper);
-  registerTimeStepper(CSVTimeSequenceStepper);
-  registerTimeStepper(IterationAdaptiveDT);
-  registerTimeStepper(SolutionTimeAdaptiveDT);
-  registerTimeStepper(DT2);
-  registerTimeStepper(PostprocessorDT);
-  registerTimeStepper(AB2PredictorCorrector);
-  // time integrators
-  registerTimeIntegrator(ImplicitEuler);
-  registerTimeIntegrator(BDF2);
-  registerTimeIntegrator(CrankNicolson);
-  registerTimeIntegrator(ExplicitEuler);
-  registerTimeIntegrator(ExplicitMidpoint);
-  registerTimeIntegrator(ExplicitTVDRK2);
-  registerTimeIntegrator(LStableDirk2);
-  registerTimeIntegrator(LStableDirk3);
-  registerTimeIntegrator(AStableDirk4);
-  registerTimeIntegrator(LStableDirk4);
-  registerTimeIntegrator(ImplicitMidpoint);
-  registerTimeIntegrator(Heun);
-  registerTimeIntegrator(Ralston);
-  // predictors
-  registerPredictor(SimplePredictor);
-  registerPredictor(AdamsPredictor);
-
-// Transfers
-#ifdef LIBMESH_TRILINOS_HAVE_DTK
-  registerTransfer(MultiAppDTKUserObjectTransfer);
-  registerTransfer(MultiAppDTKInterpolationTransfer);
-#endif
-  registerTransfer(MultiAppPostprocessorInterpolationTransfer);
-  registerTransfer(MultiAppVariableValueSampleTransfer);
-  registerTransfer(MultiAppVariableValueSamplePostprocessorTransfer);
-  registerTransfer(MultiAppMeshFunctionTransfer);
-  registerTransfer(MultiAppUserObjectTransfer);
-  registerTransfer(MultiAppNearestNodeTransfer);
-  registerTransfer(MultiAppCopyTransfer);
-  registerTransfer(MultiAppInterpolationTransfer);
-  registerTransfer(MultiAppPostprocessorTransfer);
-  registerTransfer(MultiAppProjectionTransfer);
-  registerTransfer(MultiAppPostprocessorToAuxScalarTransfer);
-  registerTransfer(MultiAppScalarToAuxScalarTransfer);
-  registerTransfer(MultiAppVectorPostprocessorTransfer);
-
-// Outputs
-#ifdef LIBMESH_HAVE_EXODUS_API
-  registerOutput(Exodus);
-#endif
-#ifdef LIBMESH_HAVE_NEMESIS_API
-  registerOutput(Nemesis);
-#endif
-  registerOutput(Console);
-  registerOutput(CSV);
-#ifdef LIBMESH_HAVE_VTK
-  registerNamedOutput(VTKOutput, "VTK");
-#endif
-  registerOutput(Checkpoint);
-  registerNamedOutput(XDA, "XDR");
-  registerOutput(XDA);
-  registerNamedOutput(GMVOutput, "GMV");
-  registerOutput(Tecplot);
-  registerOutput(Gnuplot);
-  registerOutput(SolutionHistory);
-  registerOutput(MaterialPropertyDebugOutput);
-  registerOutput(VariableResidualNormsDebugOutput);
-  registerOutput(TopResidualDebugOutput);
-  registerNamedOutput(DOFMapOutput, "DOFMap");
-  registerOutput(ControlOutput);
-
-  // Partitioner
-  registerPartitioner(LibmeshPartitioner);
-
-  // NodalKernels
-  registerNodalKernel(TimeDerivativeNodalKernel);
-  registerNodalKernel(ConstantRate);
-  registerNodalKernel(UserForcingFunctionNodalKernel);
-
-  // RelationshipManagers
-  registerRelationshipManager(ElementSideNeighborLayers);
-  registerRelationshipManager(ElementPointNeighbors);
 }
 
 void

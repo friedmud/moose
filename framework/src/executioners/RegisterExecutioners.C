@@ -9,6 +9,8 @@
 
 #include "RegisterExecutioners.h"
 
+#include "Factory.h"
+
 #include "Steady.h"
 #include "Transient.h"
 #include "InversePowerMethod.h"

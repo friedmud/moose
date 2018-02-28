@@ -11,8 +11,7 @@
 #define REGISTER_AUXKERNELS_H
 
 // Forward Declarations
-class Syntax;
-class ActionFactory;
+class Factory;
 
 namespace Moose
 {

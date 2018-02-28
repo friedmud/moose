@@ -9,6 +9,8 @@
 
 #include "RegisterDGKernels.h"
 
+#include "Factory.h"
+
 #include "DGDiffusion.h"
 #include "DGFunctionDiffusionDirichletBC.h"
 #include "DGConvection.h"

@@ -9,6 +9,8 @@
 
 #include "RegisterConstraints.h"
 
+#include "Factory.h"
+
 #include "TiedValueConstraint.h"
 #include "CoupledTiedValueConstraint.h"
 #include "AddBoundsVectorsAction.h"

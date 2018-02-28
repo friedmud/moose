@@ -9,6 +9,8 @@
 
 #include "RegisterFunctions.h"
 
+#include "Factory.h"
+
 #include "Axisymmetric2D3DSolutionFunction.h"
 #include "ConstantFunction.h"
 #include "CompositeFunction.h"

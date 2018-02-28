@@ -10,6 +10,8 @@
 #ifndef REGISTER_DIRACKERNELS_H
 #define REGISTER_DIRACKERNELS_H
 
+class Factory;
+
 namespace Moose
 {
 /**

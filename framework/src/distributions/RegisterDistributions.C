@@ -9,8 +9,7 @@
 
 #include "RegisterDistributions.h"
 
-#include "ConstantPointSource.h"
-#include "FunctionDiracSource.h"
+#include "Factory.h"
 
 namespace Moose
 {
@@ -19,9 +18,7 @@ namespace Moose
  * Called from Moose.C to register Actions
  */
 void
-registerDistributions(Factory & factory)
+registerDistributions(Factory & /*factory*/)
 {
-  registerDiracKernel(ConstantPointSource);
-  registerDiracKernel(FunctionDiracSource);
 }
 }

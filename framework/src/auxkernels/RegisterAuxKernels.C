@@ -9,6 +9,8 @@
 
 #include "RegisterAuxKernels.h"
 
+#include "Factory.h"
+
 #include "ConstantAux.h"
 #include "FunctionAux.h"
 #include "NearestNodeDistanceAux.h"
@@ -39,6 +41,7 @@
 #include "ElementL2ErrorFunctionAux.h"
 #include "ElementH1ErrorFunctionAux.h"
 #include "DiffusionFluxAux.h"
+#include "FunctionScalarAux.h"
 
 namespace Moose
 {
