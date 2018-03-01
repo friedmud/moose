@@ -38,8 +38,8 @@ validParams<RayBC>()
 RayBC::RayBC(const InputParameters & params)
   : MooseObject(params),
     SetupInterface(this),
-    Restartable(params, "RayBCs"),
-    BoundaryRestrictableRequired(params, false), // false for sidesets
+    Restartable(this, "RayBCs"),
+    BoundaryRestrictableRequired(this, false), // false for sidesets
     Coupleable(this, false),
     GeometricSearchInterface(this),
     _ray_problem(dynamic_cast<RayProblemBase &>(*params.get<FEProblem *>("_fe_problem"))),

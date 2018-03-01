@@ -746,7 +746,11 @@ void
 find_point_neighbors(const Elem * current_elem,
                      const Point & p,
                      std::set<const Elem *> & neighbor_set,
-                     const std::shared_ptr<Ray> & ray)
+                     const std::shared_ptr<Ray> &
+#ifdef USE_DEBUG_RAY
+                         ray
+#endif
+)
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());

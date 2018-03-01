@@ -127,7 +127,7 @@ RayProblemBase::reinitElem(const Elem * elem, THREAD_ID tid)
 
 void
 RayProblemBase::reinitElemPhys(const Elem * elem,
-                               std::vector<Point> phys_points_in_elem,
+                               const std::vector<Point> & phys_points_in_elem,
                                THREAD_ID tid)
 {
   _ray_system->subdomainSetup(elem->subdomain_id(), tid);
@@ -180,12 +180,12 @@ RayProblemBase::getVariableNames()
 }
 
 bool
-RayProblemBase::hasVariable(const std::string & var_name)
+RayProblemBase::hasVariable(const std::string & var_name) const
 {
   return FEProblem::hasVariable(var_name) || _ray_system->hasVariable(var_name);
 }
 
-MooseVariable &
+MooseVariableFE &
 RayProblemBase::getVariable(THREAD_ID tid, const std::string & var_name)
 {
   if (_ray_system->hasVariable(var_name))

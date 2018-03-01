@@ -61,8 +61,9 @@ public:
   virtual void RaySubdomainSetup(SubdomainID subdomain, THREAD_ID tid);
 
   virtual void reinitElem(const Elem * elem, THREAD_ID tid) override;
-  virtual void
-  reinitElemPhys(const Elem * elem, std::vector<Point> phys_points_in_elem, THREAD_ID tid) override;
+  virtual void reinitElemPhys(const Elem * elem,
+                              const std::vector<Point> & phys_points_in_elem,
+                              THREAD_ID tid) override;
 
   virtual void reinitNeighbor(const Elem * elem, unsigned int side, THREAD_ID tid) override;
 
@@ -77,9 +78,9 @@ public:
 
   virtual std::vector<VariableName> getVariableNames() override;
 
-  virtual bool hasVariable(const std::string & var_name) override;
+  virtual bool hasVariable(const std::string & var_name) const override;
 
-  virtual MooseVariable & getVariable(THREAD_ID tid, const std::string & var_name) override;
+  virtual MooseVariableFE & getVariable(THREAD_ID tid, const std::string & var_name) override;
 
   /**
    * Get the RaySystem for this Problem

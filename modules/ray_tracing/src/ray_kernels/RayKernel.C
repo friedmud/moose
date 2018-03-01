@@ -38,8 +38,8 @@ validParams<RayKernel>()
 RayKernel::RayKernel(const InputParameters & params)
   : MooseObject(params),
     SetupInterface(this),
-    Restartable(params, "RayKernels"),
-    BlockRestrictable(params),
+    Restartable(this, "RayKernels"),
+    BlockRestrictable(this),
     Coupleable(this, false),
     _ray_problem(dynamic_cast<RayProblemBase &>(*params.get<FEProblem *>("_fe_problem"))),
     _ray_sys(_ray_problem.raySystem()),

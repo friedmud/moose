@@ -30,6 +30,10 @@
 class FEProblem;
 class RayKernel;
 class RayProblemBase;
+class RayTracingStudy;
+
+template <>
+InputParameters validParams<RayTracingStudy>();
 
 /**
  * Base class for Ray tracing studies that will generate Rays and then propoagate

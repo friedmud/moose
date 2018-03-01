@@ -50,8 +50,8 @@
 [UserObjects]
   [./ecr]
     type = ElementCentroidRays
-    ray_distance = 1e5
-    num_rays = 1e5
+    ray_distance = 10000
+    num_rays = 10000
     end_elems = 4
     start_elems = 0
   [../]
@@ -87,4 +87,3 @@
     sigma_t = 1
   [../]
 []
-

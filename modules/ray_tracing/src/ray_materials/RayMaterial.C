@@ -39,8 +39,8 @@ validParams<RayMaterial>()
 RayMaterial::RayMaterial(const InputParameters & params)
   : MooseObject(params),
     SetupInterface(this),
-    Restartable(params, "RayMaterials"),
-    BlockRestrictable(params),
+    Restartable(this, "RayMaterials"),
+    BlockRestrictable(this),
     Coupleable(this, false),
     UserObjectInterface(this),
     TransientInterface(this),
