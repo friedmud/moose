@@ -1120,9 +1120,9 @@ Assembly::prepare()
 
     for (unsigned int i = beginIndex(_jacobian_block_used); i < _jacobian_block_used.size(); i++)
     {
-      _jacobian_block_used[i][vi][vj] = 0;
       jacobianBlock(vi, vj, i).resize(ivar.dofIndices().size(), jvar.dofIndices().size());
       jacobianBlock(vi, vj, i).zero();
+      _jacobian_block_used[i][vi][vj] = 0;
     }
   }
   const std::vector<MooseVariableFE *> & vars = _sys.getVariables(_tid);
@@ -1163,7 +1163,13 @@ Assembly::prepareVariable(MooseVariableFE * var)
     unsigned int vj = jvar.number();
 
     if (vi == var->number() || vj == var->number())
-      jacobianBlock(vi, vj).resize(ivar.dofIndices().size(), jvar.dofIndices().size());
+    {
+      for (auto i = beginIndex(_jacobian_block_used); i < _jacobian_block_used.size(); i++)
+      {
+        jacobianBlock(vi, vj, i).resize(ivar.dofIndices().size(), jvar.dofIndices().size());
+        _jacobian_block_used[i][vi][vj] = 0;
+      }
+    }
   }
 
   for (unsigned int i = 0; i < _sub_Re.size(); i++)
@@ -1229,10 +1235,12 @@ Assembly::prepareBlock(unsigned int ivar,
                        unsigned int jvar,
                        const std::vector<dof_id_type> & dof_indices)
 {
-  jacobianBlock(ivar, jvar).resize(dof_indices.size(), dof_indices.size());
-  jacobianBlock(ivar, jvar).zero();
-  for (unsigned int i = beginIndex(_jacobian_block_used); i < _jacobian_block_used.size(); i++)
+  for (auto i = beginIndex(_jacobian_block_used); i < _jacobian_block_used.size(); i++)
+  {
+    jacobianBlock(ivar, jvar, i).resize(dof_indices.size(), dof_indices.size());
+    jacobianBlock(ivar, jvar, i).zero();
     _jacobian_block_used[i][ivar][jvar] = 0;
+  }
 
   for (unsigned int i = 0; i < _sub_Re.size(); i++)
   {
@@ -1272,9 +1280,9 @@ Assembly::prepareScalar()
 
       for (unsigned int i = beginIndex(_jacobian_block_used); i < _jacobian_block_used.size(); i++)
       {
-        _jacobian_block_used[i][ivar->number()][jvar->number()] = 0;
         jacobianBlock(ivar->number(), jvar->number(), i).resize(idofs, jdofs);
         jacobianBlock(ivar->number(), jvar->number(), i).zero();
+        _jacobian_block_used[i][ivar->number()][jvar->number()] = 0;
       }
     }
   }
@@ -1295,13 +1303,13 @@ Assembly::prepareOffDiagScalar()
       unsigned int jdofs = jvar->dofIndices().size();
       for (unsigned int i = beginIndex(_jacobian_block_used); i < _jacobian_block_used.size(); i++)
       {
-        _jacobian_block_used[i][ivar->number()][jvar->number()] = 0;
         jacobianBlock(ivar->number(), jvar->number(), i).resize(idofs, jdofs);
         jacobianBlock(ivar->number(), jvar->number(), i).zero();
+        _jacobian_block_used[i][ivar->number()][jvar->number()] = 0;
 
-        _jacobian_block_used[i][jvar->number()][ivar->number()] = 0;
         jacobianBlock(jvar->number(), ivar->number(), i).resize(jdofs, idofs);
         jacobianBlock(jvar->number(), ivar->number(), i).zero();
+        _jacobian_block_used[i][jvar->number()][ivar->number()] = 0;
       }
     }
   }
@@ -1766,6 +1774,14 @@ Assembly::cacheJacobianBlockNonlocal(DenseMatrix<Number> & jac_block,
 void
 Assembly::addCachedJacobian(SparseMatrix<Number> & /*jacobian*/)
 {
+  mooseDeprecated(" Please use addCachedJacobian() ");
+
+  addCachedJacobian();
+}
+
+void
+Assembly::addCachedJacobian()
+{
   if (!_sys.subproblem().checkNonlocalCouplingRequirement())
   {
     mooseAssert(_cached_jacobian_rows.size() == _cached_jacobian_cols.size(),
@@ -2118,7 +2134,7 @@ Assembly::addJacobianOffDiagScalar(SparseMatrix<Number> & /*jacobian*/, unsigned
       if ((*_cm)(var_i.number(), var_j->number()) != 0 &&
           _jacobian_block_used[i][var_i.number()][var_j->number()] && _sys.hasMatrix(i))
         addJacobianBlock(_sys.getMatrix(i),
-                         jacobianBlock(var_i.number(), var_j->number()),
+                         jacobianBlock(var_i.number(), var_j->number(), i),
                          var_i.dofIndices(),
                          var_j->dofIndices(),
                          var_i.scalingFactor());
