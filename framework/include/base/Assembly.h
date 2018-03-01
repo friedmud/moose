@@ -545,8 +545,8 @@ public:
   void setResidual(NumericVector<Number> & residual, TagID tag_id = 0);
   void setResidualNeighbor(NumericVector<Number> & residual, TagID tag_id = 0);
 
-  void addJacobian(SparseMatrix<Number> & jacobian);
-  void addJacobianNonlocal(SparseMatrix<Number> & jacobian);
+  void addJacobian();
+  void addJacobianNonlocal();
   void addJacobianBlock(SparseMatrix<Number> & jacobian,
                         unsigned int ivar,
                         unsigned int jvar,
@@ -558,15 +558,15 @@ public:
                                 const DofMap & dof_map,
                                 const std::vector<dof_id_type> & idof_indices,
                                 const std::vector<dof_id_type> & jdof_indices);
-  void addJacobianNeighbor(SparseMatrix<Number> & jacobian);
+  void addJacobianNeighbor();
   void addJacobianNeighbor(SparseMatrix<Number> & jacobian,
                            unsigned int ivar,
                            unsigned int jvar,
                            const DofMap & dof_map,
                            std::vector<dof_id_type> & dof_indices,
                            std::vector<dof_id_type> & neighbor_dof_indices);
-  void addJacobianScalar(SparseMatrix<Number> & jacobian);
-  void addJacobianOffDiagScalar(SparseMatrix<Number> & jacobian, unsigned int ivar);
+  void addJacobianScalar();
+  void addJacobianOffDiagScalar(unsigned int ivar);
 
   /**
    * Takes the values that are currently in _sub_Kee and appends them to the cached values.
@@ -606,9 +606,11 @@ public:
 
   DenseMatrix<Number> & jacobianBlock(unsigned int ivar, unsigned int jvar, TagID tag = 0);
 
-  DenseMatrix<Number> & jacobianBlockNonlocal(unsigned int ivar, unsigned int jvar);
-  DenseMatrix<Number> &
-  jacobianBlockNeighbor(Moose::DGJacobianType type, unsigned int ivar, unsigned int jvar);
+  DenseMatrix<Number> & jacobianBlockNonlocal(unsigned int ivar, unsigned int jvar, TagID tag = 0);
+  DenseMatrix<Number> & jacobianBlockNeighbor(Moose::DGJacobianType type,
+                                              unsigned int ivar,
+                                              unsigned int jvar,
+                                              TagID tag = 0);
   void cacheJacobianBlock(DenseMatrix<Number> & jac_block,
                           std::vector<dof_id_type> & idof_indices,
                           std::vector<dof_id_type> & jdof_indices,
@@ -617,7 +619,8 @@ public:
   void cacheJacobianBlockNonlocal(DenseMatrix<Number> & jac_block,
                                   const std::vector<dof_id_type> & idof_indices,
                                   const std::vector<dof_id_type> & jdof_indices,
-                                  Real scaling_factor);
+                                  Real scaling_factor,
+                                  TagID tag = 0);
 
   std::vector<std::pair<MooseVariableFE *, MooseVariableFE *>> & couplingEntries()
   {
@@ -908,22 +911,23 @@ public:
    * dof_id_type) since that is what the SparseMatrix interface uses,
    * but at the time of this writing, those two types are equivalent.
    */
-  void cacheJacobianContribution(numeric_index_type i, numeric_index_type j, Real value);
+  void
+  cacheJacobianContribution(numeric_index_type i, numeric_index_type j, Real value, TagID tag = 0);
 
   /**
    * Sets previously-cached Jacobian values via SparseMatrix::set() calls.
    */
-  void setCachedJacobianContributions(SparseMatrix<Number> & jacobian);
+  void setCachedJacobianContributions();
 
   /**
    * Zero out previously-cached Jacobian rows.
    */
-  void zeroCachedJacobianContributions(SparseMatrix<Number> & jacobian);
+  void zeroCachedJacobianContributions();
 
   /**
    * Adds previously-cached Jacobian values via SparseMatrix::add() calls.
    */
-  void addCachedJacobianContributions(SparseMatrix<Number> & jacobian);
+  void addCachedJacobianContributions();
 
   /**
    * Set the pointer to the XFEM controller object
@@ -1013,9 +1017,9 @@ protected:
   std::vector<std::pair<MooseVariableFE *, MooseVariableFE *>> _cm_nonlocal_entry;
   /// Flag that indicates if the jacobian block was used
   std::vector<std::vector<std::vector<unsigned char>>> _jacobian_block_used;
-  std::vector<std::vector<unsigned char>> _jacobian_block_nonlocal_used;
+  std::vector<std::vector<std::vector<unsigned char>>> _jacobian_block_nonlocal_used;
   /// Flag that indicates if the jacobian block for neighbor was used
-  std::vector<std::vector<unsigned char>> _jacobian_block_neighbor_used;
+  std::vector<std::vector<std::vector<unsigned char>>> _jacobian_block_neighbor_used;
   /// DOF map
   const DofMap & _dof_map;
   /// Thread number (id)
@@ -1175,14 +1179,14 @@ protected:
 
   /// jacobian contributions
   std::vector<std::vector<std::vector<DenseMatrix<Number>>>> _sub_Kee;
-  std::vector<std::vector<DenseMatrix<Number>>> _sub_Keg;
+  std::vector<std::vector<std::vector<DenseMatrix<Number>>>> _sub_Keg;
 
   /// jacobian contributions from the element and neighbor
-  std::vector<std::vector<DenseMatrix<Number>>> _sub_Ken;
+  std::vector<std::vector<std::vector<DenseMatrix<Number>>>> _sub_Ken;
   /// jacobian contributions from the neighbor and element
-  std::vector<std::vector<DenseMatrix<Number>>> _sub_Kne;
+  std::vector<std::vector<std::vector<DenseMatrix<Number>>>> _sub_Kne;
   /// jacobian contributions from the neighbor
-  std::vector<std::vector<DenseMatrix<Number>>> _sub_Knn;
+  std::vector<std::vector<std::vector<DenseMatrix<Number>>>> _sub_Knn;
 
   /// auxiliary matrix for scaling jacobians (optimization to avoid expensive construction/destruction)
   DenseMatrix<Number> _tmp_Ke;
@@ -1284,9 +1288,9 @@ protected:
   /**
    * Storage for cached Jacobian entries
    */
-  std::vector<Real> _cached_jacobian_contribution_vals;
-  std::vector<numeric_index_type> _cached_jacobian_contribution_rows;
-  std::vector<numeric_index_type> _cached_jacobian_contribution_cols;
+  std::vector<std::vector<Real>> _cached_jacobian_contribution_vals;
+  std::vector<std::vector<numeric_index_type>> _cached_jacobian_contribution_rows;
+  std::vector<std::vector<numeric_index_type>> _cached_jacobian_contribution_cols;
 };
 
 template <>
