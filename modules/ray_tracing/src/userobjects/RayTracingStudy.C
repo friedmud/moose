@@ -57,6 +57,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _comm(_mesh.comm()),
     _halo_size(getParam<unsigned int>("halo_size")),
     _total_rays(getParam<unsigned int>("num_rays")),
+    _working_buffer(1e8),
     _max_buffer_size(getParam<unsigned int>("send_buffer_size")),
     _chunk_size(getParam<unsigned int>("chunk_size")),
     _my_pid(_comm.rank()),
@@ -304,42 +305,62 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
 }
 
 void
-RayTracingStudy::chunkyTraceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
+RayTracingStudy::chunkyTraceAndBuffer()
 {
-  auto num_rays = rays.size();
+  auto current_beginning = _working_buffer.begin();
 
-  unsigned int num_chunks = num_rays / _chunk_size;
-
-  if (_method == HARM || _method == BS || num_chunks == 0)
-    num_chunks = 1;
-
-  auto current_beginning = rays.begin();
-
-  for (auto chunk = decltype(num_chunks)(0); chunk < num_chunks; chunk++)
+  //  for (auto chunk = decltype(num_chunks)(0); chunk < num_chunks; chunk++)
+  while (_working_buffer.size())
   {
-    auto current_chunk_size = _chunk_size;
+    //    std::cout << 1 << ": " << _working_buffer.size() << std::endl;
 
-    if (_chunk_size < num_rays)
-    {
-      // The last chunk gets the rest of the rays
-      if (chunk == num_chunks - 1)
-        current_chunk_size += num_rays % _chunk_size;
-    }
-    else
-      current_chunk_size = num_rays;
+    auto current_chunk_size =
+        _chunk_size; // std::max((unsigned int)(0.1 * _working_buffer.size()), _chunk_size);
+
+    // Trace them all for these methods
+    if (_method != SMART)
+      current_chunk_size = _working_buffer.size();
+
+    if (current_chunk_size > _working_buffer.size())
+      current_chunk_size = _working_buffer.size();
 
     std::vector<std::shared_ptr<Ray>> current_rays(current_beginning,
                                                    current_beginning + current_chunk_size);
 
-    current_beginning += current_chunk_size;
+    current_beginning =
+        _working_buffer.erase(current_beginning, current_beginning + current_chunk_size);
+
+    //    std::cout << 2 << ": " << _working_buffer.size() << std::endl;
 
     traceAndBuffer(current_rays);
 
     // Interleave receiving and tracing of incoming rays
     // by doing this while we generate Rays we are overlapping communication and computation
     // This call makes this recursive...
-    if (_method == SMART)
-      receiveAndTrace();
+    // Once we start running out of chunks to trace... start pulling some in
+    if (_method == SMART && _working_buffer.size() < (5 * _chunk_size))
+      _receive_buffer.receive(_working_buffer);
+
+    if (_working_buffer.empty())
+    {
+      // Start some receives
+      _receive_buffer.receive(_working_buffer);
+
+      // Do some sending while we wait
+      for (auto & buffer : _send_buffers)
+        buffer.second->forceSend();
+
+      // Try to finish some receives
+      _receive_buffer.cleanupRequests(_working_buffer);
+    }
+
+    if (_method == SMART && _working_buffer.size() < (3 * _chunk_size))
+      _receive_buffer.cleanupRequests(_working_buffer);
+
+    // This will happen if we exhausted all the rays in the last go...
+    // but then we picked up new ones
+    if (_working_buffer.size() && current_beginning == _working_buffer.end())
+      current_beginning = _working_buffer.begin();
   }
 }
 
@@ -348,28 +369,32 @@ RayTracingStudy::receiveAndTrace()
 {
   bool traced_some = false;
 
-  _receive_buffer.receive();
+  if (_receive_buffer.currentlyReceiving())
+    _receive_buffer.cleanupRequests(_working_buffer);
+  else
+    _receive_buffer.receive(_working_buffer);
 
   unsigned int received_count = 0;
 
-  while (true)
+  while (_working_buffer.size())
   {
-    auto rays = _receive_buffer.getRays();
-
-    // Make sure we have some Rays to trace!
-    if (!rays)
-      break;
-
     traced_some = true;
 
-    received_count += rays->size();
+    received_count += 1;
 
-    _rays_traced += rays->size();
+    _rays_traced += _working_buffer.size();
 
     if (_method == SMART)
-      chunkyTraceAndBuffer(*rays);
+      chunkyTraceAndBuffer();
     else
-      traceAndBuffer(*rays);
+    {
+      std::vector<std::shared_ptr<Ray>> current_rays(_working_buffer.begin(),
+                                                     _working_buffer.end());
+
+      _working_buffer.clear();
+
+      traceAndBuffer(current_rays);
+    }
   }
 
   return traced_some;
@@ -541,7 +566,7 @@ RayTracingStudy::bsPropagate()
 
     do
     {
-      _receive_buffer.receive();
+      _receive_buffer.receive(_working_buffer);
       flushBuffers();
 
       receiving = _receive_buffer.currentlyReceiving();

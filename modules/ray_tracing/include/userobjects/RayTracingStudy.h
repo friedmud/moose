@@ -19,6 +19,9 @@
 #include "libmesh/elem.h"
 #include "libmesh/mesh_tools.h"
 
+// Boost Includes
+#include <boost/circular_buffer.hpp>
+
 // System Includes
 #include <memory>
 #include <chrono>
@@ -298,7 +301,7 @@ protected:
   /**
    * Traces out the given Ray's in chunks
    */
-  void chunkyTraceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays);
+  void chunkyTraceAndBuffer();
 
   /**
    * Reeive packets of Rays from other processors and trace
@@ -336,6 +339,9 @@ protected:
 
   /// Total volume of the domain
   Real _volume;
+
+  /// The set of rays we're currently working on
+  boost::circular_buffer<std::shared_ptr<Ray>> _working_buffer;
 
   /// Number of Rays to buffer before communication
   unsigned int _max_buffer_size;
@@ -398,9 +404,6 @@ protected:
 
   /// How many processors have finished generating all of their rays
   processor_id_type _ranks_finished_generating = 0;
-
-  /// Reusable buffer for generated rays
-  std::vector<std::shared_ptr<Ray>> _element_rays;
 
   std::map<processor_id_type, std::shared_ptr<SendBuffer>> _send_buffers;
   ReceiveBuffer _receive_buffer;

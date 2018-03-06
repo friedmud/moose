@@ -5,10 +5,16 @@
 #include "Ray.h"
 #include "RayTracingMethod.h"
 
+// Moose Includes
+#include "MooseError.h"
+
 // libMesh Includes
 #include "libmesh/parallel.h"
 #include "libmesh/parallel_object.h"
 #include "libmesh/mesh.h"
+
+// Boost Includes
+#include <boost/circular_buffer.hpp>
 
 // System Includes
 #include <list>
@@ -39,7 +45,11 @@ public:
   /**
    * Destructor: ensures that all send requests have completed
    */
-  ~ReceiveBuffer() { waitAll(); }
+  ~ReceiveBuffer()
+  {
+    if (!_requests.empty())
+      mooseError("Some requests not serviced!");
+  }
 
   /**
    * Set the current algorithm
@@ -63,8 +73,10 @@ public:
 
   /**
    * Start receives for all currently available messages
+   *
+   * Adds the to the working buffer
    */
-  void receive()
+  void receive(boost::circular_buffer<std::shared_ptr<Ray>> & working_buffer)
   {
     bool flag = false;
     Parallel::Status stat;
@@ -105,58 +117,26 @@ public:
                 stat,
                 _ray_buffer_tag);
 
-          _requests.push_back(std::make_pair(req, rays));
+          _requests.emplace_back(std::make_pair(req, rays));
         }
       } while (flag);
     }
 
     current_clicks++;
 
-    cleanupRequests();
-  }
-
-  /**
-   * Grab a vector of Rays to work on
-   *
-   * @return A vector of Rays or NULL if there are none
-   */
-  std::shared_ptr<std::vector<std::shared_ptr<Ray>>> getRays()
-  {
-    if (_available_rays.empty())
-      return NULL;
-
-    unsigned int total_size = 0;
-
-    // Get the total count of Rays
-    for (auto & ray_vec : _available_rays)
-    {
-      auto num_rays = ray_vec->size();
-      _rays_received += num_rays;
-      _buffers_received++;
-      total_size += ray_vec->size();
-    }
-
-    auto rays = std::make_shared<std::vector<std::shared_ptr<Ray>>>();
-
-    rays->reserve(total_size);
-
-    for (auto & ray_vec : _available_rays)
-      rays->insert(rays->end(), ray_vec->begin(), ray_vec->end());
-
-    _available_rays.clear();
-
-    return rays;
+    cleanupRequests(working_buffer);
   }
 
   /**
    * Wait for all requests to finish
    */
-  void waitAll()
+  void waitAll(boost::circular_buffer<std::shared_ptr<Ray>> & working_buffer)
   {
     for (auto & request_pair : _requests)
     {
       request_pair.first->wait();
-      _available_rays.push_back(request_pair.second);
+      working_buffer.insert(
+          working_buffer.end(), request_pair.second->begin(), request_pair.second->end());
     }
   }
 
@@ -167,11 +147,6 @@ public:
   {
     // List of Requests and buffers for each request
     _requests.clear();
-
-    // Available buffers of Rays that have been received
-    // Use the "swap trick"
-    std::vector<std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> empty;
-    std::swap(_available_rays, empty);
 
     _receive_loop_time = std::chrono::steady_clock::duration::zero();
     _cleanup_requests_time = std::chrono::steady_clock::duration::zero();
@@ -203,17 +178,16 @@ public:
    */
   Real cleanupRequestsTime() { return std::chrono::duration<Real>(_cleanup_requests_time).count(); }
 
-protected:
   /**
    * Checks to see if any Requests can be finished
    */
-  void cleanupRequests()
+  void cleanupRequests(boost::circular_buffer<std::shared_ptr<Ray>> & working_buffer)
   {
     //    auto cleanup_requests_start = std::chrono::steady_clock::now();
 
-    _requests.remove_if([&](
-        std::pair<std::shared_ptr<Parallel::Request>,
-                  std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> & request_pair) {
+    _requests.remove_if([&](std::pair<std::shared_ptr<Parallel::Request>,
+                                      std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> &
+                                request_pair) {
       auto req = request_pair.first;
       auto rays = request_pair.second;
 
@@ -221,7 +195,14 @@ protected:
       {
         req->wait(); // MUST call wait() to do post_wait_work which actually fills the ray buffer
 
-        _available_rays.push_back(rays);
+        _buffers_received++;
+        _rays_received += rays->size();
+
+        // If we can take the rays right now - then let's do that!
+        if (working_buffer.capacity() > working_buffer.size() + rays->size())
+          working_buffer.insert(working_buffer.end(), rays->begin(), rays->end());
+        else // No space for them right now, so just bank them
+          mooseError("Not enough buffer space!");
 
         return true;
       }
@@ -232,6 +213,7 @@ protected:
     //    _cleanup_requests_time += std::chrono::steady_clock::now() - cleanup_requests_start;
   }
 
+protected:
   /// The Mesh we're working on
   MeshBase & _mesh;
 
@@ -242,9 +224,6 @@ protected:
   std::list<std::pair<std::shared_ptr<Parallel::Request>,
                       std::shared_ptr<std::vector<std::shared_ptr<Ray>>>>>
       _requests;
-
-  /// Available buffers of Rays that have been received
-  std::vector<std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> _available_rays;
 
   /// MessageTag for sending rays
   Parallel::MessageTag _ray_buffer_tag = Parallel::MessageTag(RAY_BUFFER);

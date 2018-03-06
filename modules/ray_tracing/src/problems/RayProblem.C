@@ -20,6 +20,9 @@
 #include "NonlinearSystem.h"
 #include "AuxiliarySystem.h"
 
+// libMesh Includes
+#include "libmesh/threads.h"
+
 template <>
 InputParameters
 validParams<RayProblem>()
@@ -63,12 +66,73 @@ RayProblemBase::RayProblemBase(const InputParameters & params)
 
 RayProblemBase::~RayProblemBase() {}
 
+/**
+ * Helper class for threading the normal computations
+ */
+class ThreadedElemNormals
+{
+public:
+  ThreadedElemNormals() {}
+
+  ThreadedElemNormals(ThreadedElemNormals & /*x*/, Threads::split /*split*/) {}
+
+  void operator()(const ConstElemRange & range)
+  {
+    // _elem_normals.reserve(std::distance(range.begin(), range.end()));
+
+    auto first_elem = *range.begin();
+
+    _fe_face = FEBase::build(first_elem->dim(), FEType(FIRST, LAGRANGE));
+    _qface = QBase::build(QGAUSS, first_elem->dim() - 1, FIRST);
+
+    _fe_face->attach_quadrature_rule(_qface.get());
+
+    _fe_face->get_phi();
+    auto normals = &_fe_face->get_normals();
+
+    for (auto & elem : range)
+    {
+      auto n_sides = elem->n_sides();
+
+      auto & entry = _elem_normals[elem];
+
+      entry.resize(n_sides);
+
+      for (auto s = decltype(n_sides)(0); s < n_sides; s++)
+      {
+        _fe_face->reinit(elem, s);
+
+        entry[s] = (*normals)[0];
+      }
+    }
+  }
+
+  void join(const ThreadedElemNormals & ten)
+  {
+    // In C++17 use merge() to optimize this
+    _elem_normals.insert(ten._elem_normals.begin(), ten._elem_normals.end());
+  }
+
+  std::map<const Elem *, std::vector<Point>> _elem_normals;
+
+private:
+  std::unique_ptr<FEBase> _fe_face;
+  std::unique_ptr<QBase> _qface;
+};
+
 void
 RayProblemBase::initialSetup()
 {
   FEProblem::initialSetup();
 
   _ray_system->initialSetup();
+
+  ThreadedElemNormals ten;
+  Threads::parallel_reduce(*_mesh.getActiveLocalElementRange(), ten);
+
+  _elem_normals = std::move(ten._elem_normals);
+
+  std::cout << "Number of elem normals: " << _elem_normals.size() << std::endl;
 }
 
 void

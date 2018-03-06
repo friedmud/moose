@@ -51,9 +51,9 @@ ElementCentroidRays::generateRays()
 
       ray->setEndsWithinMesh();
 
-      rays.emplace_back(ray);
+      _working_buffer.push_back(ray);
     }
   }
 
-  chunkyTraceAndBuffer(rays);
+  chunkyTraceAndBuffer();
 }

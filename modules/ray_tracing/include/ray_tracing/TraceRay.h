@@ -8,6 +8,9 @@
 // libMesh Includes
 #include "libmesh/id_types.h"
 
+// System Includes
+#include <map>
+
 // forward declares
 class Ray;
 class FEProblem;
@@ -27,6 +30,7 @@ class TraceRay
 public:
   TraceRay(const MeshBase & mesh,
            const BoundingBox & b_box,
+           const std::map<const Elem *, std::vector<Point>> & elem_normals,
            unsigned int halo_size,
            Real ray_max_distance,
            Real ray_length,
@@ -103,6 +107,7 @@ protected:
 
   const MeshBase & _mesh;
   BoundingBox _b_box;
+  const std::map<const Elem *, std::vector<Point>> & _elem_normals;
   unsigned int _halo_size;
   double _ray_max_distance;
   double _ray_length;

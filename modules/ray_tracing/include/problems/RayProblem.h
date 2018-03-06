@@ -126,6 +126,11 @@ public:
    */
   const MeshTools::BoundingBox & boundingBox() { return _b_box; }
 
+  /**
+   * Get the outward facing normals for each element side
+   */
+  const std::map<const Elem *, std::vector<Point>> & elemNormals() { return _elem_normals; }
+
 protected:
   unsigned int _num_groups;
   unsigned int _num_polar;
@@ -147,6 +152,9 @@ protected:
 
   /// Bounding box for the domain
   MeshTools::BoundingBox _b_box;
+
+  /// Outward facing normals for each element side
+  std::map<const Elem *, std::vector<Point>> _elem_normals;
 
   friend class RaySystem;
   friend class RayAuxSystem;
