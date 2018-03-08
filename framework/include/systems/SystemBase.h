@@ -558,6 +558,8 @@ public:
 
   virtual void closeTaggedVectors(std::set<TagID> & tags);
 
+  virtual void clearTaggedVector(TagID TagID);
+
   virtual void zeroTaggedVectors(std::set<TagID> & tags);
 
   /**
