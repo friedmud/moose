@@ -128,6 +128,8 @@ public:
   }
 
   const MooseArray<Number> & nodalValue();
+  const MooseArray<Number> & nodalVectorTagValue(TagID tag);
+  const MooseArray<Number> & nodalMatrixTagValue(TagID tag);
   const MooseArray<Number> & nodalValueOld();
   const MooseArray<Number> & nodalValueOlder();
   const MooseArray<Number> & nodalValuePreviousNL();
@@ -335,6 +337,8 @@ protected:
   bool _need_solution_dofs_older_neighbor;
 
   bool _need_dof_u;
+  bool _need_vector_tag_dof_u;
+  bool _need_matrix_tag_dof_u;
   bool _need_dof_u_old;
   bool _need_dof_u_older;
   bool _need_dof_u_previous_nl;
@@ -370,6 +374,8 @@ protected:
   // dof solution stuff (which for nodal variables corresponds to values at the nodes)
 
   MooseArray<Real> _dof_u;
+  std::vector<MooseArray<Real>> _vector_tags_dof_u;
+  std::vector<MooseArray<Real>> _matrix_tags_dof_u;
   MooseArray<Real> _dof_u_old;
   MooseArray<Real> _dof_u_older;
   MooseArray<Real> _dof_u_previous_nl;
