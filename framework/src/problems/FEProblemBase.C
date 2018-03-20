@@ -4114,6 +4114,8 @@ FEProblemBase::computeResidualInternal(const NumericVector<Number> & soln,
     _nl->associateVectorToTag(residual, _nl->residualVectorTag());
 
     computeResidualTags(tags);
+
+    _nl->disassociateVectorFromTag(residual, _nl->residualVectorTag());
   }
   catch (MooseException & e)
   {
@@ -4254,6 +4256,8 @@ FEProblemBase::computeJacobianInternal(const NumericVector<Number> & soln,
   _nl->associateMatirxToTag(jacobian, _nl->systemMatrixTag());
 
   computeJacobianTags(tags);
+
+  _nl->disassociateMatrixFromTag(jacobian, _nl->systemMatrixTag());
 }
 
 void

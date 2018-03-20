@@ -57,6 +57,8 @@ MooseVariableFE::MooseVariableFE(unsigned int var_num,
     _need_solution_dofs_old_neighbor(false),
     _need_solution_dofs_older_neighbor(false),
     _need_dof_u(false),
+    _need_vector_tag_dof_u(false),
+    _need_matrix_tag_dof_u(false),
     _need_dof_u_old(false),
     _need_dof_u_older(false),
     _need_dof_u_previous_nl(false),
@@ -77,11 +79,27 @@ MooseVariableFE::MooseVariableFE(unsigned int var_num,
     _node(_assembly.node()),
     _node_neighbor(_assembly.nodeNeighbor())
 {
+  auto num_vector_tags = _sys.subproblem().numVectorTags();
+
+  _vector_tags_dof_u.resize(num_vector_tags);
+
+  auto num_matrix_tags = _sys.subproblem().numMatrixTags();
+
+  _matrix_tags_dof_u.resize(num_matrix_tags);
 }
 
 MooseVariableFE::~MooseVariableFE()
 {
   _dof_u.release();
+
+  for (auto & dof_u : _vector_tags_dof_u)
+    dof_u.release();
+  _vector_tags_dof_u.clear();
+
+  for (auto & dof_u : _matrix_tags_dof_u)
+    dof_u.release();
+  _matrix_tags_dof_u.clear();
+
   _dof_u_old.release();
   _dof_u_older.release();
   _dof_u_previous_nl.release();
@@ -192,6 +210,12 @@ MooseVariableFE::reinitAux()
     _dof_u.resize(_dof_indices.size());
     _sys.currentSolution()->get(_dof_indices, &_dof_u[0]);
 
+    for (auto & dof_u : _vector_tags_dof_u)
+      dof_u.resize(_dof_indices.size());
+
+    for (auto & dof_u : _matrix_tags_dof_u)
+      dof_u.resize(_dof_indices.size());
+
     _has_dofs = true;
   }
   else
@@ -280,6 +304,42 @@ MooseVariableFE::nodalValue()
   {
     _need_dof_u = true;
     return _dof_u;
+  }
+  else
+    mooseError("Nodal values can be requested only on nodal variables, variable '",
+               name(),
+               "' is not nodal.");
+}
+
+const MooseArray<Number> &
+MooseVariableFE::nodalVectorTagValue(TagID tag)
+{
+  if (isNodal())
+  {
+    _need_vector_tag_dof_u = true;
+
+    if (_sys.hasVector(tag) && tag < _vector_tags_dof_u.size())
+      return _vector_tags_dof_u[tag];
+    else
+      mooseError("Tag is not associated with any vector or there is no any data for tag ", tag);
+  }
+  else
+    mooseError("Nodal values can be requested only on nodal variables, variable '",
+               name(),
+               "' is not nodal.");
+}
+
+const MooseArray<Number> &
+MooseVariableFE::nodalMatrixTagValue(TagID tag)
+{
+  if (isNodal())
+  {
+    _need_matrix_tag_dof_u = true;
+
+    if (_sys.hasMatrix(tag) && tag < _matrix_tags_dof_u.size())
+      return _matrix_tags_dof_u[tag];
+    else
+      mooseError("Tag is not associated with any matrix or there is no any data for tag ", tag);
   }
   else
     mooseError("Nodal values can be requested only on nodal variables, variable '",
@@ -451,6 +511,37 @@ MooseVariableFE::computeNodalValues()
     _dof_u.resize(n);
     _sys.currentSolution()->get(_dof_indices, &_dof_u[0]);
 
+    if (_need_vector_tag_dof_u)
+    {
+      TagID tag = 0;
+      for (auto & dof_u : _vector_tags_dof_u)
+      {
+        if (_sys.hasVector(tag))
+        {
+          dof_u.resize(n);
+          auto & vec = _sys.getVector(tag);
+          vec.get(_dof_indices, &dof_u[0]);
+        }
+        tag++;
+      }
+    }
+
+    if (_need_matrix_tag_dof_u)
+    {
+      TagID tag = 0;
+      for (auto & dof_u : _matrix_tags_dof_u)
+      {
+        if (_sys.hasMatrix(tag) && _sys.matrixTagActive(tag))
+        {
+          dof_u.resize(n);
+          auto & mat = _sys.getMatrix(tag);
+          for (unsigned i = 0; i < _dof_indices.size(); i++)
+            dof_u[i] = mat(_dof_indices[i], _dof_indices[i]);
+        }
+        tag++;
+      }
+    }
+
     if (_need_dof_u_previous_nl)
     {
       _dof_u_previous_nl.resize(n);
@@ -476,6 +567,12 @@ MooseVariableFE::computeNodalValues()
   else
   {
     _dof_u.resize(0);
+    for (auto & dof_u : _vector_tags_dof_u)
+      dof_u.resize(0);
+
+    for (auto & dof_u : _matrix_tags_dof_u)
+      dof_u.resize(0);
+
     if (_need_dof_u_previous_nl)
       _dof_u_previous_nl.resize(0);
     if (_subproblem.isTransient())
