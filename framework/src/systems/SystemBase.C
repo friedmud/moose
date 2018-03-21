@@ -785,7 +785,7 @@ SystemBase::closeTaggedMatrices(std::set<TagID> & tags)
 }
 
 void
-SystemBase::associateMatirxToTag(SparseMatrix<Number> & matrix, TagID tag)
+SystemBase::associateMatrixToTag(SparseMatrix<Number> & matrix, TagID tag)
 {
   mooseAssert(_subproblem.matrixTagExists(tag),
               "Cannot associate Matirx with matrix_tag : " << tag << "that does not exsit");
