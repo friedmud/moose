@@ -44,8 +44,6 @@ protected:
 
   // Reference to interface kernel storage
   const MooseObjectWarehouse<InterfaceKernel> & _interface_kernels;
-
-  Moose::KernelType _kernel_type;
 };
 
 #endif // COMPUTEFULLJACOBIANTHREAD_H
