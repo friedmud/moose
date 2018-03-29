@@ -4227,11 +4227,7 @@ FEProblemBase::computeJacobianTag(const NumericVector<Number> & soln,
                                   SparseMatrix<Number> & jacobian,
                                   TagID tag)
 {
-  _fe_matrix_tags.clear();
-
-  _fe_matrix_tags.insert(tag);
-
-  computeJacobianInternal(soln, jacobian, _fe_matrix_tags);
+  computeJacobianInternal(soln, jacobian, {tag});
 }
 
 void
@@ -4249,7 +4245,7 @@ FEProblemBase::computeJacobian(const NumericVector<Number> & soln, SparseMatrix<
 void
 FEProblemBase::computeJacobianInternal(const NumericVector<Number> & soln,
                                        SparseMatrix<Number> & jacobian,
-                                       std::set<TagID> & tags)
+                                       const std::set<TagID> & tags)
 {
   _nl->setSolution(soln);
 
@@ -4261,7 +4257,7 @@ FEProblemBase::computeJacobianInternal(const NumericVector<Number> & soln,
 }
 
 void
-FEProblemBase::computeJacobianTags(std::set<TagID> & tags)
+FEProblemBase::computeJacobianTags(const std::set<TagID> & tags)
 {
   if (!_has_jacobian || !_const_jacobian)
   {

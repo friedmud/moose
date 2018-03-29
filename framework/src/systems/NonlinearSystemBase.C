@@ -542,7 +542,7 @@ NonlinearSystemBase::computeResidual(NumericVector<Number> & residual, TagID tag
 }
 
 void
-NonlinearSystemBase::computeResidualTags(std::set<TagID> & tags)
+NonlinearSystemBase::computeResidualTags(const std::set<TagID> & tags)
 {
   Moose::perf_log.push("compute_residual()", "Execution");
 
@@ -1109,7 +1109,7 @@ NonlinearSystemBase::constraintResiduals(NumericVector<Number> & residual, bool 
 }
 
 void
-NonlinearSystemBase::computeResidualInternal(std::set<TagID> & tags)
+NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
 {
   for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
@@ -1314,7 +1314,7 @@ NonlinearSystemBase::computeNodalBCs(NumericVector<Number> & residual)
 }
 
 void
-NonlinearSystemBase::computeNodalBCs(NumericVector<Number> & residual, std::set<TagID> & tags)
+NonlinearSystemBase::computeNodalBCs(NumericVector<Number> & residual, const std::set<TagID> & tags)
 {
   associateVectorToTag(residual, residualVectorTag());
 
@@ -1322,7 +1322,7 @@ NonlinearSystemBase::computeNodalBCs(NumericVector<Number> & residual, std::set<
 }
 
 void
-NonlinearSystemBase::computeNodalBCs(std::set<TagID> & tags)
+NonlinearSystemBase::computeNodalBCs(const std::set<TagID> & tags)
 {
   // We need to close the diag_save_in variables on the aux system before NodalBCs clear the dofs on
   // boundary nodes
@@ -1888,7 +1888,7 @@ NonlinearSystemBase::computeScalarKernelsJacobians()
 }
 
 void
-NonlinearSystemBase::computeJacobianInternal(std::set<TagID> & tags)
+NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
 {
   // Make matrice ready to use
   activeAllMatrixTags();
@@ -1902,23 +1902,23 @@ NonlinearSystemBase::computeJacobianInternal(std::set<TagID> & tags)
 #ifdef LIBMESH_HAVE_PETSC
 // Necessary for speed
 #if PETSC_VERSION_LESS_THAN(3, 0, 0)
-  MatSetOption(static_cast<PetscMatrix<Number> &>(jacobian).mat(), MAT_KEEP_ZEROED_ROWS);
+    MatSetOption(static_cast<PetscMatrix<Number> &>(jacobian).mat(), MAT_KEEP_ZEROED_ROWS);
 #elif PETSC_VERSION_LESS_THAN(3, 1, 0)
-  // In Petsc 3.0.0, MatSetOption has three args...the third arg
-  // determines whether the option is set (true) or unset (false)
-  MatSetOption(
-      static_cast<PetscMatrix<Number> &>(jacobian).mat(), MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
+    // In Petsc 3.0.0, MatSetOption has three args...the third arg
+    // determines whether the option is set (true) or unset (false)
+    MatSetOption(
+        static_cast<PetscMatrix<Number> &>(jacobian).mat(), MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
 #else
-  MatSetOption(static_cast<PetscMatrix<Number> &>(jacobian).mat(),
-               MAT_KEEP_NONZERO_PATTERN, // This is changed in 3.1
-               PETSC_TRUE);
+    MatSetOption(static_cast<PetscMatrix<Number> &>(jacobian).mat(),
+                 MAT_KEEP_NONZERO_PATTERN, // This is changed in 3.1
+                 PETSC_TRUE);
 #endif
 #if PETSC_VERSION_LESS_THAN(3, 3, 0)
 #else
-  if (!_fe_problem.errorOnJacobianNonzeroReallocation())
-    MatSetOption(static_cast<PetscMatrix<Number> &>(jacobian).mat(),
-                 MAT_NEW_NONZERO_ALLOCATION_ERR,
-                 PETSC_FALSE);
+    if (!_fe_problem.errorOnJacobianNonzeroReallocation())
+      MatSetOption(static_cast<PetscMatrix<Number> &>(jacobian).mat(),
+                   MAT_NEW_NONZERO_ALLOCATION_ERR,
+                   PETSC_FALSE);
 #endif
 
 #endif
@@ -2198,7 +2198,7 @@ NonlinearSystemBase::computeJacobian(SparseMatrix<Number> & jacobian)
 }
 
 void
-NonlinearSystemBase::computeJacobian(SparseMatrix<Number> & jacobian, std::set<TagID> & tags)
+NonlinearSystemBase::computeJacobian(SparseMatrix<Number> & jacobian, const std::set<TagID> & tags)
 {
   associateMatrixToTag(jacobian, systemMatrixTag());
 
@@ -2206,7 +2206,7 @@ NonlinearSystemBase::computeJacobian(SparseMatrix<Number> & jacobian, std::set<T
 }
 
 void
-NonlinearSystemBase::computeJacobianTags(std::set<TagID> & tags)
+NonlinearSystemBase::computeJacobianTags(const std::set<TagID> & tags)
 {
   Moose::perf_log.push("compute_jacobian()", "Execution");
 
@@ -2242,7 +2242,7 @@ NonlinearSystemBase::computeJacobianBlocks(std::vector<JacobianBlock *> & blocks
 
 void
 NonlinearSystemBase::computeJacobianBlocks(std::vector<JacobianBlock *> & blocks,
-                                           std::set<TagID> & tags)
+                                           const std::set<TagID> & tags)
 {
   Moose::perf_log.push("compute_jacobian_block()", "Execution");
 
