@@ -5,8 +5,8 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 10
-  ny = 10
+  nx = 100
+  ny = 100
 []
 
 [Variables]
@@ -25,6 +25,7 @@
     implicit = true
     variable = u
     extra_matrix_tags = 'time'
+    lumping = true
   [../]
 []
 
@@ -50,8 +51,8 @@
 [Executioner]
   # Preconditioned JFNK (default)
   type = Transient
-  num_steps = 20000
-  dt = 0.001
+  num_steps = 200
+  dt = 0.0001
   solve_type = LINEAR
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
@@ -63,4 +64,5 @@
 
 [Outputs]
   exodus = true
+  interval = 100
 []
