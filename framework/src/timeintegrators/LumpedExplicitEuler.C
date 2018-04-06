@@ -79,11 +79,13 @@ LumpedExplicitEuler::solve()
 
   auto & mass_matrix = *libmesh_system.matrix;
 
-  _fe_problem.computeResidualTag(*libmesh_system.solution, _Re_non_time, Re_non_time_tag);
+  // Must compute the residual first
+  _fe_problem.computeResidualTag(
+      *libmesh_system.current_local_solution, _Re_non_time, Re_non_time_tag);
 
   _Re_non_time *= -1.;
 
-  _fe_problem.computeJacobianTag(*libmesh_system.solution, mass_matrix, _Ke_time_tag);
+  _fe_problem.computeJacobianTag(*libmesh_system.current_local_solution, mass_matrix, _Ke_time_tag);
 
   MatGetDiagonal(petsc_mass_matrix.mat(), _mass_matrix_diag.vec());
 
