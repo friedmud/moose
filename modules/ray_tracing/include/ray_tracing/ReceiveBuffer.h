@@ -195,11 +195,7 @@ public:
         _buffers_received++;
         _rays_received += rays->size();
 
-        // If we can take the rays right now - then let's do that!
-        if (working_buffer.capacity() > working_buffer.size() + rays->size())
-          working_buffer.append(rays->begin(), rays->end());
-        else // No space for them right now, so just bank them
-          mooseError("Not enough buffer space!");
+        working_buffer.append(rays->begin(), rays->end());
 
         return true;
       }

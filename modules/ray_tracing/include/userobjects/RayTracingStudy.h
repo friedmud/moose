@@ -294,7 +294,8 @@ protected:
    * The Ray will either be buffered to send to the next processor
    * or it will be terminated if it reaches a boundary
    */
-  void traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays);
+  void traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begin,
+                      std::vector<std::shared_ptr<Ray>>::iterator end);
 
   /**
    * Traces out the given Ray's in chunks

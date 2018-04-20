@@ -218,11 +218,9 @@ CircularBuffer<T>::append(const_iterator in_begin, const_iterator in_end)
 {
   auto additional_size = std::distance(in_begin, in_end);
 
-  auto new_end = newEnd(_end_pos + additional_size);
+  _end_pos = newEnd(_end_pos + additional_size);
 
-  std::copy(in_begin, in_end, end());
-
-  _end_pos = new_end;
+  std::copy(in_begin, in_end, end() - additional_size);
 }
 
 template <typename T>

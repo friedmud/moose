@@ -229,16 +229,15 @@ RayTracingStudy::propagateRays()
 }
 
 void
-RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
+RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begin,
+                                std::vector<std::shared_ptr<Ray>>::iterator end)
 {
   _chunks_traced++;
 
-  auto num_rays = rays.size();
-
 #pragma omp parallel for schedule(guided)
-  for (auto ray_index = decltype(num_rays)(0); ray_index < num_rays; ray_index++)
+  for (auto it = begin; it < end; ++it)
   {
-    auto & ray = rays[ray_index];
+    auto & ray = *it;
 
     if (ray->startingElem()->processor_id() == _my_pid) // This will be false if we've picked up a
                                                         // banked ray that needs to start on another
@@ -257,8 +256,10 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
   }
 
   // Figure out where they went
-  for (auto & ray : rays)
+  for (auto it = begin; it < end; ++it)
   {
+    auto & ray = *it;
+
     // Means that the Ray needs to be given to another processor to finish tracing
     if (ray->shouldContinue())
     {
@@ -307,10 +308,8 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>> & rays)
 void
 RayTracingStudy::chunkyTraceAndBuffer()
 {
-  auto current_beginning = _working_buffer.begin();
-
   //  for (auto chunk = decltype(num_chunks)(0); chunk < num_chunks; chunk++)
-  while (_working_buffer.size())
+  while (!_working_buffer.empty())
   {
     //    std::cout << 1 << ": " << _working_buffer.size() << std::endl;
 
@@ -324,14 +323,9 @@ RayTracingStudy::chunkyTraceAndBuffer()
     if (current_chunk_size > _working_buffer.size())
       current_chunk_size = _working_buffer.size();
 
-    std::vector<std::shared_ptr<Ray>> current_rays(current_beginning,
-                                                   current_beginning + current_chunk_size);
+    traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
 
-    current_beginning = _working_buffer.erase(current_beginning + current_chunk_size);
-
-    //    std::cout << 2 << ": " << _working_buffer.size() << std::endl;
-
-    traceAndBuffer(current_rays);
+    _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
 
     // Interleave receiving and tracing of incoming rays
     // by doing this while we generate Rays we are overlapping communication and computation
@@ -355,11 +349,6 @@ RayTracingStudy::chunkyTraceAndBuffer()
 
     if (_method == SMART && _working_buffer.size() < (3 * _chunk_size))
       _receive_buffer.cleanupRequests(_working_buffer);
-
-    // This will happen if we exhausted all the rays in the last go...
-    // but then we picked up new ones
-    if (_working_buffer.size() && current_beginning == _working_buffer.end())
-      current_beginning = _working_buffer.begin();
   }
 }
 
@@ -387,12 +376,8 @@ RayTracingStudy::receiveAndTrace()
       chunkyTraceAndBuffer();
     else
     {
-      std::vector<std::shared_ptr<Ray>> current_rays(_working_buffer.begin(),
-                                                     _working_buffer.end());
-
+      traceAndBuffer(_working_buffer.begin(), _working_buffer.end());
       _working_buffer.clear();
-
-      traceAndBuffer(current_rays);
     }
   }
 
