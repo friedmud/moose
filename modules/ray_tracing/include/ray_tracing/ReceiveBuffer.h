@@ -36,7 +36,8 @@ public:
       _mesh(mesh),
       _clicks_per_receive(clicks_per_receive),
       _blocking(blocking),
-      _method(SMART)
+      _method(SMART),
+      _my_rank(processor_id())
   {
   }
 
@@ -182,6 +183,13 @@ public:
   {
     //    auto cleanup_requests_start = std::chrono::steady_clock::now();
 
+    auto num_requests = _requests.size();
+
+    /*
+    if (num_requests)
+      std::cout << "Num receive requests: " << _requests.size() << "\n";
+    */
+
     _requests.remove_if([&](std::pair<std::shared_ptr<Parallel::Request>,
                                       std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> &
                                 request_pair) {
@@ -202,6 +210,11 @@ public:
       else
         return false;
     });
+
+    /*
+    if (num_requests)
+      std::cout << "Requests finished: " << num_requests - _requests.size() << "\n";
+    */
 
     //    _cleanup_requests_time += std::chrono::steady_clock::now() - cleanup_requests_start;
   }
@@ -270,6 +283,8 @@ private:
     req.add_post_wait_work(
         new libMesh::Parallel::PostWaitDeleteBuffer<std::vector<buffer_t>>(buffer));
   }
+
+  unsigned int _my_rank;
 };
 
 #endif

@@ -12,6 +12,7 @@
 
 // System Includes
 #include <list>
+#include <algorithm>
 
 /**
  * Controls the Ray buffer headed _one_ other processor
@@ -30,7 +31,11 @@ public:
              processor_id_type pid,
              unsigned int max_buff_size,
              RayTracingMethod method)
-    : ParallelObject(comm), _pid(pid), _max_buff_size(max_buff_size), _method(method)
+    : ParallelObject(comm),
+      _pid(pid),
+      _max_buff_size(max_buff_size),
+      _current_buff_size(1),
+      _method(method)
   {
     _buffer.reserve(_max_buff_size);
   }
@@ -70,14 +75,21 @@ public:
     _buffer.push_back(ray);
 
     // 2000 is a safety net to try to stay below 1MB
-    if ((_method == SMART && _buffer.size() == _max_buff_size) || (_buffer.size() > 2000))
-      forceSend();
+    if ((_method == SMART &&
+         (_buffer.size() >= _current_buff_size || _buffer.size() == _max_buff_size)) ||
+        (_buffer.size() > 2000))
+    {
+      //      std::cout << "Sending " << _buffer.size() << " rays to " << _pid << "\n";
+
+      _current_buff_size = std::min(2 * _current_buff_size, _max_buff_size);
+      forceSend(false);
+    }
   }
 
   /**
    * Forces a Send for all currently buffered Rays
    */
-  void forceSend()
+  void forceSend(bool shrink_current_buff_size = true)
   {
     if (!_buffer.empty())
     {
@@ -91,6 +103,9 @@ public:
       _buffer.clear();
       _buffer.reserve(_max_buff_size);
     }
+
+    if (shrink_current_buff_size)
+      _current_buff_size = std::max(1u, _current_buff_size / 2);
 
     cleanupRequests();
   }
@@ -141,6 +156,9 @@ protected:
 
   /// Maximum size of the buffer (in Rays)
   unsigned int _max_buff_size;
+
+  /// Current size of the buffer (in Rays)
+  unsigned int _current_buff_size;
 
   /// The buffer
   std::vector<std::shared_ptr<Ray>> _buffer;

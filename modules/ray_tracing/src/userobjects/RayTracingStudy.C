@@ -313,6 +313,8 @@ RayTracingStudy::chunkyTraceAndBuffer()
   {
     //    std::cout << 1 << ": " << _working_buffer.size() << std::endl;
 
+    // std::cout << "chunky working buffer size: " << _working_buffer.size() << "\n";
+
     auto current_chunk_size =
         _chunk_size; // std::max((unsigned int)(0.1 * _working_buffer.size()), _chunk_size);
 
@@ -331,9 +333,16 @@ RayTracingStudy::chunkyTraceAndBuffer()
     // by doing this while we generate Rays we are overlapping communication and computation
     // This call makes this recursive...
     // Once we start running out of chunks to trace... start pulling some in
-    if (_method == SMART && _working_buffer.size() < (5 * _chunk_size))
+    if (_method == SMART && _working_buffer.size() < _chunk_size)
       _receive_buffer.receive(_working_buffer);
 
+    /*
+    // Make an attempt to keep doing what we're doing
+    if (_method == SMART && _working_buffer.empty())
+      _receive_buffer.receive(_working_buffer);
+    */
+
+    /*
     if (_working_buffer.empty())
     {
       // Start some receives
@@ -349,7 +358,10 @@ RayTracingStudy::chunkyTraceAndBuffer()
 
     if (_method == SMART && _working_buffer.size() < (3 * _chunk_size))
       _receive_buffer.cleanupRequests(_working_buffer);
+    */
   }
+
+  // std::cout << "Out of rays!\n\n";
 }
 
 bool
@@ -399,6 +411,8 @@ RayTracingStudy::smartPropagate()
   Parallel::Request rays_started_request;
   Parallel::Request rays_finished_request;
 
+  bool finished_started_request = false;
+
   // Get the number of rays that were started in the whole domain
   nonblockingSum(_comm, _rays_started, _all_rays_started, rays_started_request);
 
@@ -407,6 +421,7 @@ RayTracingStudy::smartPropagate()
 
   // Use these to try to delay some forced communication
   unsigned int non_tracing_clicks = 0;
+  unsigned int non_tracing_root_clicks = 0;
 
   bool traced_some = true;
 
@@ -421,10 +436,16 @@ RayTracingStudy::smartPropagate()
       sending = sending || send_buffer.second->currentlySending() ||
                 send_buffer.second->currentlyBuffered();
 
-    if (traced_some || _receive_buffer.currentlyReceiving())
+    if (traced_some /*|| _receive_buffer.currentlyReceiving()*/)
+    {
       non_tracing_clicks = 0;
+      non_tracing_root_clicks = 0;
+    }
     else
+    {
       non_tracing_clicks++;
+      non_tracing_root_clicks++;
+    }
 
     if (_method == SMART && non_tracing_clicks >= _clicks_per_communication)
     {
@@ -432,14 +453,26 @@ RayTracingStudy::smartPropagate()
       flushBuffers();
     }
 
-    if (!(traced_some || _receive_buffer.currentlyReceiving() || sending) &&
-        rays_started_request.test() && rays_finished_request.test())
+    if (non_tracing_root_clicks >= _clicks_per_root_communication)
     {
-      if (_all_rays_started == _all_rays_finished)
-        return;
+      non_tracing_root_clicks = 0;
 
-      _rays_finished_temp = _rays_finished;
-      nonblockingSum(_comm, _rays_finished_temp, _all_rays_finished, rays_finished_request);
+      if (!finished_started_request && rays_started_request.test())
+      {
+        std::cout << "Finished rays_started_request!" << std::endl;
+        finished_started_request = true;
+      }
+
+      if (finished_started_request && rays_finished_request.test())
+      {
+        if (_all_rays_started == _all_rays_finished)
+          return;
+
+        std::cout << "Starting a new rays_finished_request!" << std::endl;
+
+        _rays_finished_temp = _rays_finished;
+        nonblockingSum(_comm, _rays_finished_temp, _all_rays_finished, rays_finished_request);
+      }
     }
   }
 }
