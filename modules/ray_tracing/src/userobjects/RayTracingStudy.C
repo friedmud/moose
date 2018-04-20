@@ -57,7 +57,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _comm(_mesh.comm()),
     _halo_size(getParam<unsigned int>("halo_size")),
     _total_rays(getParam<unsigned int>("num_rays")),
-    _working_buffer(1e8),
+    _working_buffer(10),
     _max_buffer_size(getParam<unsigned int>("send_buffer_size")),
     _chunk_size(getParam<unsigned int>("chunk_size")),
     _my_pid(_comm.rank()),

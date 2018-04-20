@@ -1,6 +1,8 @@
 #ifndef CIRCULARBUFFER_H
 #define CIRCULARBUFFER_H
 
+#include "MooseError.h"
+
 #include <vector>
 
 namespace MooseUtils
@@ -67,6 +69,11 @@ public:
 
   /**
    * Add a new entries to the end
+   */
+  void append(const std::vector<T> & vals) { append(vals.begin(), vals.end()); }
+
+  /**
+   * Add a new entries to the end
    *
    * Everything in [in_begin, in_end) is appended
    */
@@ -111,6 +118,16 @@ public:
   const T & operator[](std::size_t index) const;
 
   /**
+   * Use in_data as our data vector
+   */
+  void swap(std::vector<T> & in_data)
+  {
+    std::swap(in_data, _data);
+    _begin_pos = 0;
+    _end_pos = _data.size();
+  }
+
+  /**
    * Access the raw underlying array
    *
    * Caution!  Use with care!
@@ -118,6 +135,16 @@ public:
    * can move and be removed
    */
   std::vector<T> & data() { return _data; }
+
+  /**
+   * Expert interface: the current beginning position
+   */
+  size_t beginPos() { return _begin_pos; }
+
+  /**
+   * Expert interface: the current ending position
+   */
+  size_t endPos() { return _end_pos; }
 
 protected:
   /**
@@ -287,7 +314,7 @@ CircularBuffer<T>::newEnd(std::size_t new_end)
 
     // See if we need to grow our capacity
     if (_begin_pos == 0) // If we're already using the beginning - just resize
-      _data.resize(new_size * 2);
+      _data.resize(std::max(new_size * 2, _data.size() * 2));
     else
     {
       // Try to move everything to the beginning of the array
@@ -298,7 +325,7 @@ CircularBuffer<T>::newEnd(std::size_t new_end)
 
       // If there still isn't room... add space
       if (new_end > _data.size())
-        _data.resize(new_size * 2);
+        _data.resize(std::max(new_size * 2, _data.size() * 2));
     }
   }
 
