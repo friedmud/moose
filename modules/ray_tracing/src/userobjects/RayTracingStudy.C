@@ -327,8 +327,7 @@ RayTracingStudy::chunkyTraceAndBuffer()
     std::vector<std::shared_ptr<Ray>> current_rays(current_beginning,
                                                    current_beginning + current_chunk_size);
 
-    current_beginning =
-        _working_buffer.erase(current_beginning, current_beginning + current_chunk_size);
+    current_beginning = _working_buffer.erase(current_beginning + current_chunk_size);
 
     //    std::cout << 2 << ": " << _working_buffer.size() << std::endl;
 

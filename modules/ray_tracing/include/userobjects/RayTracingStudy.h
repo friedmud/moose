@@ -10,6 +10,7 @@
 
 // MOOSE Includes
 #include "GeneralUserObject.h"
+#include "CircularBuffer.h"
 
 // libMesh Includes
 #include "libmesh/libmesh.h"
@@ -18,9 +19,6 @@
 #include "libmesh/mesh_generation.h"
 #include "libmesh/elem.h"
 #include "libmesh/mesh_tools.h"
-
-// Boost Includes
-#include <boost/circular_buffer.hpp>
 
 // System Includes
 #include <memory>
@@ -341,7 +339,7 @@ protected:
   Real _volume;
 
   /// The set of rays we're currently working on
-  boost::circular_buffer<std::shared_ptr<Ray>> _working_buffer;
+  MooseUtils::CircularBuffer<std::shared_ptr<Ray>> _working_buffer;
 
   /// Number of Rays to buffer before communication
   unsigned int _max_buffer_size;

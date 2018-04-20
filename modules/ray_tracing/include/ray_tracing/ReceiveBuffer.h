@@ -7,14 +7,12 @@
 
 // Moose Includes
 #include "MooseError.h"
+#include "CircularBuffer.h"
 
 // libMesh Includes
 #include "libmesh/parallel.h"
 #include "libmesh/parallel_object.h"
 #include "libmesh/mesh.h"
-
-// Boost Includes
-#include <boost/circular_buffer.hpp>
 
 // System Includes
 #include <list>
@@ -76,7 +74,7 @@ public:
    *
    * Adds the to the working buffer
    */
-  void receive(boost::circular_buffer<std::shared_ptr<Ray>> & working_buffer)
+  void receive(MooseUtils::CircularBuffer<std::shared_ptr<Ray>> & working_buffer)
   {
     bool flag = false;
     Parallel::Status stat;
@@ -130,13 +128,12 @@ public:
   /**
    * Wait for all requests to finish
    */
-  void waitAll(boost::circular_buffer<std::shared_ptr<Ray>> & working_buffer)
+  void waitAll(MooseUtils::CircularBuffer<std::shared_ptr<Ray>> & working_buffer)
   {
     for (auto & request_pair : _requests)
     {
       request_pair.first->wait();
-      working_buffer.insert(
-          working_buffer.end(), request_pair.second->begin(), request_pair.second->end());
+      working_buffer.append(request_pair.second->begin(), request_pair.second->end());
     }
   }
 
@@ -181,7 +178,7 @@ public:
   /**
    * Checks to see if any Requests can be finished
    */
-  void cleanupRequests(boost::circular_buffer<std::shared_ptr<Ray>> & working_buffer)
+  void cleanupRequests(MooseUtils::CircularBuffer<std::shared_ptr<Ray>> & working_buffer)
   {
     //    auto cleanup_requests_start = std::chrono::steady_clock::now();
 
@@ -200,7 +197,7 @@ public:
 
         // If we can take the rays right now - then let's do that!
         if (working_buffer.capacity() > working_buffer.size() + rays->size())
-          working_buffer.insert(working_buffer.end(), rays->begin(), rays->end());
+          working_buffer.append(rays->begin(), rays->end());
         else // No space for them right now, so just bank them
           mooseError("Not enough buffer space!");
 
