@@ -249,13 +249,16 @@ RayProblemBase::hasVariable(const std::string & var_name) const
   return FEProblem::hasVariable(var_name) || _ray_system->hasVariable(var_name);
 }
 
-MooseVariableFE &
-RayProblemBase::getVariable(THREAD_ID tid, const std::string & var_name)
+MooseVariableFEBase &
+RayProblemBase::getVariable(THREAD_ID tid,
+                            const std::string & var_name,
+                            Moose::VarKindType expected_var_type,
+                            Moose::VarFieldType expected_var_field_type)
 {
   if (_ray_system->hasVariable(var_name))
     return _ray_system->getVariable(tid, var_name);
 
-  return FEProblem::getVariable(tid, var_name);
+  return FEProblem::getVariable(tid, var_name, expected_var_type, expected_var_field_type);
 }
 
 RayProblem::RayProblem(const InputParameters & params) : RayProblemBase(params)

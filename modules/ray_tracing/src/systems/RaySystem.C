@@ -287,8 +287,8 @@ RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
 
 void
 RaySystem::reinitNeighborFace(const Elem * elem,
-                              unsigned int side,
-                              BoundaryID bnd_id,
+                              unsigned int /*side*/,
+                              BoundaryID /*bnd_id*/,
                               THREAD_ID tid)
 {
   std::cout << "Setting up neighbor info!" << std::endl;
