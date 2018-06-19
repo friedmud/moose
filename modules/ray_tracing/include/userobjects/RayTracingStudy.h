@@ -345,6 +345,15 @@ protected:
   /// Number of Rays to buffer before communication
   unsigned int _max_buffer_size;
 
+  /// Multiplier for the buffer size for growing the buffer
+  Real _buffer_growth_multiplier;
+
+  /// Multiplier for the buffer size for shrinking the buffer
+  Real _buffer_shrink_multiplier;
+
+  /// Minimum size of a SendBuffer
+  unsigned int _min_buffer_size;
+
   /// Number of rays to generate before tracing
   unsigned int _chunk_size;
 

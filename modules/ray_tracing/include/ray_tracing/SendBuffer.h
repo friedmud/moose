@@ -30,13 +30,22 @@ public:
   SendBuffer(const Parallel::Communicator & comm,
              processor_id_type pid,
              unsigned int max_buff_size,
+             unsigned int min_buff_size,
+             Real buffer_growth_multiplier,
+             Real buffer_shrink_multiplier,
              RayTracingMethod method)
     : ParallelObject(comm),
       _pid(pid),
       _max_buff_size(max_buff_size),
-      _current_buff_size(1),
+      _min_buff_size(min_buff_size),
+      _buffer_growth_multiplier(buffer_growth_multiplier),
+      _buffer_shrink_multiplier(buffer_shrink_multiplier),
+      _current_buff_size(_min_buff_size),
+      _current_buff_size_real(_min_buff_size),
       _method(method)
   {
+    std::cout << "Min buff size: " << _min_buff_size << std::endl;
+
     _buffer.reserve(_max_buff_size);
   }
 
@@ -81,7 +90,15 @@ public:
     {
       //      std::cout << "Sending " << _buffer.size() << " rays to " << _pid << "\n";
 
-      _current_buff_size = std::min(2 * _current_buff_size, _max_buff_size);
+      _current_buff_size_real = std::min(_buffer_growth_multiplier * _current_buff_size_real,
+                                         static_cast<Real>(_max_buff_size));
+
+      if (_current_buff_size != static_cast<unsigned int>(_current_buff_size_real))
+      {
+        _current_buff_size = static_cast<unsigned int>(_current_buff_size_real);
+        std::cout << "Increasing buffer size to: " << _current_buff_size << "\n";
+      }
+
       forceSend(false);
     }
   }
@@ -102,10 +119,19 @@ public:
 
       _buffer.clear();
       _buffer.reserve(_max_buff_size);
-    }
 
-    if (shrink_current_buff_size)
-      _current_buff_size = std::max(1u, _current_buff_size / 2);
+      if (_method == SMART && shrink_current_buff_size)
+      {
+        _current_buff_size_real = std::max(static_cast<Real>(_min_buff_size),
+                                           _current_buff_size_real * _buffer_shrink_multiplier);
+
+        if (_current_buff_size != static_cast<unsigned int>(_current_buff_size_real))
+        {
+          _current_buff_size = static_cast<unsigned int>(_current_buff_size_real);
+          std::cout << "Cutting buffer to: " << _current_buff_size << "\n";
+        }
+      }
+    }
 
     cleanupRequests();
   }
@@ -157,8 +183,20 @@ protected:
   /// Maximum size of the buffer (in Rays)
   unsigned int _max_buff_size;
 
+  /// Minimum size of the buffer (in Rays)
+  unsigned int _min_buff_size;
+
+  /// Multiplier for the buffer size for growing the buffer
+  Real _buffer_growth_multiplier;
+
+  /// Multiplier for the buffer size for shrinking the buffer
+  Real _buffer_shrink_multiplier;
+
   /// Current size of the buffer (in Rays)
   unsigned int _current_buff_size;
+
+  /// Running buffer size
+  Real _current_buff_size_real;
 
   /// The buffer
   std::vector<std::shared_ptr<Ray>> _buffer;

@@ -42,6 +42,23 @@ validParams<RayTracingStudy>()
   params.addParam<bool>(
       "tolerate_failure", false, "Whether or not to tolerate a ray tracing failure");
 
+  params.addParam<unsigned int>("min_buffer_size",
+                                "The initial size of the SendBuffer and the floor for shrinking "
+                                "it.  This defaults to send_buffer_size if not set (i.e. the "
+                                "buffer won't change size)");
+
+  params.addParam<Real>("buffer_growth_multiplier",
+                        2.,
+                        "How much to grow a SendBuffer by if the buffer completely fills and "
+                        "dumps.  Will max at send_buffer_size");
+
+  params.addRangeCheckedParam<Real>("buffer_shrink_multiplier",
+                                    0.5,
+                                    "0 < buffer_shrink_multiplier <= 1.0",
+                                    "Multiplier (between 0 and 1) to apply to the current buffer "
+                                    "size if it is force dumped.  Will stop at "
+                                    "min_buffer_size.");
+
   MooseEnum methods("smart harm bs", "smart");
 
   params.addParam<MooseEnum>("method", methods, "The ray tracing algorithm to use");
@@ -59,6 +76,8 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _total_rays(getParam<unsigned int>("num_rays")),
     _working_buffer(10),
     _max_buffer_size(getParam<unsigned int>("send_buffer_size")),
+    _buffer_growth_multiplier(getParam<Real>("buffer_growth_multiplier")),
+    _buffer_shrink_multiplier(getParam<Real>("buffer_shrink_multiplier")),
     _chunk_size(getParam<unsigned int>("chunk_size")),
     _my_pid(_comm.rank()),
     _ray_length(_ray_problem.domainMaxLength()),
@@ -73,6 +92,11 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _old_average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
     _method((RayTracingMethod)(int)(getParam<MooseEnum>("method")))
 {
+  if (parameters.isParamSetByUser("min_buffer_size"))
+    _min_buffer_size = getParam<unsigned int>("min_buffer_size");
+  else
+    _min_buffer_size = _max_buffer_size;
+
   setMethod(_method);
 }
 
@@ -268,8 +292,13 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
       processor_id_type next_pid = ray->startingElem()->processor_id();
 
       if (!_send_buffers[next_pid])
-        _send_buffers[next_pid] =
-            std::make_shared<SendBuffer>(_comm, next_pid, _max_buffer_size, _method);
+        _send_buffers[next_pid] = std::make_shared<SendBuffer>(_comm,
+                                                               next_pid,
+                                                               _max_buffer_size,
+                                                               _min_buffer_size,
+                                                               _buffer_growth_multiplier,
+                                                               _buffer_shrink_multiplier,
+                                                               _method);
 
       _send_buffers[next_pid]->addRay(ray);
     }
@@ -315,6 +344,9 @@ RayTracingStudy::chunkyTraceAndBuffer()
 
     // std::cout << "chunky working buffer size: " << _working_buffer.size() << "\n";
 
+    if (_method == SMART /*&& _working_buffer.size() < _chunk_size*/)
+      _receive_buffer.receive(_working_buffer);
+
     auto current_chunk_size =
         _chunk_size; // std::max((unsigned int)(0.1 * _working_buffer.size()), _chunk_size);
 
@@ -333,19 +365,11 @@ RayTracingStudy::chunkyTraceAndBuffer()
     // by doing this while we generate Rays we are overlapping communication and computation
     // This call makes this recursive...
     // Once we start running out of chunks to trace... start pulling some in
-    if (_method == SMART && _working_buffer.size() < _chunk_size)
+    if (_method == SMART /*&& _working_buffer.size() < _chunk_size*/)
       _receive_buffer.receive(_working_buffer);
 
-    /*
-    // Make an attempt to keep doing what we're doing
-    if (_method == SMART && _working_buffer.empty())
-      _receive_buffer.receive(_working_buffer);
-    */
-
-    /*
     if (_working_buffer.empty())
     {
-      // Start some receives
       _receive_buffer.receive(_working_buffer);
 
       // Do some sending while we wait
@@ -356,9 +380,8 @@ RayTracingStudy::chunkyTraceAndBuffer()
       _receive_buffer.cleanupRequests(_working_buffer);
     }
 
-    if (_method == SMART && _working_buffer.size() < (3 * _chunk_size))
+    if (_method == SMART /*&& _working_buffer.size() < (3 * _chunk_size)*/)
       _receive_buffer.cleanupRequests(_working_buffer);
-    */
   }
 
   // std::cout << "Out of rays!\n\n";

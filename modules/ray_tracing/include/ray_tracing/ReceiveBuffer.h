@@ -183,7 +183,7 @@ public:
   {
     //    auto cleanup_requests_start = std::chrono::steady_clock::now();
 
-    auto num_requests = _requests.size();
+    // auto num_requests = _requests.size();
 
     /*
     if (num_requests)
