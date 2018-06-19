@@ -141,6 +141,53 @@ RayProblemTraceRay::finishedBoundary()
 }
 
 /**
+ * Pass in:
+ * Ray: o -> d
+ * Side: v0 -> v1
+ *
+ * Internally:
+ * Ray: p -> t*r
+ * Side: q -> u*s
+ *
+ * From: https://stackoverflow.com/a/565282
+ */
+bool
+lineLineIntersect2DVanilla(const Point & o,
+                           const Point & d,
+                           const Point & v0,
+                           const Point & v1,
+                           Point & intersection_point,
+                           Real & intersection_distance)
+
+{
+  const Point & p = o;
+  const Point & q = v0;
+
+  auto r = (d - o);
+  auto s = (v1 - v0);
+
+  auto rxs = r(0) * s(1) - r(1) * s(0);
+
+  if (std::abs(rxs) < 1e-10) // Lines are parallel or colinear
+    return false;
+
+  auto qmp = q - p;
+
+  auto t = (qmp(0) * s(1) - qmp(1) * s(0)) / rxs;
+  auto u = (qmp(0) * r(1) - qmp(1) * r(0)) / rxs;
+
+  if ((0 < t + 4e-9 && t - 4e-9 <= 1.0) && (0 < u + 4e-9 && u - 4e-9 <= 1.0)) // Do they intersect
+  {
+    intersection_point = p + (t * r);
+    intersection_distance = t;
+    return true;
+  }
+
+  // Not parallel, but don't intersect
+  return false;
+}
+
+/**
  * Derived from: http://stackoverflow.com/a/565282/2042320
  * q -> q + u*s: Ray
  * p -> p + t*r: Side
@@ -163,6 +210,9 @@ sideIntersectedByLine2D(const Elem * current_elem,
   Point ray_direction = (ray->end() - ray->start());
   ray_direction /= ray_direction.norm();
 
+  Point current_intersection_point;
+  double current_intersection_distance = 0;
+
   {
   //    int boundary_side = -1;
 
@@ -177,19 +227,10 @@ sideIntersectedByLine2D(const Elem * current_elem,
 #endif
 
     // Bump the starting point down the path a bit
-    double q0 = incoming_point(0) + 1e-9 * (ray->end()(0) - incoming_point(0));
-    double q1 = incoming_point(1) + 1e-9 * (ray->end()(1) - incoming_point(1));
+    Point starting_point = incoming_point + (1e-9 * ray_direction);
 
-    double s0 = ray->end()(0) - q0;
-    double s1 = ray->end()(1) - q1;
+    double intersection_distance = 0;
 
-    double intersection_distance = std::numeric_limits<Real>::max();
-    double centroid_distance = std::numeric_limits<Real>::max();
-
-    /*
-    if (ray_count == 2071730)
-      libMesh::err<<std::endl;
-    */
     auto & normals = elem_normals.at(current_elem);
 
     for (unsigned int i = 0; i < n_sides; i++)
@@ -201,15 +242,6 @@ sideIntersectedByLine2D(const Elem * current_elem,
       if (normals[i] * ray_direction < -TOLERANCE)
         continue;
 
-        /*
-        //if (ray_count == 2071730)
-        {
-          libMesh::err<<"side: "<<i<<std::endl;
-        }
-        */
-
-        //      bool intersect = false;
-
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
       {
@@ -220,72 +252,19 @@ sideIntersectedByLine2D(const Elem * current_elem,
       }
 #endif
 
-      double p0 = current_elem->point(T::side_nodes_map[i][0])(0);
-      double p1 = current_elem->point(T::side_nodes_map[i][0])(1);
+      auto intersected = lineLineIntersect2DVanilla(starting_point,
+                                                    ray->end(),
+                                                    current_elem->point(T::side_nodes_map[i][0]),
+                                                    current_elem->point(T::side_nodes_map[i][1]),
+                                                    current_intersection_point,
+                                                    current_intersection_distance);
 
-      double r0 = current_elem->point(T::side_nodes_map[i][1])(0) - p0;
-      double r1 = current_elem->point(T::side_nodes_map[i][1])(1) - p1;
-
-      double rxs = r0 * s1 - r1 * s0;
-      double sxr = s0 * r1 - s1 * r0;
-
-      if (std::abs(rxs) < 1e-10 || std::abs(sxr) < 1e-10) // Lines are parallel or colinear
-        continue;
-
-      double t = (((q0 - p0) * s1) - ((q1 - p1) * s0)) / rxs;
-      double u = (((p0 - q0) * r1) - ((p1 - q1) * r0)) / sxr;
-
-      /*
-      //      if (ray_count == 2071730)
-            {
-              libMesh::err<<"Tolerance: "<<TOLERANCE<<std::endl;
-
-              libMesh::err<<"t: "<<t<<std::endl;
-              libMesh::err<<"u: "<<u<<std::endl;
-
-              libMesh::err<<"t + TOLERANCE: "<<t + TOLERANCE<<std::endl;
-              libMesh::err<<"t - TOLERANCE: "<<t - TOLERANCE<<std::endl;
-              libMesh::err<<"u + TOLERANCE: "<<u + TOLERANCE<<std::endl;
-              libMesh::err<<"u - TOLERANCE: "<<u - TOLERANCE<<std::endl;
-            }
-      */
-
-      if ((0 < t + 4e-9 && t - 4e-9 <= 1.0) &&
-          (0 < u + 4e-9 && u - 4e-9 <= 1.0)) // Do they intersect
+      // Do they intersect and is it further down the path than any other intersection
+      if (intersected && current_intersection_distance > intersection_distance)
       {
-        double current_centroid_distance = std::abs(
-            t - 0.5); // We want to prefer intersections that go through the middle of sides
-
-        if (current_centroid_distance < centroid_distance)
-        {
-          //          Elem * neighbor = current_elem->neighbor(i);
-
-          /*
-          //if (ray_count == 2071730)
-            libMesh::err<<"Intersected side: "<<i<<std::endl;
-          */
-
-          intersected_side = i;
-          intersection_distance = u;
-          centroid_distance = current_centroid_distance;
-
-          // Bump just a bit down the Ray to reduce edge cases
-          intersection_point(0) = q0 + ((u /*+1e-9*/) * s0);
-          intersection_point(1) = q1 + ((u /*+1e-9*/) * s1);
-        }
-      }
-      else
-      {
-#ifdef USE_DEBUG_RAY
-        if (DEBUG_IF)
-        {
-          std::cerr << "\nSide: " << i << std::endl;
-          std::cerr << " 0 < t + 4e-9: " << t + 4e-9 << std::endl;
-          std::cerr << " t - 4e-9 <= 1.0: " << t - 4e-9 << std::endl;
-          std::cerr << " 0 < u + 4e-9: " << u + 4e-9 << std::endl;
-          std::cerr << " u - 4e-9 <= 1.0: " << u - 4e-9 << std::endl;
-        }
-#endif
+        intersected_side = i;
+        intersection_point = current_intersection_point;
+        intersection_distance = current_intersection_distance;
       }
     }
   }
