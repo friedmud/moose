@@ -6,6 +6,7 @@
 // MOOSE Includes
 #include "ParallelUniqueId.h"
 #include "MooseMesh.h"
+#include "StaticallyAllocatedSet.h"
 
 // libMesh Includes
 #include "libmesh/threads.h"

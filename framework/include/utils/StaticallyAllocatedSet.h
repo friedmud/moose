@@ -42,13 +42,13 @@ public:
   /**
    * Add a new entry
    */
-  void insert(const T && value)
+  void insert(const T & value)
   {
     if (!contains(value))
     {
       mooseAssert(_end_pos < N, "Out of space in StaticallyAllocatedSet!");
 
-      _data[_end_pos] = std::forward<const T>(value);
+      _data[_end_pos] = value;
       _end_pos++;
     }
   }

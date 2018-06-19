@@ -4,6 +4,7 @@
 // MOOSE Includes
 #include "Moose.h"
 #include "MooseTypes.h"
+#include "StaticallyAllocatedSet.h"
 
 // libMesh Includes
 #include "libmesh/id_types.h"
@@ -117,8 +118,10 @@ protected:
 
   THREAD_ID _tid;
 
-  /// Which boundary IDs have already been applied
-  std::set<BoundaryID> _applied_ids;
+  /// Which boundary IDs have already been applied, The '18' is the maximum.
+  /// I expect that the most a ray will have is 6: 3 from one corner, 3 in another
+  /// So I just multiplied by 3 to be extra safe!
+  MooseUtils::StaticallyAllocatedSet<BoundaryID, 18> _applied_ids;
 
 private:
   void possiblyOnBoundary(const std::shared_ptr<Ray> & ray,

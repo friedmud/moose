@@ -119,8 +119,6 @@ RayProblemTraceRay::onBoundary(const Elem * current_elem,
 {
   if (_ray_system.hasRayBCs(bid, _tid))
   {
-    _applied_ids.insert(bid);
-
     auto & ray_bcs = _ray_system.getRayBCs(bid, _tid);
 
     for (auto & bc : ray_bcs)
@@ -1588,7 +1586,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           for (const auto & bid : ids)
           {
-            if (_applied_ids.find(bid) == _applied_ids.end()) // Don't reapply the same BC twice!
+            if (!_applied_ids.contains(bid))
             {
               _applied_ids.insert(bid);
               onBoundary(current_elem, intersection_point, intersected_side, bid, NULL, ray);
@@ -1653,8 +1651,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
                   for (const auto & bid : ids)
                   {
-                    if (_applied_ids.find(bid) ==
-                        _applied_ids.end()) // Don't reapply the same BC twice!
+                    // Don't apply the same BC twice!
+                    if (!_applied_ids.contains(bid))
                     {
                       _applied_ids.insert(bid);
                       onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
