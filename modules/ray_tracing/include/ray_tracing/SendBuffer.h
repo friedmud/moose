@@ -86,7 +86,7 @@ public:
     // 2000 is a safety net to try to stay below 1MB
     if ((_method == SMART &&
          (_buffer.size() >= _current_buff_size || _buffer.size() == _max_buff_size)) ||
-        (_buffer.size() > 2000))
+        (_buffer.size() > 200000))
     {
       //      std::cout << "Sending " << _buffer.size() << " rays to " << _pid << "\n";
 
