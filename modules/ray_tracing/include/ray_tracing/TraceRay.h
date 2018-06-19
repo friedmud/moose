@@ -119,6 +119,19 @@ protected:
 
   /// Which boundary IDs have already been applied
   std::set<BoundaryID> _applied_ids;
+
+private:
+  void possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
+                          const Point & incoming_point,
+                          const Elem * current_elem,
+                          unsigned int incoming_side,
+                          Point & intersection_point,
+                          int & intersected_side);
+
+  unsigned int _mesh_dim;
+
+  Point _work_point;
+  Point _work_point2;
 };
 
 class RayProblemTraceRay : public TraceRay

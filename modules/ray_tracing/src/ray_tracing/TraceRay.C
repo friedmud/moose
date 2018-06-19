@@ -991,6 +991,93 @@ TraceRay::getNeighbor(const Elem * current_elem,
 }
 
 /**
+ * This routine checks to see if the current start point of the ray is already REALLY
+ * close to the side of the domeain where it will need to be stopped.  This keeps badness
+ * from happening when a ray strikes a side right at a junction that is on the boundary -
+ * but happens to pick a side that is not _actually_ on the boundary.
+ */
+void
+TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
+                             const Point & incoming_point,
+                             const Elem * current_elem,
+                             unsigned int incoming_side,
+                             Point & intersection_point,
+                             int & intersected_side)
+{
+  if (ray->distance() > 1e-9) // Only allow this if the ray has moved a bit
+  {
+    // See if we're on the edge of the domain
+    _work_point = incoming_point - _b_box.min();
+    _work_point2 = incoming_point - _b_box.max();
+
+#ifdef USE_DEBUG_RAY
+    if (DEBUG_IF)
+    {
+      std::cerr << "Work point: " << work_point << std::endl;
+      std::cerr << "Work point2: " << work_point2 << std::endl;
+    }
+#endif
+
+    // We're going to look at our bounding box for the domain to know if we're
+    // close to the side.  What we're looking for here are dims where the difference
+    // between the Ray's dim and the bounding box dim is zero
+    unsigned int num_zero = 0;
+
+    for (unsigned int i = 0; i < _mesh_dim; i++)
+      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-8))
+        num_zero++;
+
+    for (unsigned int i = 0; i < _mesh_dim; i++)
+      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-8))
+        num_zero++;
+
+#ifdef USE_DEBUG_RAY
+    if (DEBUG_IF)
+      std::cerr << "Checking to see if by boundary: " << num_zero << std::endl;
+#endif
+
+    if (num_zero) // If we are, then let's just call this point good
+    {
+#ifdef USE_DEBUG_RAY
+      if (DEBUG_IF)
+        std::cerr << "On domain boundary!" << std::endl;
+#endif
+
+      // Now what we're going to do is search the sides of this element for a side
+      // on the boundary that still contains this point
+      auto n_sides = current_elem->n_sides();
+
+      for (auto s = 0u; s < n_sides; s++)
+      {
+        if (s != incoming_side) // Don't allow a ray to turn around!
+        {
+          // Only check sides that are up against the domain edge
+          if (current_elem->neighbor(s) == NULL)
+          {
+            auto side_elem = current_elem->build_side(s);
+
+            if (side_elem->contains_point(incoming_point))
+            {
+#ifdef USE_DEBUG_RAY
+              if (DEBUG_IF)
+              {
+                std::cerr << ray_count << " Found boundary side: " << s << std::endl;
+                std::cerr << ray_count << " Boundary intersection point: " << incoming_point
+                          << std::endl;
+              }
+#endif
+              intersected_side = s;
+              intersection_point = incoming_point;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  */
 void
 TraceRay::trace(std::shared_ptr<Ray> & ray)
@@ -1001,9 +1088,6 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   Point boundary_intersection_point;
 
   Point incoming_point = ray->start();
-
-  Point work_point;
-  Point work_point2;
 
   current_elem = ray->startingElem();
 
@@ -1036,13 +1120,13 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   //    sleep(1000);
   //#endif
 
-  auto mesh_dim = _mesh.mesh_dimension();
+  _mesh_dim = _mesh.mesh_dimension();
 
 #ifdef USE_DEBUG_RAY
   if (false && DEBUG_IF && pid == 0)
   //  if (pid == 1)
   {
-    debug_mesh = new Mesh(Parallel::Communicator(), _mesh.mesh_dimension());
+    debug_mesh = new Mesh(Parallel::Communicator(), _mesh._mesh_dimension());
     debug_mesh->skip_partitioning(true);
   }
 #endif
@@ -1201,73 +1285,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
 #endif
 
-      if (ray->distance() > 1e-9) // Only allow this if the ray has moved a bit
-      {
-        // See if we're on the edge of the domain
-        work_point = incoming_point - _b_box.min();
-        work_point2 = incoming_point - _b_box.max();
-
-#ifdef USE_DEBUG_RAY
-        if (DEBUG_IF)
-        {
-          std::cerr << "Work point: " << work_point << std::endl;
-          std::cerr << "Work point2: " << work_point2 << std::endl;
-        }
-#endif
-
-        unsigned int num_zero = 0;
-
-        for (unsigned int i = 0; i < mesh_dim; i++)
-          if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point(i)), 0., 1e-8))
-            num_zero++;
-
-        for (unsigned int i = 0; i < mesh_dim; i++)
-          if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point2(i)), 0., 1e-8))
-            num_zero++;
-
-#ifdef USE_DEBUG_RAY
-        if (DEBUG_IF)
-          std::cerr << "Checking to see if by boundary: " << num_zero << std::endl;
-#endif
-
-        if (num_zero) // If we are, then let's just call this point good
-        {
-#ifdef USE_DEBUG_RAY
-          if (DEBUG_IF)
-            std::cerr << "On domain boundary!" << std::endl;
-#endif
-          //        auto side = -1;
-
-          auto n_sides = current_elem->n_sides();
-
-          for (auto s = 0u; s < n_sides; s++)
-          {
-            if (s != incoming_side) // Don't allow a ray to turn around!
-            {
-              if (current_elem->neighbor(s) ==
-                  NULL) // Only check sides that are up against the domain edge
-              {
-                auto side_elem = current_elem->build_side(s);
-
-                if (side_elem->contains_point(incoming_point))
-                {
-#ifdef USE_DEBUG_RAY
-                  if (DEBUG_IF)
-                  {
-                    std::cerr << ray_count << " Found boundary side: " << s << std::endl;
-                    std::cerr << ray_count << " Boundary intersection point: " << incoming_point
-                              << std::endl;
-                  }
-#endif
-                  intersected_side = s;
-                  intersection_point = incoming_point;
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
+      possiblyOnBoundary(
+          ray, incoming_point, current_elem, incoming_side, intersection_point, intersected_side);
 
       if (intersected_side == -1) // Need to do a more exhaustive search
       {
@@ -1451,12 +1470,12 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       //      "<<intersection_point<<std::endl;
 
       // Use a work point here so temporaries don't get created
-      work_point = intersection_point;
-      work_point -= incoming_point;
+      _work_point = intersection_point;
+      _work_point -= incoming_point;
 
       // The 0.79... is for TY quadrature in 2D
       // TODO: fix this better for 3D
-      ray->distance() += work_point.norm();
+      ray->distance() += _work_point.norm();
       /*
             // Need to reinit at a physical point.  For now, we'll just take that to be halfway
          along the line
@@ -1561,9 +1580,9 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           // Need to see if this is a reflective BC
           // Get the "direction" of the Ray
-          // Use work_point so no temporaries are created
+          // Use _work_point so no temporaries are created
 
-          //        libMesh::err<<" Direction: "<<work_point<<std::endl;
+          //        libMesh::err<<" Direction: "<<_work_point<<std::endl;
 
           _mesh.get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
 
@@ -1583,17 +1602,17 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           // First determine if we hit a corner.
           // Subtract off the current point from the min/max of the bounding box
           // If any two entries from that subtraction are (near) zero then we're at a corner
-          work_point = intersection_point - _b_box.min();
-          work_point2 = intersection_point - _b_box.max();
+          _work_point = intersection_point - _b_box.min();
+          _work_point2 = intersection_point - _b_box.max();
 
           unsigned int num_zero = 0;
 
-          for (unsigned int i = 0; i < mesh_dim; i++)
-            if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point(i)), 0., 1e-8))
+          for (unsigned int i = 0; i < _mesh_dim; i++)
+            if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-8))
               num_zero++;
 
-          for (unsigned int i = 0; i < mesh_dim; i++)
-            if (MooseUtils::absoluteFuzzyEqual(std::abs(work_point2(i)), 0., 1e-8))
+          for (unsigned int i = 0; i < _mesh_dim; i++)
+            if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-8))
               num_zero++;
 
           //        if (ray->id() == 4811)
@@ -1684,7 +1703,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           //        libMesh::err<<"Reflected:\n Start: "<<ray->start()<<"\n End:
           //        "<<ray->end()<<std::endl;
-          //        libMesh::err<<" Direction: "<<work_point<<std::endl;
+          //        libMesh::err<<" Direction: "<<_work_point<<std::endl;
 
           // ray->setStartingElem(NULL);
           // keep_tracing = false;
