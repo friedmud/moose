@@ -337,54 +337,46 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 void
 RayTracingStudy::chunkyTraceAndBuffer()
 {
-  //  for (auto chunk = decltype(num_chunks)(0); chunk < num_chunks; chunk++)
   while (!_working_buffer.empty())
   {
-    //    std::cout << 1 << ": " << _working_buffer.size() << std::endl;
-
-    // std::cout << "chunky working buffer size: " << _working_buffer.size() << "\n";
-
-    if (_method == SMART /*&& _working_buffer.size() < _chunk_size*/)
+    // Always look for extra work first so that these transfers can be finishing while we're tracing
+    if (_method == SMART)
       _receive_buffer.receive(_working_buffer);
 
-    auto current_chunk_size =
-        _chunk_size; // std::max((unsigned int)(0.1 * _working_buffer.size()), _chunk_size);
+    // The idea here is to try to keep from running out of having work to do
+    auto current_chunk_size = std::max((unsigned int)(0.1 * _working_buffer.size()), _chunk_size);
 
     // Trace them all for these methods
     if (_method != SMART)
       current_chunk_size = _working_buffer.size();
 
+    // Can't trace more than we have
     if (current_chunk_size > _working_buffer.size())
       current_chunk_size = _working_buffer.size();
 
+    // Trace out some rays
     traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
 
+    // Remove those rays from the buffer
     _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
 
-    // Interleave receiving and tracing of incoming rays
-    // by doing this while we generate Rays we are overlapping communication and computation
-    // This call makes this recursive...
-    // Once we start running out of chunks to trace... start pulling some in
-    if (_method == SMART /*&& _working_buffer.size() < _chunk_size*/)
-      _receive_buffer.receive(_working_buffer);
-
-    if (_working_buffer.empty())
+    // If we're running out of work to do - try to pull in some more
+    if (_method == SMART && _working_buffer.size() < _chunk_size)
     {
+      // Try to do some receiving
       _receive_buffer.receive(_working_buffer);
 
       // Do some sending while we wait
       for (auto & buffer : _send_buffers)
         buffer.second->forceSend();
 
+      // Since it's been a moment - try again
+      _receive_buffer.receive(_working_buffer);
+
       // Try to finish some receives
       _receive_buffer.cleanupRequests(_working_buffer);
     }
-
-    if (_method == SMART /*&& _working_buffer.size() < (3 * _chunk_size)*/)
-      _receive_buffer.cleanupRequests(_working_buffer);
   }
-
-  // std::cout << "Out of rays!\n\n";
 }
 
 bool
