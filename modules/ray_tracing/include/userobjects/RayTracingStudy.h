@@ -10,7 +10,7 @@
 
 // MOOSE Includes
 #include "GeneralUserObject.h"
-#include "CircularBuffer.h"
+#include "LIFOBuffer.h"
 
 // libMesh Includes
 #include "libmesh/libmesh.h"
@@ -340,7 +340,7 @@ protected:
   Real _volume;
 
   /// The set of rays we're currently working on
-  MooseUtils::CircularBuffer<std::shared_ptr<Ray>> _working_buffer;
+  MooseUtils::LIFOBuffer<std::shared_ptr<Ray>> _working_buffer;
 
   /// Number of Rays to buffer before communication
   unsigned int _max_buffer_size;

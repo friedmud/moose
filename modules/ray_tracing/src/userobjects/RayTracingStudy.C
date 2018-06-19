@@ -74,7 +74,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _comm(_mesh.comm()),
     _halo_size(getParam<unsigned int>("halo_size")),
     _total_rays(getParam<unsigned int>("num_rays")),
-    _working_buffer(10),
+    _working_buffer(getParam<unsigned int>("chunk_size") * 10),
     _max_buffer_size(getParam<unsigned int>("send_buffer_size")),
     _buffer_growth_multiplier(getParam<Real>("buffer_growth_multiplier")),
     _buffer_shrink_multiplier(getParam<Real>("buffer_shrink_multiplier")),
@@ -356,10 +356,10 @@ RayTracingStudy::chunkyTraceAndBuffer()
       current_chunk_size = _working_buffer.size();
 
     // Trace out some rays
-    traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
+    traceAndBuffer(_working_buffer.end() - current_chunk_size, _working_buffer.end());
 
     // Remove those rays from the buffer
-    _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
+    _working_buffer.erase(current_chunk_size);
 
     // If we're running out of work to do - try to pull in some more
     if (_method == SMART && _working_buffer.size() < _chunk_size)
