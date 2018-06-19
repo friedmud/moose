@@ -339,12 +339,13 @@ RayTracingStudy::chunkyTraceAndBuffer()
 {
   while (!_working_buffer.empty())
   {
-    // Always look for extra work first so that these transfers can be finishing while we're tracing
-    if (_method == SMART)
+    // Look for extra work first so that these transfers can be finishing while we're tracing
+    // The check for the buffer size just says: if we have a ton of work to do - let's not look for
+    // more right now
+    if (_method == SMART && _working_buffer.size() < 10 * _chunk_size)
       _receive_buffer.receive(_working_buffer);
 
-    // The idea here is to try to keep from running out of having work to do
-    auto current_chunk_size = std::max((unsigned int)(0.1 * _working_buffer.size()), _chunk_size);
+    auto current_chunk_size = _chunk_size;
 
     // Trace them all for these methods
     if (_method != SMART)
