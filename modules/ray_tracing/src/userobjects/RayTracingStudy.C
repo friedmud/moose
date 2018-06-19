@@ -367,15 +367,17 @@ RayTracingStudy::chunkyTraceAndBuffer()
       // Try to do some receiving
       _receive_buffer.receive(_working_buffer);
 
-      // Do some sending while we wait
-      for (auto & buffer : _send_buffers)
-        buffer.second->forceSend();
+      // If there's actually nothing to do - try to do other work
+      if (_working_buffer.empty())
+      {
+        // Do some sending while we wait
+        for (auto & buffer : _send_buffers)
+          buffer.second->forceSend();
 
-      // Since it's been a moment - try again
-      _receive_buffer.receive(_working_buffer);
-
-      // Try to finish some receives
-      _receive_buffer.cleanupRequests(_working_buffer);
+        // Wait for any receives to finish
+        while (_working_buffer.empty() && _receive_buffer.currentlyReceiving())
+          _receive_buffer.receive(_working_buffer);
+      }
     }
   }
 }
