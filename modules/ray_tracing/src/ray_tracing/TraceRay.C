@@ -28,11 +28,6 @@
 #include <list>
 #include <unistd.h>
 
-// Maximum number of point neighbors possible
-// With normal topology the max is 8 for Hex8s
-// Using 16 for safety
-#define MAX_POINT_NEIGHBORS 16
-
 unsigned long int ray_count = 0;
 
 // 0 ray_count: 156007 ray_id: 7244 Endless loop!
@@ -207,8 +202,6 @@ sideIntersectedByLine2D(const Elem * current_elem,
 {
   int intersected_side = -1;
   unsigned int n_sides = current_elem->n_sides();
-
-  std::vector<double> stuff;
 
   Point ray_direction = (ray->end() - ray->start());
   ray_direction /= ray_direction.norm();
@@ -835,7 +828,7 @@ sideNeighborIsOn(const Elem * elem, const Elem * neighbor)
 }
 */
 void
-find_point_neighbors(
+TraceRay::find_point_neighbors(
     const Elem * current_elem,
     const Point & p,
     MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> & neighbor_set,
@@ -904,13 +897,11 @@ find_point_neighbors(
           else // ... the neighbor is *not* active,
           {    // ... so add *all* neighboring
                // active children that touch p
-            std::vector<const Elem *> active_neighbor_children;
+            current_neighbor->active_family_tree_by_neighbor(_active_neighbor_children, elem);
 
-            current_neighbor->active_family_tree_by_neighbor(active_neighbor_children, elem);
-
-            std::vector<const Elem *>::const_iterator child_it = active_neighbor_children.begin();
+            std::vector<const Elem *>::const_iterator child_it = _active_neighbor_children.begin();
             const std::vector<const Elem *>::const_iterator child_end =
-                active_neighbor_children.end();
+                _active_neighbor_children.end();
             for (; child_it != child_end; ++child_it)
             {
               const Elem * current_child = *child_it;
@@ -1115,8 +1106,6 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   unsigned int debug_node_count = 0;
 #endif
 
-  std::vector<BoundaryID> ids(1);
-
   MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> point_neighbors;
 
   auto pid = _mesh.comm().rank();
@@ -1291,12 +1280,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
 #endif
 
-      /*
       possiblyOnBoundary(
           ray, incoming_point, current_elem, incoming_side, intersection_point, intersected_side);
-      */
 
-      if (false && intersected_side == -1) // Need to do a more exhaustive search
+      if (intersected_side == -1) // Need to do a more exhaustive search
       {
         // Let's first try grabbing the point_neighbors for this element to see if they are good
         // candidates
@@ -1592,9 +1579,9 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
           //        libMesh::err<<" Direction: "<<_work_point<<std::endl;
 
-          _mesh.get_boundary_info().boundary_ids(current_elem, intersected_side, ids);
+          _mesh.get_boundary_info().boundary_ids(current_elem, intersected_side, _ids);
 
-          for (const auto & bid : ids)
+          for (const auto & bid : _ids)
           {
             if (!_applied_ids.contains(bid))
             {
@@ -1626,7 +1613,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           //        if (ray->id() == 4811)
           //          libMesh::err<<"Here!"<<std::endl;
 
-          if (false && num_zero > 1)
+          if (num_zero > 1)
           {
             //          if (ray->id() == 4811)
             //          libMesh::err<<ray_count<<" Ray hit a domain corner!
@@ -1657,9 +1644,9 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                 {
                   side = s;
 
-                  _mesh.get_boundary_info().boundary_ids(neighbor, side, ids);
+                  _mesh.get_boundary_info().boundary_ids(neighbor, side, _ids);
 
-                  for (const auto & bid : ids)
+                  for (const auto & bid : _ids)
                   {
                     // Don't apply the same BC twice!
                     if (!_applied_ids.contains(bid))

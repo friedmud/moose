@@ -24,6 +24,11 @@ namespace libMesh
 class Mesh;
 }
 
+// Maximum number of point neighbors possible
+// With normal topology the max is 8 for Hex8s
+// Using 16 for safety
+#define MAX_POINT_NEIGHBORS 16
+
 extern const std::vector<std::vector<unsigned int>> quad4_side_to_children;
 
 class TraceRay
@@ -124,6 +129,12 @@ protected:
   MooseUtils::StaticallyAllocatedSet<BoundaryID, 18> _applied_ids;
 
 private:
+  void find_point_neighbors(
+      const Elem * current_elem,
+      const Point & p,
+      MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> & neighbor_set,
+      const std::shared_ptr<Ray> &);
+
   void possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
                           const Point & incoming_point,
                           const Elem * current_elem,
@@ -135,6 +146,12 @@ private:
 
   Point _work_point;
   Point _work_point2;
+
+  // Boundary IDs
+  std::vector<BoundaryID> _ids;
+
+  // Reusable
+  std::vector<const Elem *> _active_neighbor_children;
 };
 
 class RayProblemTraceRay : public TraceRay
