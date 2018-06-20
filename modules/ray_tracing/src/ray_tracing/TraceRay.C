@@ -197,15 +197,13 @@ sideIntersectedByLine2D(const Elem * current_elem,
                         unsigned int incoming_side,
                         const Point & incoming_point,
                         const std::shared_ptr<Ray> & ray,
-                        const std::map<const Elem *, std::vector<Point>> & elem_normals,
+                        const Point & ray_direction,
+                        const std::map<const Elem *, std::vector<Point>> & /*elem_normals*/,
                         Point & intersection_point,
                         Point & /*boundaryintersection_point*/)
 {
   int intersected_side = -1;
   unsigned int n_sides = current_elem->n_sides();
-
-  Point ray_direction = (ray->end() - ray->start());
-  ray_direction /= ray_direction.norm();
 
   Point current_intersection_point;
   double current_intersection_distance = 0;
@@ -575,16 +573,13 @@ sideIntersectedByLineHex8(const Elem * current_elem,
                           unsigned int incoming_side,
                           const Point & incoming_point,
                           const std::shared_ptr<Ray> & ray,
+                          const Point & ray_direction,
                           const std::map<const Elem *, std::vector<Point>> & elem_normals,
                           Point & intersection_point,
                           Point & /*boundaryintersection_point*/)
 {
-
   int intersected_side = -1;
   unsigned int n_sides = 6;
-
-  Point ray_direction = (ray->end() - ray->start());
-  ray_direction /= ray_direction.norm();
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
@@ -702,11 +697,12 @@ int
 sideIntersectedByLine1D(const Elem * current_elem,
                         unsigned int /*incoming_side*/,
                         const Point & /*incoming_point*/,
-                        const std::shared_ptr<Ray> & ray,
+                        const std::shared_ptr<Ray> & /*ray*/,
+                        const Point & in_ray_direction,
                         Point & intersection_point,
                         Point & /*boundaryintersection_point*/)
 {
-  Real ray_direction = ray->end()(0) - ray->start()(0);
+  Real ray_direction = in_ray_direction(0);
 
   // Ray is moving left: node/side 0 is the left node for EDGE elements
   if (ray_direction < 0)
@@ -868,7 +864,9 @@ TraceRay::find_point_neighbors(
     {
       const Elem * elem = *it;
 
-      for (unsigned int s = 0; s < elem->n_sides(); s++)
+      const auto n_sides = elem->n_sides();
+
+      for (unsigned int s = 0; s < n_sides; s++)
       {
         const Elem * current_neighbor = elem->neighbor_ptr(s);
 #ifdef USE_DEBUG_RAY
@@ -978,8 +976,9 @@ TraceRay::getNeighbor(const Elem * current_elem,
 {
   auto neighbor = current_elem->neighbor(intersected_side);
 
-  if (!neighbor || neighbor->active())
+  if (neighbor->active() || !neighbor)
     return neighbor;
+
   else // There is adaptivity... need to find the active child that contains the point
   {
     // Get the side the current elem occupies for the neighbor
@@ -1045,7 +1044,7 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
 
       // Now what we're going to do is search the sides of this element for a side
       // on the boundary that still contains this point
-      auto n_sides = current_elem->n_sides();
+      const auto n_sides = current_elem->n_sides();
 
       for (auto s = 0u; s < n_sides; s++)
       {
@@ -1077,6 +1076,103 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
   }
 }
 
+void
+TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
+                                         const ElemType elem_type,
+                                         const Point & incoming_point,
+                                         const std::shared_ptr<Ray> & ray,
+                                         const Point & ray_direction,
+                                         Point & intersection_point,
+                                         Point & boundary_intersection_point,
+                                         int & intersected_side,
+                                         const Elem *& best_neighbor,
+                                         unsigned int & best_side)
+{
+  // Let's first try grabbing the point_neighbors for this element to see if they are good
+  // candidates
+  find_point_neighbors(current_elem, incoming_point, _point_neighbors, ray);
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "Num point_neighbors: " << point_neighbors.size() << std::endl;
+#endif
+
+  Real longest_distance = 0;
+
+  // Try the search on each neighbor and see if something good happens
+  for (auto & neighbor : _point_neighbors)
+  {
+    if (neighbor != current_elem) // Don't need to look through this element again
+    {
+#ifdef USE_DEBUG_RAY
+      if (DEBUG_IF)
+        std::cerr << "Trying neighbor " << neighbor->id() << std::endl;
+#endif
+
+      // First find the side the point is on in the neighbor
+      auto side = -1;
+
+      const auto n_sides = neighbor->n_sides();
+
+      for (auto s = 0u; s < n_sides; s++)
+      {
+        auto side_elem = neighbor->build_side(s);
+
+        if (side_elem->contains_point(incoming_point))
+        {
+          side = s;
+          break;
+        }
+      }
+
+      if (side == -1)
+        continue;
+
+      // Now try to find an intersection in that neighbor
+      if (elem_type == QUAD4)
+        intersected_side = sideIntersectedByLine2D<Quad4>(neighbor,
+                                                          side,
+                                                          incoming_point,
+                                                          ray,
+                                                          ray_direction,
+                                                          _elem_normals,
+                                                          intersection_point,
+                                                          boundary_intersection_point);
+      else if (elem_type == TRI3)
+        intersected_side = sideIntersectedByLine2D<Tri3>(neighbor,
+                                                         side,
+                                                         incoming_point,
+                                                         ray,
+                                                         ray_direction,
+                                                         _elem_normals,
+                                                         intersection_point,
+                                                         boundary_intersection_point);
+      else if (elem_type == HEX8)
+        intersected_side = sideIntersectedByLineHex8(neighbor,
+                                                     side,
+                                                     incoming_point,
+                                                     ray,
+                                                     ray_direction,
+                                                     _elem_normals,
+                                                     intersection_point,
+                                                     boundary_intersection_point);
+
+      // If we found an intersection let's go with it
+      if (intersected_side != -1)
+      {
+        auto distance = (intersection_point - incoming_point).norm();
+
+        if (distance > longest_distance)
+        {
+          best_neighbor = neighbor;
+          best_side = side;
+          longest_distance = distance;
+        }
+      }
+    }
+  }
+}
+
 /**
  */
 void
@@ -1086,6 +1182,9 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   int intersected_side = -1;
   Point intersection_point;
   Point boundary_intersection_point;
+
+  Point ray_direction = (ray->end() - ray->start());
+  ray_direction /= ray_direction.norm();
 
   Point incoming_point = ray->start();
 
@@ -1108,8 +1207,6 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
   unsigned int debug_node_count = 0;
 #endif
-
-  MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> point_neighbors;
 
   auto pid = _mesh.comm().rank();
 
@@ -1244,6 +1341,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                           incoming_side,
                                                           incoming_point,
                                                           ray,
+                                                          ray_direction,
                                                           _elem_normals,
                                                           intersection_point,
                                                           boundary_intersection_point);
@@ -1252,6 +1350,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                          incoming_side,
                                                          incoming_point,
                                                          ray,
+                                                         ray_direction,
                                                          _elem_normals,
                                                          intersection_point,
                                                          boundary_intersection_point);
@@ -1260,6 +1359,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                      incoming_side,
                                                      incoming_point,
                                                      ray,
+                                                     ray_direction,
                                                      _elem_normals,
                                                      intersection_point,
                                                      boundary_intersection_point);
@@ -1269,12 +1369,12 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                    incoming_side,
                                                    incoming_point,
                                                    ray,
+                                                   ray_direction,
                                                    intersection_point,
                                                    boundary_intersection_point);
     }
 
-    if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder (as
-                                                 // long as the ray has moved a bit
+    if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder
     {
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -1289,93 +1389,19 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
       if (intersected_side == -1) // Need to do a more exhaustive search
       {
-        // Let's first try grabbing the point_neighbors for this element to see if they are good
-        // candidates
-        find_point_neighbors(current_elem, incoming_point, point_neighbors, ray);
-
-#ifdef USE_DEBUG_RAY
-        if (DEBUG_IF)
-          std::cerr << "Num point_neighbors: " << point_neighbors.size() << std::endl;
-#endif
-
         const Elem * best_neighbor = NULL;
         unsigned int best_side = 0;
-        Real longest_distance = 0;
 
-        // Try the search on each neighbor and see if something good happens
-        for (auto & neighbor : point_neighbors)
-        {
-          if (neighbor != current_elem) // Don't need to look through this element again
-          {
-#ifdef USE_DEBUG_RAY
-            if (DEBUG_IF)
-              std::cerr << "Trying neighbor " << neighbor->id() << std::endl;
-#endif
-
-            // First find the side the point is on in the neighbor
-            auto side = -1;
-
-            auto n_sides = neighbor->n_sides();
-
-            for (auto s = 0u; s < n_sides; s++)
-            {
-              auto side_elem = neighbor->build_side(s);
-
-              if (side_elem->contains_point(incoming_point))
-              {
-                side = s;
-                break;
-              }
-            }
-
-            if (side == -1)
-              continue;
-
-            // Now try to find an intersection in that neighbor
-            if (elem_type == QUAD4)
-              intersected_side = sideIntersectedByLine2D<Quad4>(neighbor,
-                                                                side,
-                                                                incoming_point,
-                                                                ray,
-                                                                _elem_normals,
-                                                                intersection_point,
-                                                                boundary_intersection_point);
-            else if (elem_type == TRI3)
-              intersected_side = sideIntersectedByLine2D<Tri3>(neighbor,
-                                                               side,
-                                                               incoming_point,
-                                                               ray,
-                                                               _elem_normals,
-                                                               intersection_point,
-                                                               boundary_intersection_point);
-            else if (elem_type == HEX8)
-              intersected_side = sideIntersectedByLineHex8(neighbor,
-                                                           side,
-                                                           incoming_point,
-                                                           ray,
-                                                           _elem_normals,
-                                                           intersection_point,
-                                                           boundary_intersection_point);
-
-            // If we found an intersection let's go with it
-            if (intersected_side != -1)
-            {
-              auto distance = (intersection_point - incoming_point).norm();
-
-              if (distance > longest_distance)
-              {
-                best_neighbor = neighbor;
-                best_side = side;
-                longest_distance = distance;
-              }
-
-              //              current_elem = neighbor;
-              //              incoming_side = side;
-
-              //              break;
-            }
-          }
-        }
+        tryToMoveThroughPointNeighbors(current_elem,
+                                       elem_type,
+                                       incoming_point,
+                                       ray,
+                                       ray_direction,
+                                       intersection_point,
+                                       boundary_intersection_point,
+                                       intersected_side,
+                                       best_neighbor,
+                                       best_side);
 
         if (best_neighbor)
         {
@@ -1424,6 +1450,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           break;
         }
 
+        // This causes the loop to restart with the neighbor as current_elem
         continue;
       }
     }
@@ -1623,10 +1650,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             //          libMesh::err<<ray_count<<" Ray hit a domain corner!
             //          "<<intersection_point<<std::endl;
 
-            find_point_neighbors(current_elem, intersection_point, point_neighbors, ray);
+            find_point_neighbors(current_elem, intersection_point, _point_neighbors, ray);
 
             // Try the search on each neighbor and see if something good happens
-            for (auto & neighbor : point_neighbors)
+            for (auto & neighbor : _point_neighbors)
             {
 //            if (neighbor != current_elem) // Don't need to look through this element again
 //            {
@@ -1638,7 +1665,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
               // First find the side the point is on in the neighbor
               auto side = -1;
 
-              auto n_sides = neighbor->n_sides();
+              const auto n_sides = neighbor->n_sides();
 
               for (auto s = 0u; s < n_sides; s++)
               {

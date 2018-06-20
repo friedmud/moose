@@ -128,6 +128,9 @@ protected:
   /// So I just multiplied by 3 to be extra safe!
   MooseUtils::StaticallyAllocatedSet<BoundaryID, 18> _applied_ids;
 
+  /// For calling point_neighbors
+  MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> _point_neighbors;
+
 private:
   void find_point_neighbors(
       const Elem * current_elem,
@@ -141,6 +144,17 @@ private:
                           unsigned int incoming_side,
                           Point & intersection_point,
                           int & intersected_side);
+
+  void tryToMoveThroughPointNeighbors(const Elem * current_elem,
+                                      const ElemType elem_type,
+                                      const Point & incoming_point,
+                                      const std::shared_ptr<Ray> & ray,
+                                      const Point & ray_direction,
+                                      Point & intersection_point,
+                                      Point & boundary_intersection_point,
+                                      int & intersected_side,
+                                      const Elem *& best_neighbor,
+                                      unsigned int & best_side);
 
   unsigned int _mesh_dim;
 
