@@ -87,6 +87,11 @@ public:
   static Elem *
   getNeighbor(const Elem * current_elem, unsigned int intersected_side, Point & intersection_point);
 
+  /**
+   * The number of intersections that were done
+   */
+  unsigned long intersections() { return _num_intersections; }
+
 protected:
   virtual void subdomainSetup(subdomain_id_type /* current_subdomain */,
                               std::shared_ptr<Ray> & /* ray */)
@@ -122,6 +127,8 @@ protected:
   bool _tolerate_failure;
 
   THREAD_ID _tid;
+
+  unsigned long _num_intersections;
 
   /// Which boundary IDs have already been applied, The '18' is the maximum.
   /// I expect that the most a ray will have is 6: 3 from one corner, 3 in another

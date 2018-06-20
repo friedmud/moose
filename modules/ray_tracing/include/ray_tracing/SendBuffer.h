@@ -42,7 +42,9 @@ public:
       _buffer_shrink_multiplier(buffer_shrink_multiplier),
       _current_buff_size(_min_buff_size),
       _current_buff_size_real(_min_buff_size),
-      _method(method)
+      _method(method),
+      _rays_sent(0),
+      _buffers_sent(0)
   {
     std::cout << "Min buff size: " << _min_buff_size << std::endl;
 
@@ -59,6 +61,16 @@ public:
 
     cleanupRequests();
   }
+
+  /**
+   * Get the number of rays sent from this buffer
+   */
+  unsigned long int raysSent() { return _rays_sent; }
+
+  /**
+   * Get the number of buffers sent from this buffer
+   */
+  unsigned long int buffersSent() { return _buffers_sent; }
 
   /**
    * Set the current algorithm
@@ -114,6 +126,9 @@ public:
 
       _requests.push_back(req);
 
+      _rays_sent += _buffer.size();
+      _buffers_sent++;
+
       _communicator.nonblocking_send_packed_range(
           _pid, &_buffer, _buffer.begin(), _buffer.end(), *req, _ray_buffer_tag);
 
@@ -155,6 +170,10 @@ public:
 
     /// List of Requests
     _requests.clear();
+
+    // Reset Counters
+    _rays_sent = 0;
+    _buffers_sent = 0;
   }
 
   /**
@@ -209,6 +228,10 @@ protected:
 
   /// The current algorithm
   RayTracingMethod _method;
+
+  /// Counters
+  unsigned long int _rays_sent;
+  unsigned long int _buffers_sent;
 };
 
 #endif

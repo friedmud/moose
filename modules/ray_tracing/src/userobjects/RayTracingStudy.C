@@ -259,6 +259,8 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 {
   _chunks_traced++;
 
+  _rays_traced += std::distance(begin, end);
+
 #pragma omp parallel
   {
     RayProblemTraceRay tr(_ray_problem,
@@ -280,6 +282,9 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
       if (ray->startingElem()->processor_id() == _my_pid)
         tr.trace(ray);
     }
+
+#pragma omp critical
+    _local_intersections += tr.intersections();
   }
 
   // Figure out where they went
@@ -345,7 +350,7 @@ RayTracingStudy::chunkyTraceAndBuffer()
     // Look for extra work first so that these transfers can be finishing while we're tracing
     // The check for the buffer size just says: if we have a ton of work to do - let's not look for
     // more right now
-    if (_method == SMART && _working_buffer.size() < 10 * _chunk_size)
+    if (_method == SMART && _working_buffer.size() < 2 * _chunk_size)
       _receive_buffer.receive(_working_buffer);
 
     auto current_chunk_size = _chunk_size;
@@ -402,8 +407,6 @@ RayTracingStudy::receiveAndTrace()
     traced_some = true;
 
     received_count += 1;
-
-    _rays_traced += _working_buffer.size();
 
     if (_method == SMART)
       chunkyTraceAndBuffer();

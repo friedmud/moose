@@ -62,7 +62,8 @@ TraceRay::TraceRay(const MeshBase & mesh,
     _ray_max_distance(ray_max_distance),
     _ray_length(ray_length),
     _tolerate_failure(tolerate_failure),
-    _tid(tid)
+    _tid(tid),
+    _num_intersections(0)
 {
   _ids.reserve(20);
 }
@@ -976,7 +977,7 @@ TraceRay::getNeighbor(const Elem * current_elem,
 {
   auto neighbor = current_elem->neighbor(intersected_side);
 
-  if (neighbor->active() || !neighbor)
+  if (!neighbor || neighbor->active())
     return neighbor;
 
   else // There is adaptivity... need to find the active child that contains the point
@@ -1455,8 +1456,6 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
     }
 
-    ray->intersections()++;
-
     /*
     #ifdef USE_DEBUG_RAY
       if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
@@ -1491,6 +1490,9 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       if (DEBUG_IF)
         std::cerr << "Found a side!" << std::endl;
 #endif
+
+      ray->intersections()++;
+      _num_intersections++;
 
       //      libMesh::err<<"Intersected side "<<intersected_side<<" at
       //      "<<intersection_point<<std::endl;

@@ -1,0 +1,9 @@
+[Tests]
+  [./test]
+    type = 'Exodiff'
+    input = 'per_processor_ray_tracing_results_vector_postprocessor.i'
+    exodiff = 'per_processor_ray_tracing_results_vector_postprocessor_out.e'
+    min_parallel = 4
+    max_parallel = 4
+  [../]
+[]

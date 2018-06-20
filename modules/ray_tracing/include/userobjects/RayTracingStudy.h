@@ -63,12 +63,17 @@ public:
   unsigned long int maxProcessorCrossings() { return _max_processor_crossings; }
 
   /**
-   * Total number of Ray/element intersections
+   * Number of Ray/element intersections done by this processor
+   */
+  unsigned long int localIntersections() { return _local_intersections; }
+
+  /**
+   * Number of Ray/element intersections for rays that end on this processor
    */
   unsigned long int totalIntersections() { return _total_intersections; }
 
   /**
-   * Total number of Ray/element integrations
+   * Total number of Ray/element integrations for rays that end on this processor
    */
   unsigned long int totalIntegrations() { return _total_integrations; }
 
@@ -83,12 +88,17 @@ public:
   unsigned long int totalIntegratedDistance() { return _total_integrated_distance; }
 
   /**
+   * Local Rays started
+   */
+  unsigned long int localRaysStarted() { return _rays_started; }
+
+  /**
    * Total number of Rays started
    */
   unsigned long int totalRaysStarted() { return _all_rays_started; }
 
   /**
-   * Received rays traced on this processor
+   * Rays traced on this processor
    */
   unsigned long int raysTraced() { return _rays_traced; }
 
@@ -96,6 +106,32 @@ public:
    * Total number of received Ray buffers traced by this processor
    */
   unsigned long int rayBuffersReceived() { return _receive_buffer.buffersReceived(); }
+
+  /**
+   * Rays sent from this processor
+   */
+  unsigned long int raysSent()
+  {
+    unsigned long int total_sent = 0;
+
+    for (auto & buffer : _send_buffers)
+      total_sent += buffer.second->raysSent();
+
+    return total_sent;
+  }
+
+  /**
+   * Buffers sent from this processor
+   */
+  unsigned long int buffersSent()
+  {
+    unsigned long int total_sent = 0;
+
+    for (auto & buffer : _send_buffers)
+      total_sent += buffer.second->buffersSent();
+
+    return total_sent;
+  }
 
   /**
    * Total number of received Rays by this processor
@@ -388,6 +424,9 @@ protected:
 
   /// Total number of processor crossings for Rays that finished on this processor
   unsigned long int _total_processor_crossings = 0;
+
+  /// Local number of Ray/element intersections
+  unsigned long int _local_intersections = 0;
 
   /// Total number of Ray/element intersections
   unsigned long int _total_intersections = 0;
