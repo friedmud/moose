@@ -64,6 +64,7 @@ TraceRay::TraceRay(const MeshBase & mesh,
     _tolerate_failure(tolerate_failure),
     _tid(tid)
 {
+  _ids.reserve(20);
 }
 
 RayProblemTraceRay::RayProblemTraceRay(RayProblemBase & ray_problem,
@@ -227,16 +228,18 @@ sideIntersectedByLine2D(const Elem * current_elem,
 
     double intersection_distance = 0;
 
-    auto & normals = elem_normals.at(current_elem);
+    // Unfortunately - backface culling ended up being slower than just testing the intersection
+    // *shrug*
+    //    auto & normals = elem_normals.at(current_elem);
 
     for (unsigned int i = 0; i < n_sides; i++)
     {
       if (i == incoming_side) // Don't search backwards
         continue;
 
-      // Backface culling
-      if (normals[i] * ray_direction < -TOLERANCE)
-        continue;
+        // Backface culling
+        //      if (normals[i] * ray_direction < -TOLERANCE)
+        //        continue;
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -1190,6 +1193,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
     }
 
+    auto elem_type = current_elem->type();
+
     if (!ends_in_elem)
     {
 
@@ -1234,7 +1239,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     }
 
       */
-      if (current_elem->type() == QUAD4)
+      if (elem_type == QUAD4)
         intersected_side = sideIntersectedByLine2D<Quad4>(current_elem,
                                                           incoming_side,
                                                           incoming_point,
@@ -1242,7 +1247,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                           _elem_normals,
                                                           intersection_point,
                                                           boundary_intersection_point);
-      else if (current_elem->type() == TRI3)
+      else if (elem_type == TRI3)
         intersected_side = sideIntersectedByLine2D<Tri3>(current_elem,
                                                          incoming_side,
                                                          incoming_point,
@@ -1250,7 +1255,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                          _elem_normals,
                                                          intersection_point,
                                                          boundary_intersection_point);
-      else if (current_elem->type() == HEX8)
+      else if (elem_type == HEX8)
         intersected_side = sideIntersectedByLineHex8(current_elem,
                                                      incoming_side,
                                                      incoming_point,
@@ -1259,8 +1264,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                      intersection_point,
                                                      boundary_intersection_point);
 
-      else if (current_elem->type() == EDGE2 || current_elem->type() == EDGE3 ||
-               current_elem->type() == EDGE4)
+      else if (elem_type == EDGE2 || elem_type == EDGE3 || elem_type == EDGE4)
         intersected_side = sideIntersectedByLine1D(current_elem,
                                                    incoming_side,
                                                    incoming_point,
@@ -1328,7 +1332,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
               continue;
 
             // Now try to find an intersection in that neighbor
-            if (current_elem->type() == QUAD4)
+            if (elem_type == QUAD4)
               intersected_side = sideIntersectedByLine2D<Quad4>(neighbor,
                                                                 side,
                                                                 incoming_point,
@@ -1336,7 +1340,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                                 _elem_normals,
                                                                 intersection_point,
                                                                 boundary_intersection_point);
-            else if (current_elem->type() == TRI3)
+            else if (elem_type == TRI3)
               intersected_side = sideIntersectedByLine2D<Tri3>(neighbor,
                                                                side,
                                                                incoming_point,
@@ -1344,7 +1348,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                                _elem_normals,
                                                                intersection_point,
                                                                boundary_intersection_point);
-            else if (current_elem->type() == HEX8)
+            else if (elem_type == HEX8)
               intersected_side = sideIntersectedByLineHex8(neighbor,
                                                            side,
                                                            incoming_point,

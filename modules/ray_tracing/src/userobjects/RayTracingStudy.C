@@ -259,24 +259,26 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 {
   _chunks_traced++;
 
-#pragma omp parallel for schedule(guided)
-  for (auto it = begin; it < end; ++it)
+#pragma omp parallel
   {
-    auto & ray = *it;
+    RayProblemTraceRay tr(_ray_problem,
+                          _mesh.getMesh(),
+                          _halo_size,
+                          _ray_max_distance,
+                          _ray_length,
+                          _tolerate_failure,
+                          omp_get_thread_num());
 
-    if (ray->startingElem()->processor_id() == _my_pid) // This will be false if we've picked up a
-                                                        // banked ray that needs to start on another
-                                                        // processor
+#pragma omp for schedule(guided)
+    for (auto it = begin; it < end; ++it)
     {
-      RayProblemTraceRay tr(_ray_problem,
-                            _mesh.getMesh(),
-                            _halo_size,
-                            _ray_max_distance,
-                            _ray_length,
-                            _tolerate_failure,
-                            omp_get_thread_num());
+      auto & ray = *it;
 
-      tr.trace(ray);
+      // This will be false if we've picked up a
+      // banked ray that needs to start on another
+      // processor
+      if (ray->startingElem()->processor_id() == _my_pid)
+        tr.trace(ray);
     }
   }
 
