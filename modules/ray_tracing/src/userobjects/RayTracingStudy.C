@@ -269,7 +269,7 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
                           _tolerate_failure,
                           omp_get_thread_num());
 
-#pragma omp for schedule(guided)
+#pragma omp for schedule(dynamic)
     for (auto it = begin; it < end; ++it)
     {
       auto & ray = *it;
