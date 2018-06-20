@@ -85,6 +85,15 @@ public:
   }
 
   /**
+   * Swap the contents of this set with another
+   */
+  void swap(StaticallyAllocatedSet<T, N> & other)
+  {
+    _data.swap(other._data);
+    std::swap(_end_pos, other._end_pos);
+  }
+
+  /**
    * Expert interface: the current ending position
    */
   size_t endPos() { return _end_pos; }

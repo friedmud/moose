@@ -30,4 +30,22 @@ TEST(StaticallyAllocatedSet, test)
   EXPECT_EQ(set.endPos(), 0);
   EXPECT_EQ(set.contains(2), false);
   EXPECT_EQ(set.contains(1), false);
+
+  set.insert(3);
+  set.insert(4);
+
+  MooseUtils::StaticallyAllocatedSet<int, 4> set2;
+  set2.insert(5);
+
+  set.swap(set2);
+
+  EXPECT_EQ(set.contains(3), false);
+  EXPECT_EQ(set.contains(4), false);
+  EXPECT_EQ(set.contains(5), true);
+  EXPECT_EQ(set.size(), 1);
+
+  EXPECT_EQ(set2.contains(3), true);
+  EXPECT_EQ(set2.contains(4), true);
+  EXPECT_EQ(set2.contains(5), false);
+  EXPECT_EQ(set2.size(), 2);
 }
