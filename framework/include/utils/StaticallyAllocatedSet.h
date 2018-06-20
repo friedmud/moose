@@ -21,8 +21,8 @@ template <typename T, std::size_t N>
 class StaticallyAllocatedSet
 {
 public:
-  typedef typename std::vector<T>::iterator iterator;
-  typedef typename std::vector<T>::const_iterator const_iterator;
+  typedef typename std::array<T, N>::iterator iterator;
+  typedef typename std::array<T, N>::const_iterator const_iterator;
 
   /**
    * Create a set

@@ -28,6 +28,11 @@
 #include <list>
 #include <unistd.h>
 
+// Maximum number of point neighbors possible
+// With normal topology the max is 8 for Hex8s
+// Using 16 for safety
+#define MAX_POINT_NEIGHBORS 16
+
 unsigned long int ray_count = 0;
 
 // 0 ray_count: 156007 ray_id: 7244 Endless loop!
@@ -830,12 +835,13 @@ sideNeighborIsOn(const Elem * elem, const Elem * neighbor)
 }
 */
 void
-find_point_neighbors(const Elem * current_elem,
-                     const Point & p,
-                     std::set<const Elem *> & neighbor_set,
-                     const std::shared_ptr<Ray> &
+find_point_neighbors(
+    const Elem * current_elem,
+    const Point & p,
+    MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> & neighbor_set,
+    const std::shared_ptr<Ray> &
 #ifdef USE_DEBUG_RAY
-                         ray
+        ray
 #endif
 )
 {
@@ -845,7 +851,9 @@ find_point_neighbors(const Elem * current_elem,
   neighbor_set.clear();
   neighbor_set.insert(current_elem);
 
-  std::set<const Elem *> untested_set, next_untested_set;
+  MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> untested_set;
+  MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> next_untested_set;
+
   untested_set.insert(current_elem);
 
 #ifdef USE_DEBUG_RAY
@@ -857,8 +865,8 @@ find_point_neighbors(const Elem * current_elem,
   {
     // Loop over all the elements in the patch that haven't already
     // been tested
-    std::set<const Elem *>::const_iterator it = untested_set.begin();
-    const std::set<const Elem *>::const_iterator end = untested_set.end();
+    auto it = untested_set.begin();
+    const auto end = untested_set.end();
 
     for (; it != end; ++it)
     {
@@ -881,7 +889,7 @@ find_point_neighbors(const Elem * current_elem,
                                                  1e-5) /*contains_point(p)*/) // ... and touches p
             {
               // Make sure we'll test it
-              if (!neighbor_set.count(current_neighbor))
+              if (!neighbor_set.contains(current_neighbor))
                 next_untested_set.insert(current_neighbor);
 
 #ifdef USE_DEBUG_RAY
@@ -909,7 +917,7 @@ find_point_neighbors(const Elem * current_elem,
               if (current_child->contains_point(p))
               {
                 // Make sure we'll test it
-                if (!neighbor_set.count(current_child))
+                if (!neighbor_set.contains(current_child))
                   next_untested_set.insert(current_child);
 
                 neighbor_set.insert(current_child);
@@ -1109,7 +1117,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
   std::vector<BoundaryID> ids(1);
 
-  std::set<const Elem *> point_neighbors;
+  MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> point_neighbors;
 
   auto pid = _mesh.comm().rank();
 
@@ -1283,10 +1291,12 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
 #endif
 
+      /*
       possiblyOnBoundary(
           ray, incoming_point, current_elem, incoming_side, intersection_point, intersected_side);
+      */
 
-      if (intersected_side == -1) // Need to do a more exhaustive search
+      if (false && intersected_side == -1) // Need to do a more exhaustive search
       {
         // Let's first try grabbing the point_neighbors for this element to see if they are good
         // candidates
@@ -1616,7 +1626,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
           //        if (ray->id() == 4811)
           //          libMesh::err<<"Here!"<<std::endl;
 
-          if (num_zero > 1)
+          if (false && num_zero > 1)
           {
             //          if (ray->id() == 4811)
             //          libMesh::err<<ray_count<<" Ray hit a domain corner!
