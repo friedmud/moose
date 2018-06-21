@@ -196,6 +196,7 @@
   [./per_proc_ray_tracing]
     type = PerProcessorRayTracingResultsVectorPostprocessor
     results = 'rays_started rays_traced chunks_traced rays_received buffers_received rays_sent buffers_sent intersections generation_time propagation_time'
+    execute_on = 'timestep_begin'
   [../]
 []
 

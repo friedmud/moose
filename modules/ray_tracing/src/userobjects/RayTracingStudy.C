@@ -113,6 +113,7 @@ RayTracingStudy::executeStudy()
   _all_rays_started = 0;
   _rays_finished = 0;
   _all_rays_finished = 0;
+  _local_intersections = 0;
 
   /// Total number of processor crossings for Rays that finished on this processor
   _total_processor_crossings = 0;
@@ -189,6 +190,9 @@ RayTracingStudy::executeStudy()
   auto generation_start_time = std::chrono::steady_clock::now();
   generateRays();
   _generation_time = std::chrono::steady_clock::now() - generation_start_time;
+
+  std::cout << "Generation time: " << std::chrono::duration<Real>(_generation_time).count()
+            << std::endl;
 
   //  _communicator.barrier();
 
