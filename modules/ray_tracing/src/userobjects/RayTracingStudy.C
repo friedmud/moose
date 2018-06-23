@@ -267,15 +267,17 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 
 #pragma omp parallel
   {
+    auto thread_num = omp_get_thread_num();
+
     RayProblemTraceRay tr(_ray_problem,
                           _mesh.getMesh(),
                           _halo_size,
                           _ray_max_distance,
                           _ray_length,
                           _tolerate_failure,
-                          omp_get_thread_num());
+                          thread_num);
 
-#pragma omp for schedule(dynamic)
+#pragma omp for schedule(dynamic, 5)
     for (auto it = begin; it < end; ++it)
     {
       auto & ray = *it;
@@ -288,6 +290,7 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
     }
 
 #pragma omp critical
+    //    std::cout << thread_num << ": " << tr.intersections() << " intersections" << std::endl;
     _local_intersections += tr.intersections();
   }
 

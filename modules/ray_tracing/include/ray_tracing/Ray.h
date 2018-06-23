@@ -35,7 +35,7 @@ typedef StoredRange<std::vector<std::shared_ptr<Ray>>::iterator, std::shared_ptr
 /**
  * Basic datastructure for a ray that will traverse the mesh.
  */
-class Ray
+class alignas(64) Ray
 {
 public:
   Ray() {}
@@ -224,6 +224,9 @@ protected:
   /// NOTE: This is NOT sent with the Ray in parallel!
   /// Only a Ray that is actively being traced will be passed in parallel
   bool _should_continue = true;
+
+  // Extra padding to avoid false sharing
+  long padding[8];
 
   friend class Parallel::Packing<std::shared_ptr<Ray>>;
 };

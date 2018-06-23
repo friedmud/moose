@@ -163,6 +163,10 @@ private:
                                       const Elem *& best_neighbor,
                                       unsigned int & best_side);
 
+  void checkForCornerHitAndApplyBCs(const Elem * current_elem,
+                                    const Point & intersection_point,
+                                    std::shared_ptr<Ray> & ray);
+
   unsigned int _mesh_dim;
 
   Point _work_point;

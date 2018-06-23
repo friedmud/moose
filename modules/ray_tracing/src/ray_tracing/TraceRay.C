@@ -975,6 +975,8 @@ TraceRay::getNeighbor(const Elem * current_elem,
                       unsigned int intersected_side,
                       Point & intersection_point)
 {
+  return current_elem->neighbor(intersected_side);
+
   auto neighbor = current_elem->neighbor(intersected_side);
 
   if (!neighbor || neighbor->active())
@@ -1168,6 +1170,82 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
           best_neighbor = neighbor;
           best_side = side;
           longest_distance = distance;
+        }
+      }
+    }
+  }
+}
+
+void
+TraceRay::checkForCornerHitAndApplyBCs(const Elem * current_elem,
+                                       const Point & intersection_point,
+                                       std::shared_ptr<Ray> & ray)
+{
+  // Need to see if the ray hit _right_ on the "corner" of the domain
+  // If it did, then we're going to apply all of the boundary conditions for each
+  // side at that corner
+
+  // First determine if we hit a corner.
+  // Subtract off the current point from the min/max of the bounding box
+  // If any two entries from that subtraction are (near) zero then we're at a corner
+  _work_point = intersection_point - _b_box.min();
+  _work_point2 = intersection_point - _b_box.max();
+
+  unsigned int num_zero = 0;
+
+  for (unsigned int i = 0; i < _mesh_dim; i++)
+    if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-8))
+      num_zero++;
+
+  for (unsigned int i = 0; i < _mesh_dim; i++)
+    if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-8))
+      num_zero++;
+
+  //        if (ray->id() == 4811)
+  //          libMesh::err<<"Here!"<<std::endl;
+
+  if (num_zero > 1)
+  {
+    //          if (ray->id() == 4811)
+    //          libMesh::err<<ray_count<<" Ray hit a domain corner!
+    //          "<<intersection_point<<std::endl;
+
+    find_point_neighbors(current_elem, intersection_point, _point_neighbors, ray);
+
+    // Try the search on each neighbor and see if something good happens
+    for (auto & neighbor : _point_neighbors)
+    {
+//            if (neighbor != current_elem) // Don't need to look through this element again
+//            {
+#ifdef USE_DEBUG_RAY
+      if (ray->id() == 4811)
+        libMesh::err << "Looking at neighbor: " << neighbor->id() << std::endl;
+#endif
+
+      // First find the side the point is on in the neighbor
+      auto side = -1;
+
+      const auto n_sides = neighbor->n_sides();
+
+      for (auto s = 0u; s < n_sides; s++)
+      {
+        auto side_elem = neighbor->build_side(s);
+
+        if (side_elem->contains_point(intersection_point))
+        {
+          side = s;
+
+          _mesh.get_boundary_info().boundary_ids(neighbor, side, _ids);
+
+          for (const auto & bid : _ids)
+          {
+            // Don't apply the same BC twice!
+            if (!_applied_ids.contains(bid))
+            {
+              _applied_ids.insert(bid);
+              onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
+            }
+          }
         }
       }
     }
@@ -1484,7 +1562,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     #endif
     */
 
-    if (intersected_side != -1 || ends_in_elem) // -1 means that we didn't find any side
+    if (intersected_side != -1 || ends_in_elem) // This is true if we have found an intersection
     {
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -1544,7 +1622,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         break;
       }
 
-      if (intersected_side != -1)
+      // Grab the neighbor and set up where to go next
       {
         // Get the neighbor on that side
         Elem * neighbor = getNeighbor(current_elem, intersected_side, intersection_point);
@@ -1623,75 +1701,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             }
           }
 
-          // Need to see if the ray hit _right_ on the "corner" of the domain
-          // If it did, then we're going to apply all of the boundary conditions for each
-          // side at that corner
-
-          // First determine if we hit a corner.
-          // Subtract off the current point from the min/max of the bounding box
-          // If any two entries from that subtraction are (near) zero then we're at a corner
-          _work_point = intersection_point - _b_box.min();
-          _work_point2 = intersection_point - _b_box.max();
-
-          unsigned int num_zero = 0;
-
-          for (unsigned int i = 0; i < _mesh_dim; i++)
-            if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-8))
-              num_zero++;
-
-          for (unsigned int i = 0; i < _mesh_dim; i++)
-            if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-8))
-              num_zero++;
-
-          //        if (ray->id() == 4811)
-          //          libMesh::err<<"Here!"<<std::endl;
-
-          if (num_zero > 1)
-          {
-            //          if (ray->id() == 4811)
-            //          libMesh::err<<ray_count<<" Ray hit a domain corner!
-            //          "<<intersection_point<<std::endl;
-
-            find_point_neighbors(current_elem, intersection_point, _point_neighbors, ray);
-
-            // Try the search on each neighbor and see if something good happens
-            for (auto & neighbor : _point_neighbors)
-            {
-//            if (neighbor != current_elem) // Don't need to look through this element again
-//            {
-#ifdef USE_DEBUG_RAY
-              if (ray->id() == 4811)
-                libMesh::err << "Looking at neighbor: " << neighbor->id() << std::endl;
-#endif
-
-              // First find the side the point is on in the neighbor
-              auto side = -1;
-
-              const auto n_sides = neighbor->n_sides();
-
-              for (auto s = 0u; s < n_sides; s++)
-              {
-                auto side_elem = neighbor->build_side(s);
-
-                if (side_elem->contains_point(intersection_point))
-                {
-                  side = s;
-
-                  _mesh.get_boundary_info().boundary_ids(neighbor, side, _ids);
-
-                  for (const auto & bid : _ids)
-                  {
-                    // Don't apply the same BC twice!
-                    if (!_applied_ids.contains(bid))
-                    {
-                      _applied_ids.insert(bid);
-                      onBoundary(current_elem, intersection_point, side, bid, neighbor, ray);
-                    }
-                  }
-                }
-              }
-            }
-          }
+          checkForCornerHitAndApplyBCs(current_elem, intersection_point, ray);
 
           finishedBoundary();
 
