@@ -275,7 +275,8 @@ RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
 
   dof_id_type dof_number = elem->dof_number(number(), 0, 0);
 
-  threaded_data._current_offset = _current_group_solution.map_global_to_local_index(dof_number);
+  threaded_data._current_offset =
+      threaded_data._group_solution->map_global_to_local_index(dof_number);
 
   if (only_sigma_t)
     threaded_data._current_ray_material->reinitSigmaT(elem);
