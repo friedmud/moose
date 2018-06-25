@@ -32,13 +32,13 @@ unsigned long int ray_count = 0;
 
 // 0 ray_count: 156007 ray_id: 7244 Endless loop!
 
-unsigned int debug_ray = 198357;
+unsigned int debug_ray = 64781;
 
-unsigned int debug_ray_id = 10186;
+unsigned int debug_ray_id = 8016835;
 
 unsigned int debug_ray_pid = 1;
 
-#define DEBUG_IF ray_count > 197000 && debug_ray_id == ray->id()
+#define DEBUG_IF ray->id() == debug_ray_id // ray_count > 197000 && debug_ray_id == ray->id()
 
 // && ray_count == debug_ray
 
@@ -279,14 +279,18 @@ rayIntersectsTriangle(const Point & O,
                       const Point & V11,
                       Real & u,
                       Real & v,
-                      Real & t
+                      Real & t,
+                      const std::shared_ptr<Ray> &
+#ifdef USE_DEBUG_RAY
+                          ray
+#endif
                       /*
   Vector3D rayOrigin,
                            Vector3D rayVector,
                            Triangle* inTriangle,
                            Vector3D& outIntersectionPoint*/)
 {
-  const Real EPSILON = 0.0000001;
+  const Real EPSILON = 0.000001;
   const Point & vertex0 = V00;
   const Point & vertex1 = V10;
   const Point & vertex2 = V11;
@@ -302,19 +306,44 @@ rayIntersectsTriangle(const Point & O,
   edge2 = vertex2 - vertex0;
   h = rayVector.cross(edge2);
   a = edge1 * h;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  a: " << a << std::endl;
+#endif
+
   if (a > -EPSILON && a < EPSILON)
     return false;
   f = 1 / a;
   s = rayOrigin - vertex0;
   u = f * (s * h);
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  u: " << u << std::endl;
+#endif
+
   if (u < -EPSILON || u > 1. + EPSILON)
     return false;
   q = s.cross(edge1);
   v = f * rayVector * q;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  v: " << v << std::endl;
+#endif
+
   if (v < -EPSILON || u + v > 1. + EPSILON)
     return false;
+
   // At this stage we can compute t to find out where the intersection point is on the line.
   t = f * edge2 * q;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  t: " << t << std::endl;
+#endif
+
   if (t > -EPSILON) // ray intersection
     return true;
   else // This means that there is a line intersection but not a ray intersection.
@@ -331,26 +360,47 @@ intersectQuadUsingTriangles(const Point & O,
                             Real & u,
                             Real & v,
                             Real & t,
-                            const std::shared_ptr<Ray> &
-#ifdef USE_DEBUG_RAY
-                                ray
-#else
-/* ray */
-#endif
-)
+                            const std::shared_ptr<Ray> & ray)
 {
-  /*
-  auto normal = (V10 - V00).cross(V11 - V10);
+/*
+auto normal = (V10 - V00).cross(V11 - V10);
 
-  // Backface culling
-  if (D * normal > -TOLERANCE)
-    return false;
+// Backface culling
+if (D * normal > -TOLERANCE)
+  return false;
+*/
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << " Trying first triangle " << std::endl;
+#endif
+  if (rayIntersectsTriangle(O, D, V00, V10, V11, u, v, t, ray))
+    return true;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << " Trying second triangle " << std::endl;
+#endif
+  if (rayIntersectsTriangle(O, D, V11, V01, V00, u, v, t, ray))
+    return true;
+
+  /*
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << " Trying third triangle " << std::endl;
+#endif
+  if (rayIntersectsTriangle(O, D, V10, V11, V01, u, v, t, ray))
+    return true;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << " Trying fourth triangle " << std::endl;
+#endif
+  if (rayIntersectsTriangle(O, D, V01, V00, V10, u, v, t, ray))
+    return true;
   */
 
-  if (rayIntersectsTriangle(O, D, V00, V10, V11, u, v, t))
-    return true;
-  else
-    return rayIntersectsTriangle(O, D, V11, V01, V00, u, v, t);
+  return false;
 }
 
 // https://people.cs.kuleuven.be/~ares.lagae/publications/LD05ERQIT/LD05ERQIT_code.cpp
@@ -597,7 +647,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
     double s0 = ray->end()(0) - q0;
     double s1 = ray->end()(1) - q1;
     */
-    Point bumped_incoming_point = incoming_point + 1e-9 * ray_direction;
+    Point bumped_incoming_point = incoming_point + 1e-9 * ray_direction; // + 1e-10 * ray_direction;
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
@@ -621,18 +671,18 @@ sideIntersectedByLineHex8(const Elem * current_elem,
     Point u_v;
 
     // Center of the bilinear coordinates
-    Point centroid(0.5, 0.5, 0);
+    //    Point centroid(0.5, 0.5, 0);
 
-    auto & normals = elem_normals.find(current_elem)->second;
+    //    auto & normals = elem_normals.find(current_elem)->second;
 
     for (unsigned int i = 0; i < n_sides; i++)
     {
       if (i == incoming_side) // Don't search backwards
         continue;
 
-      // Backface culling
-      if (normals[i] * ray_direction < -TOLERANCE)
-        continue;
+        // Backface culling
+        //      if (normals[i] * ray_direction < -TOLERANCE)
+        //        continue;
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -651,12 +701,25 @@ sideIntersectedByLineHex8(const Elem * current_elem,
                                       t,
                                       ray);
 
+#ifdef USE_DEBUG_RAY
+      if (DEBUG_IF)
+        libMesh::err << "t: " << t << std::endl;
+#endif
+
       if (intersected)
       {
+#ifdef USE_DEBUG_RAY
+        if (DEBUG_IF)
+          libMesh::err << "Intersected" << std::endl;
+#endif
         if (t > intersection_distance)
         {
-          //          Elem * neighbor = current_elem->neighbor(i);
+        //          Elem * neighbor = current_elem->neighbor(i);
 
+#ifdef USE_DEBUG_RAY
+          if (DEBUG_IF)
+            libMesh::err << "Largest Intersection distance: " << t << std::endl;
+#endif
           intersected_side = i;
           intersection_distance = t;
 
@@ -664,6 +727,10 @@ sideIntersectedByLineHex8(const Elem * current_elem,
 
           if (t > 1e-9)
             return intersected_side;
+#ifdef USE_DEBUG_RAY
+          else if (DEBUG_IF)
+            libMesh::err << t << " Not larger than 1e-9 so rejected " << std::endl;
+#endif
         }
 
         /*
@@ -888,7 +955,7 @@ TraceRay::find_point_neighbors(
                 next_untested_set.insert(current_neighbor);
 
 #ifdef USE_DEBUG_RAY
-              if (ray->id() == debug_ray_id && ray_count == debug_ray)
+              if (DEBUG_IF)
                 std::cerr << "  Contained in " << current_neighbor->id() << std::endl;
 #endif
               // And add it
@@ -1008,6 +1075,18 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
 {
   if (ray->distance() > 1e-9) // Only allow this if the ray has moved a bit
   {
+    const auto n_sides = current_elem->n_sides();
+
+    unsigned int sides_on_boundary = 0;
+    // First, see how many sides are by the boundary
+    for (auto s = 0u; s < n_sides; s++)
+      if (current_elem->neighbor(s) == NULL)
+        sides_on_boundary++;
+
+    // Can't find a boundary side if this element has none
+    if (!sides_on_boundary)
+      return;
+
     // See if we're on the edge of the domain
     _work_point = incoming_point - _b_box.min();
     _work_point2 = incoming_point - _b_box.max();
@@ -1015,8 +1094,8 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
     {
-      std::cerr << "Work point: " << work_point << std::endl;
-      std::cerr << "Work point2: " << work_point2 << std::endl;
+      std::cerr << "Work point: " << _work_point << std::endl;
+      std::cerr << "Work point2: " << _work_point2 << std::endl;
     }
 #endif
 
@@ -1026,11 +1105,11 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
     unsigned int num_zero = 0;
 
     for (unsigned int i = 0; i < _mesh_dim; i++)
-      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-8))
+      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-5))
         num_zero++;
 
     for (unsigned int i = 0; i < _mesh_dim; i++)
-      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-8))
+      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-5))
         num_zero++;
 
 #ifdef USE_DEBUG_RAY
@@ -1047,30 +1126,48 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
 
       // Now what we're going to do is search the sides of this element for a side
       // on the boundary that still contains this point
-      const auto n_sides = current_elem->n_sides();
-
-      for (auto s = 0u; s < n_sides; s++)
+      if (sides_on_boundary == 1) // If there's only one let's just pick it
       {
-        if (s != incoming_side) // Don't allow a ray to turn around!
+        for (auto s = 0u; s < n_sides; s++)
         {
-          // Only check sides that are up against the domain edge
           if (current_elem->neighbor(s) == NULL)
           {
-            auto side_elem = current_elem->build_side(s);
+            intersected_side = s;
+            intersection_point = ray->end();
 
-            if (side_elem->contains_point(incoming_point))
+            return;
+          }
+        }
+      }
+      else if (sides_on_boundary > 1) // If there's more than one then we need to choose
+      {
+        for (auto s = 0u; s < n_sides; s++)
+        {
+          if (s != incoming_side) // Don't allow a ray to turn around!
+          {
+            // Only check sides that are up against the domain edge
+            if (current_elem->neighbor(s) == NULL)
             {
 #ifdef USE_DEBUG_RAY
               if (DEBUG_IF)
-              {
-                std::cerr << ray_count << " Found boundary side: " << s << std::endl;
-                std::cerr << ray_count << " Boundary intersection point: " << incoming_point
-                          << std::endl;
-              }
+                std::cerr << "Checking to see if side " << s << "contains the point" << std::endl;
 #endif
-              intersected_side = s;
-              intersection_point = incoming_point;
-              break;
+              auto side_elem = current_elem->build_side(s);
+
+              if (side_elem->contains_point(incoming_point))
+              {
+#ifdef USE_DEBUG_RAY
+                if (DEBUG_IF)
+                {
+                  std::cerr << ray_count << " Found boundary side: " << s << std::endl;
+                  std::cerr << ray_count << " Boundary intersection point: " << incoming_point
+                            << std::endl;
+                }
+#endif
+                intersected_side = s;
+                intersection_point = incoming_point;
+                break;
+              }
             }
           }
         }
@@ -1097,7 +1194,7 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
-    std::cerr << "Num point_neighbors: " << point_neighbors.size() << std::endl;
+    std::cerr << "Num point_neighbors: " << _point_neighbors.size() << std::endl;
 #endif
 
   Real longest_distance = 0;
@@ -1117,6 +1214,7 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
 
       const auto n_sides = neighbor->n_sides();
 
+      /*
       for (auto s = 0u; s < n_sides; s++)
       {
         auto side_elem = neighbor->build_side(s);
@@ -1129,7 +1227,14 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
       }
 
       if (side == -1)
+      {
+#ifdef USE_DEBUG_RAY
+        if (DEBUG_IF)
+          std::cerr << "Neighbor sides didn't contain the point" << neighbor->id() << std::endl;
+#endif
         continue;
+      }
+      */
 
       // Now try to find an intersection in that neighbor
       if (elem_type == QUAD4)
@@ -1194,11 +1299,11 @@ TraceRay::checkForCornerHitAndApplyBCs(const Elem * current_elem,
   unsigned int num_zero = 0;
 
   for (unsigned int i = 0; i < _mesh_dim; i++)
-    if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-8))
+    if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-6))
       num_zero++;
 
   for (unsigned int i = 0; i < _mesh_dim; i++)
-    if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-8))
+    if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-6))
       num_zero++;
 
   //        if (ray->id() == 4811)
@@ -1218,7 +1323,7 @@ TraceRay::checkForCornerHitAndApplyBCs(const Elem * current_elem,
 //            if (neighbor != current_elem) // Don't need to look through this element again
 //            {
 #ifdef USE_DEBUG_RAY
-      if (ray->id() == 4811)
+      if (DEBUG_IF)
         libMesh::err << "Looking at neighbor: " << neighbor->id() << std::endl;
 #endif
 
@@ -1300,7 +1405,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
   if (false && DEBUG_IF && pid == 0)
   //  if (pid == 1)
   {
-    debug_mesh = new Mesh(Parallel::Communicator(), _mesh._mesh_dimension());
+    debug_mesh = new Mesh(Parallel::Communicator(), _mesh.mesh_dimension());
     debug_mesh->skip_partitioning(true);
   }
 #endif
