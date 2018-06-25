@@ -81,7 +81,12 @@ PetscMatPartitioner::_do_partition(MeshBase & mesh, const unsigned int n_parts)
 
     auto elem = _local_id_to_elem[k];
 
-    elem_weights[k] = std::sqrt(elem->volume()) * 10000;
+    Real side_volume = 0;
+
+    for (auto s : elem->side_index_range())
+      side_volume += elem->build_side(s)->volume();
+
+    elem_weights[k] = side_volume * 10000;
   }
 
   // j is adjacency matrix

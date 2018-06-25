@@ -34,7 +34,7 @@ unsigned long int ray_count = 0;
 
 unsigned int debug_ray = 64781;
 
-unsigned int debug_ray_id = 8016835;
+unsigned int debug_ray_id = 15524036;
 
 unsigned int debug_ray_pid = 1;
 
@@ -1105,11 +1105,11 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
     unsigned int num_zero = 0;
 
     for (unsigned int i = 0; i < _mesh_dim; i++)
-      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-5))
+      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 5e-5))
         num_zero++;
 
     for (unsigned int i = 0; i < _mesh_dim; i++)
-      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-5))
+      if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 5e-5))
         num_zero++;
 
 #ifdef USE_DEBUG_RAY

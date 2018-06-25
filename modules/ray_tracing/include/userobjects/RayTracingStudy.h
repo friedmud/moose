@@ -108,6 +108,11 @@ public:
   unsigned long int rayBuffersReceived() { return _receive_buffer.buffersReceived(); }
 
   /**
+   * Total number of times that messages were probed for
+   */
+  unsigned long int numProbes() { return _receive_buffer.numProbes(); }
+
+  /**
    * Rays sent from this processor
    */
   unsigned long int raysSent()

@@ -71,6 +71,11 @@ public:
   unsigned long int buffersReceived() { return _buffers_received; }
 
   /**
+   * The total number of times we've polled for messages
+   */
+  unsigned long int numProbes() { return _num_probes; }
+
+  /**
    * Start receives for all currently available messages
    *
    * Adds the to the working buffer
@@ -91,6 +96,8 @@ public:
       {
         stat = _communicator.template packed_range_probe<std::shared_ptr<Ray>>(
             Parallel::any_source, _ray_buffer_tag, flag);
+
+        _num_probes++;
 
         if (flag)
         {
@@ -151,6 +158,7 @@ public:
 
     _rays_received = 0;
     _buffers_received = 0;
+    _num_probes = 0;
   }
 
   /**
@@ -251,6 +259,9 @@ protected:
 
   /// Total ray buffers received
   unsigned long int _buffers_received;
+
+  /// Total number of times we've polled for messages
+  unsigned long int _num_probes;
 
 private:
   template <typename Context, typename OutputIter, typename T>
