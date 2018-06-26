@@ -53,6 +53,8 @@ void
 PetscMatPartitioner::_do_partition(MeshBase & mesh, const unsigned int n_parts)
 {
 #ifdef LIBMESH_HAVE_PETSC
+  std::cout << "Partitioning Mesh!" << std::endl;
+
   // construct a dual graph
   Mat dual;
   PetscInt *i, *j, *values, *elem_weights, nrows, nj, ncols;
@@ -74,6 +76,31 @@ PetscMatPartitioner::_do_partition(MeshBase & mesh, const unsigned int n_parts)
   // Moving index for adjacency array
   nj = 0;
 
+
+  // Loop over all of the elements and find the _smallest_ side area
+  Real min_side_area = std::numeric_limits<Real>::max();
+  Real min_elem_surface_area = std::numeric_limits<Real>::max();
+
+  for (auto & elem : mesh.active_local_element_ptr_range())
+  {
+    Real elem_surface_area = 0;
+
+    for (auto s : elem->side_index_range())
+    {
+      auto side_area = elem->build_side(s)->volume();
+
+      min_side_area = std::min(side_area, min_side_area);
+
+      elem_surface_area += side_area;
+    }
+
+    min_elem_surface_area = std::min(elem_surface_area, min_elem_surface_area);
+  }
+
+  // Find the min over all procs
+  _communicator.min(min_side_area);
+  _communicator.min(min_elem_surface_area);
+
   // Fill i in with offsets (note that the zeroth entry is zero)
   for (PetscInt k = 0; k < nrows; k++)
   {
@@ -81,12 +108,12 @@ PetscMatPartitioner::_do_partition(MeshBase & mesh, const unsigned int n_parts)
 
     auto elem = _local_id_to_elem[k];
 
-    Real side_volume = 0;
+    Real elem_surface_area = 0;
 
     for (auto s : elem->side_index_range())
-      side_volume += elem->build_side(s)->volume();
+      elem_surface_area += elem->build_side(s)->volume();
 
-    elem_weights[k] = side_volume * 10000;
+    elem_weights[k] = (elem_surface_area / min_elem_surface_area);
   }
 
   // j is adjacency matrix
@@ -116,7 +143,7 @@ PetscMatPartitioner::_do_partition(MeshBase & mesh, const unsigned int n_parts)
 
         auto side_elem = elem->build_side(neighbor);
 
-        values[nj] = side_elem->volume() * 10000;
+        values[nj] = (side_elem->volume() / min_side_area);
 
         nj++;
 
@@ -154,6 +181,9 @@ PetscMatPartitioner::_do_partition(MeshBase & mesh, const unsigned int n_parts)
   MatPartitioningDestroy(&part);
   ISDestroy(&is);
   MatDestroy(&dual);
+
+  std::cout << "Finished Partitioning Mesh!" << std::endl;
+
 #else
   mooseError("Petsc is required for this partitioner");
 #endif
