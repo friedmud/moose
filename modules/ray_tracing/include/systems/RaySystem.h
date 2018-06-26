@@ -61,7 +61,7 @@ public:
    * It also guarantees that a std::vector of these objects will create
    * a contiguous chunk of memory that is 64 byte aligned.
    */
-  struct alignas(64) ThreadedData
+  struct ThreadedData
   {
     /// The current RayMaterial
     MooseSharedPointer<RayMaterial> _current_ray_material;

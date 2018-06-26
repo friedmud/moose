@@ -35,7 +35,7 @@ typedef StoredRange<std::vector<std::shared_ptr<Ray>>::iterator, std::shared_ptr
 /**
  * Basic datastructure for a ray that will traverse the mesh.
  */
-class alignas(64) Ray
+class Ray
 {
 public:
   Ray() {}
