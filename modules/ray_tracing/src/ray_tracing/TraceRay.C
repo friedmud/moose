@@ -210,7 +210,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
   double current_intersection_distance = 0;
 
   {
-  //    int boundary_side = -1;
+//    int boundary_side = -1;
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
@@ -236,9 +236,9 @@ sideIntersectedByLine2D(const Elem * current_elem,
       if (i == incoming_side) // Don't search backwards
         continue;
 
-        // Backface culling
-        //      if (normals[i] * ray_direction < -TOLERANCE)
-        //        continue;
+// Backface culling
+//      if (normals[i] * ray_direction < -TOLERANCE)
+//        continue;
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -424,7 +424,7 @@ intersectQuad(const Point & O,
 #else
 /* ray */
 #endif
-)
+              )
 {
   // Reject rays using the barycentric coordinates of // the intersection point with respect to T.
   auto E01 = V10;
@@ -625,7 +625,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
                           const Point & incoming_point,
                           const std::shared_ptr<Ray> & ray,
                           const Point & ray_direction,
-                          const std::map<const Elem *, std::vector<Point>> & elem_normals,
+                          const std::map<const Elem *, std::vector<Point>> & /*elem_normals*/,
                           Point & intersection_point,
                           Point & /*boundaryintersection_point*/)
 {
@@ -680,9 +680,9 @@ sideIntersectedByLineHex8(const Elem * current_elem,
       if (i == incoming_side) // Don't search backwards
         continue;
 
-        // Backface culling
-        //      if (normals[i] * ray_direction < -TOLERANCE)
-        //        continue;
+// Backface culling
+//      if (normals[i] * ray_direction < -TOLERANCE)
+//        continue;
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -714,7 +714,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
 #endif
         if (t > intersection_distance)
         {
-        //          Elem * neighbor = current_elem->neighbor(i);
+//          Elem * neighbor = current_elem->neighbor(i);
 
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
@@ -903,7 +903,7 @@ TraceRay::find_point_neighbors(
 #ifdef USE_DEBUG_RAY
         ray
 #endif
-)
+    )
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());
@@ -1212,9 +1212,10 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
       // First find the side the point is on in the neighbor
       auto side = -1;
 
+      /*
       const auto n_sides = neighbor->n_sides();
 
-      /*
+
       for (auto s = 0u; s < n_sides; s++)
       {
         auto side_elem = neighbor->build_side(s);
@@ -1732,7 +1733,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         // Get the neighbor on that side
         Elem * neighbor = getNeighbor(current_elem, intersected_side, intersection_point);
 
-        // Elem * neighbor = current_elem->neighbor(intersected_side);
+// Elem * neighbor = current_elem->neighbor(intersected_side);
 
 #ifdef USE_DEBUG_RAY
         if (DEBUG_IF)
