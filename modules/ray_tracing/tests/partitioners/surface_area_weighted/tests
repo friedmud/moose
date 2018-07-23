@@ -1,8 +1,10 @@
 [Tests]
   [./test]
     type = 'Exodiff'
-    input = 'simple_diffusion.i'
-    exodiff = 'simple_diffusion_out.e'
-    skip = 'true' # Skip for now because it need new PETSc
+    input = 'surface_area_weighted.i'
+    exodiff = 'surface_area_weighted_out.e'
+    min_parallel = 4
+    max_parallel = 4
+    petsc_version = '>=3.9.3'
   [../]
 []

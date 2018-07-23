@@ -28,6 +28,8 @@ class SurfaceAreaWeightedPartitioner : public PetscExternalPartitioner
 public:
   SurfaceAreaWeightedPartitioner(const InputParameters & params);
 
+  virtual std::unique_ptr<Partitioner> clone() const override;
+
   virtual dof_id_type computeElementWeight(Elem & elem) override;
 
   virtual dof_id_type computeSideWeight(Elem & elem, unsigned int side) override;

@@ -1,9 +1,6 @@
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 20
-  ny = 20
-  bias_x = 1.2
+  type = FileMesh
+  file = surface_area_weighted_in.e
   [Partitioner]
     type = SurfaceAreaWeightedPartitioner
     apply_side_weight = true

@@ -47,6 +47,9 @@ SurfaceAreaWeightedPartitioner::_do_partition(MeshBase & mesh, const unsigned in
       elem_surface_area += side_area;
     }
 
+    std::cout << "elem_surface_area: " << elem_surface_area << " area: " << elem->volume()
+              << std::endl;
+
     _min_elem_surface_area = std::min(elem_surface_area, _min_elem_surface_area);
   }
 
@@ -54,8 +57,16 @@ SurfaceAreaWeightedPartitioner::_do_partition(MeshBase & mesh, const unsigned in
   _communicator.min(_min_side_area);
   _communicator.min(_min_elem_surface_area);
 
+  std::cout << "min_elem_surface_area: " << _min_elem_surface_area << std::endl;
+
   // Call the base class
   PetscExternalPartitioner::_do_partition(mesh, n);
+}
+
+std::unique_ptr<Partitioner>
+SurfaceAreaWeightedPartitioner::clone() const
+{
+  return libmesh_make_unique<SurfaceAreaWeightedPartitioner>(_pars);
 }
 
 dof_id_type
@@ -65,6 +76,8 @@ SurfaceAreaWeightedPartitioner::computeElementWeight(Elem & elem)
 
   for (auto s : elem.side_index_range())
     elem_surface_area += elem.build_side(s)->volume();
+
+  std::cout << "Weight: " << elem_surface_area << "/" << _min_elem_surface_area << std::endl;
 
   return elem_surface_area / _min_elem_surface_area;
 }
