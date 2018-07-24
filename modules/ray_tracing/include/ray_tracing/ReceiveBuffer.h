@@ -7,7 +7,6 @@
 
 // Moose Includes
 #include "MooseError.h"
-#include "LIFOBuffer.h"
 
 // libMesh Includes
 #include "libmesh/parallel.h"
@@ -80,7 +79,7 @@ public:
    *
    * Adds the to the working buffer
    */
-  void receive(MooseUtils::LIFOBuffer<std::shared_ptr<Ray>> & working_buffer)
+  void receive(WorkBufferType & working_buffer)
   {
     bool flag = false;
     Parallel::Status stat;
@@ -136,7 +135,7 @@ public:
   /**
    * Wait for all requests to finish
    */
-  void waitAll(MooseUtils::LIFOBuffer<std::shared_ptr<Ray>> & working_buffer)
+  void waitAll(WorkBufferType & working_buffer)
   {
     for (auto & request_pair : _requests)
     {
@@ -187,7 +186,7 @@ public:
   /**
    * Checks to see if any Requests can be finished
    */
-  void cleanupRequests(MooseUtils::LIFOBuffer<std::shared_ptr<Ray>> & working_buffer)
+  void cleanupRequests(WorkBufferType & working_buffer)
   {
     //    auto cleanup_requests_start = std::chrono::steady_clock::now();
 

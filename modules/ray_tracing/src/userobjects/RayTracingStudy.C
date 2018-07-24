@@ -99,6 +99,12 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _min_buffer_size = _max_buffer_size;
 
   setMethod(_method);
+
+  // Figure out what kind of buffer type we have
+  _is_lifo =
+      std::is_same<MooseUtils::LIFOBuffer<std::shared_ptr<Ray>>, typeof(_working_buffer)>::value;
+
+  std::cout << "IS LIFO: " << _is_lifo << std::endl;
 }
 
 void
@@ -371,10 +377,17 @@ RayTracingStudy::chunkyTraceAndBuffer()
       current_chunk_size = _working_buffer.size();
 
     // Trace out some rays
-    traceAndBuffer(_working_buffer.end() - current_chunk_size, _working_buffer.end());
 
-    // Remove those rays from the buffer
-    _working_buffer.erase(current_chunk_size);
+    if (_is_lifo) // LIFOBuffer
+    {
+      traceAndBuffer(_working_buffer.end() - current_chunk_size, _working_buffer.end());
+      _working_buffer.erase(current_chunk_size);
+    }
+    else // CircularBuffer
+    {
+      traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
+      _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
+    }
 
     // If we're running out of work to do - try to pull in some more
     if (_method == SMART && _working_buffer.size() < _chunk_size)
