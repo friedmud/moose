@@ -47,7 +47,8 @@ unsigned int debug_ray_pid = 1;
 const std::vector<std::vector<unsigned int>> quad4_side_to_children = {
     {0, 1}, {1, 3}, {3, 2}, {2, 0}};
 
-TraceRay::TraceRay(const MeshBase & mesh,
+TraceRay::TraceRay(PerfGraph & perf_graph,
+                   const MeshBase & mesh,
                    const BoundingBox & b_box,
                    const std::map<const Elem *, std::vector<Point>> & elem_normals,
                    unsigned int halo_size,
@@ -55,7 +56,8 @@ TraceRay::TraceRay(const MeshBase & mesh,
                    Real ray_length,
                    bool tolerate_failure,
                    THREAD_ID tid)
-  : _mesh(mesh),
+  : PerfGraphInterface(perf_graph, "TraceRay"),
+    _mesh(mesh),
     _b_box(b_box),
     _elem_normals(elem_normals),
     _halo_size(halo_size),
@@ -63,7 +65,11 @@ TraceRay::TraceRay(const MeshBase & mesh,
     _ray_length(ray_length),
     _tolerate_failure(tolerate_failure),
     _tid(tid),
-    _num_intersections(0)
+    _num_intersections(0),
+    _trace_timer(registerTimedSection("trace", 1)),
+    _intersection_timer(registerTimedSection("intersection", 1)),
+    _try_harder_timer(registerTimedSection("try_harder", 1)),
+    _found_intersection(registerTimedSection("found_intersection", 1))
 {
   _ids.reserve(20);
 }
@@ -75,7 +81,8 @@ RayProblemTraceRay::RayProblemTraceRay(RayProblemBase & ray_problem,
                                        Real ray_length,
                                        bool tolerate_failure,
                                        THREAD_ID tid)
-  : TraceRay(mesh,
+  : TraceRay(ray_problem.perfGraph(),
+             mesh,
              ray_problem.boundingBox(),
              ray_problem.elemNormals(),
              halo_size,
@@ -210,7 +217,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
   double current_intersection_distance = 0;
 
   {
-//    int boundary_side = -1;
+  //    int boundary_side = -1;
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
@@ -236,9 +243,9 @@ sideIntersectedByLine2D(const Elem * current_elem,
       if (i == incoming_side) // Don't search backwards
         continue;
 
-// Backface culling
-//      if (normals[i] * ray_direction < -TOLERANCE)
-//        continue;
+        // Backface culling
+        //      if (normals[i] * ray_direction < -TOLERANCE)
+        //        continue;
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -424,7 +431,7 @@ intersectQuad(const Point & O,
 #else
 /* ray */
 #endif
-              )
+)
 {
   // Reject rays using the barycentric coordinates of // the intersection point with respect to T.
   auto E01 = V10;
@@ -680,9 +687,9 @@ sideIntersectedByLineHex8(const Elem * current_elem,
       if (i == incoming_side) // Don't search backwards
         continue;
 
-// Backface culling
-//      if (normals[i] * ray_direction < -TOLERANCE)
-//        continue;
+        // Backface culling
+        //      if (normals[i] * ray_direction < -TOLERANCE)
+        //        continue;
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -714,7 +721,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
 #endif
         if (t > intersection_distance)
         {
-//          Elem * neighbor = current_elem->neighbor(i);
+        //          Elem * neighbor = current_elem->neighbor(i);
 
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
@@ -903,7 +910,7 @@ TraceRay::find_point_neighbors(
 #ifdef USE_DEBUG_RAY
         ray
 #endif
-    )
+)
 {
   libmesh_assert(current_elem->contains_point(p));
   libmesh_assert(current_elem->active());
@@ -1363,6 +1370,8 @@ TraceRay::checkForCornerHitAndApplyBCs(const Elem * current_elem,
 void
 TraceRay::trace(std::shared_ptr<Ray> & ray)
 {
+  TIME_SECTION(_trace_timer);
+
   const Elem * current_elem = NULL;
   int intersected_side = -1;
   Point intersection_point;
@@ -1479,6 +1488,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
     if (!ends_in_elem)
     {
+      //      TIME_SECTION(_intersection_timer);
 
       /*
 
@@ -1561,6 +1571,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
     if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder
     {
+    //      TIME_SECTION(_try_harder_timer);
+
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
       {
@@ -1670,6 +1682,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
     if (intersected_side != -1 || ends_in_elem) // This is true if we have found an intersection
     {
+    //      TIME_SECTION(_found_intersection);
+
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
         std::cerr << "Found a side!" << std::endl;
@@ -1733,7 +1747,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         // Get the neighbor on that side
         Elem * neighbor = getNeighbor(current_elem, intersected_side, intersection_point);
 
-// Elem * neighbor = current_elem->neighbor(intersected_side);
+        // Elem * neighbor = current_elem->neighbor(intersected_side);
 
 #ifdef USE_DEBUG_RAY
         if (DEBUG_IF)

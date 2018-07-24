@@ -541,6 +541,16 @@ private:
   virtual void execute() {}
   virtual void initialize() {}
   virtual void finalize() {}
+
+  /**
+   * Timers
+   */
+  PerfID _execute_study_timer;
+  PerfID _generate_timer;
+  PerfID _propagate_timer;
+  PerfID _trace_and_buffer_timer;
+  PerfID _trace_timer;
+  PerfID _buffer_timer;
 };
 
 #endif

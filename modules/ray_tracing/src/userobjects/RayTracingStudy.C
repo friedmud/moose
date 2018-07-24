@@ -91,7 +91,13 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _tolerate_failure(getParam<bool>("tolerate_failure")),
     _average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
     _old_average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
-    _method((RayTracingMethod)(int)(getParam<MooseEnum>("method")))
+    _method((RayTracingMethod)(int)(getParam<MooseEnum>("method"))),
+    _execute_study_timer(registerTimedSection("executeStudy", 1)),
+    _generate_timer(registerTimedSection("generate", 1)),
+    _propagate_timer(registerTimedSection("propagate", 1)),
+    _trace_and_buffer_timer(registerTimedSection("trace_and_buffer", 1)),
+    _trace_timer(registerTimedSection("trace", 1)),
+    _buffer_timer(registerTimedSection("buffer", 1))
 {
   if (parameters.isParamSetByUser("min_buffer_size"))
     _min_buffer_size = getParam<unsigned int>("min_buffer_size");
@@ -110,6 +116,8 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
 void
 RayTracingStudy::executeStudy()
 {
+  TIME_SECTION(_execute_study_timer);
+
   // Reset the internal data
 
   /// Processor 0 will tell us when to stop
@@ -194,7 +202,10 @@ RayTracingStudy::executeStudy()
   //  _communicator.barrier();
 
   auto generation_start_time = std::chrono::steady_clock::now();
-  generateRays();
+  {
+    TIME_SECTION(_generate_timer);
+    generateRays();
+  }
   _generation_time = std::chrono::steady_clock::now() - generation_start_time;
 
   std::cout << "Generation time: " << std::chrono::duration<Real>(_generation_time).count()
@@ -203,7 +214,10 @@ RayTracingStudy::executeStudy()
   //  _communicator.barrier();
 
   auto propagation_start_time = std::chrono::steady_clock::now();
-  propagateRays();
+  {
+    TIME_SECTION(_propagate_timer);
+    propagateRays();
+  }
   _propagation_time = std::chrono::steady_clock::now() - propagation_start_time;
 
   auto execution_end_time = std::chrono::steady_clock::now();
@@ -267,83 +281,92 @@ void
 RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begin,
                                 std::vector<std::shared_ptr<Ray>>::iterator end)
 {
+  TIME_SECTION(_trace_and_buffer_timer);
+
   _chunks_traced++;
 
   _rays_traced += std::distance(begin, end);
 
-#pragma omp parallel
   {
-    auto thread_num = omp_get_thread_num();
+    TIME_SECTION(_trace_timer);
+#pragma omp parallel
+    {
+      auto thread_num = omp_get_thread_num();
 
-    RayProblemTraceRay tr(_ray_problem,
-                          _mesh.getMesh(),
-                          _halo_size,
-                          _ray_max_distance,
-                          _ray_length,
-                          _tolerate_failure,
-                          thread_num);
+      RayProblemTraceRay tr(_ray_problem,
+                            _mesh.getMesh(),
+                            _halo_size,
+                            _ray_max_distance,
+                            _ray_length,
+                            _tolerate_failure,
+                            thread_num);
 
 #pragma omp for schedule(dynamic, 20) nowait // schedule(dynamic, 5)
+      for (auto it = begin; it < end; ++it)
+      {
+        auto & ray = *it;
+
+        // This will be false if we've picked up a
+        // banked ray that needs to start on another
+        // processor
+        if (ray->startingElem()->processor_id() == _my_pid)
+          tr.trace(ray);
+      }
+
+#pragma omp critical
+      //    std::cout << thread_num << ": " << tr.intersections() << " intersections" << std::endl;
+      _local_intersections += tr.intersections();
+    }
+  }
+
+  {
+    TIME_SECTION(_buffer_timer);
+
+    // Figure out where they went
     for (auto it = begin; it < end; ++it)
     {
       auto & ray = *it;
 
-      // This will be false if we've picked up a
-      // banked ray that needs to start on another
-      // processor
-      if (ray->startingElem()->processor_id() == _my_pid)
-        tr.trace(ray);
-    }
+      // Means that the Ray needs to be given to another processor to finish tracing
+      if (ray->shouldContinue())
+      {
+        ray->processorCrossings()++;
 
-#pragma omp critical
-    //    std::cout << thread_num << ": " << tr.intersections() << " intersections" << std::endl;
-    _local_intersections += tr.intersections();
-  }
+        processor_id_type next_pid = ray->startingElem()->processor_id();
 
-  // Figure out where they went
-  for (auto it = begin; it < end; ++it)
-  {
-    auto & ray = *it;
+        if (!_send_buffers[next_pid])
+          _send_buffers[next_pid] = std::make_shared<SendBuffer>(_comm,
+                                                                 next_pid,
+                                                                 _max_buffer_size,
+                                                                 _min_buffer_size,
+                                                                 _buffer_growth_multiplier,
+                                                                 _buffer_shrink_multiplier,
+                                                                 _method);
 
-    // Means that the Ray needs to be given to another processor to finish tracing
-    if (ray->shouldContinue())
-    {
-      ray->processorCrossings()++;
+        _send_buffers[next_pid]->addRay(ray);
+      }
+      else
+      {
+        unsigned long int pc = ray->processorCrossings();
 
-      processor_id_type next_pid = ray->startingElem()->processor_id();
+        _total_processor_crossings += pc;
 
-      if (!_send_buffers[next_pid])
-        _send_buffers[next_pid] = std::make_shared<SendBuffer>(_comm,
-                                                               next_pid,
-                                                               _max_buffer_size,
-                                                               _min_buffer_size,
-                                                               _buffer_growth_multiplier,
-                                                               _buffer_shrink_multiplier,
-                                                               _method);
+        _max_processor_crossings = std::max(_max_processor_crossings, pc);
 
-      _send_buffers[next_pid]->addRay(ray);
-    }
-    else
-    {
-      unsigned long int pc = ray->processorCrossings();
+        _total_intersections += ray->intersections();
 
-      _total_processor_crossings += pc;
+        _total_integrations +=
+            (ray->intersections() * ray->polarSins().size() * _ray_problem.numGroups());
 
-      _max_processor_crossings = std::max(_max_processor_crossings, pc);
+        _total_distance += ray->distance();
 
-      _total_intersections += ray->intersections();
+        _total_integrated_distance += ray->integratedDistance();
 
-      _total_integrations +=
-          (ray->intersections() * ray->polarSins().size() * _ray_problem.numGroups());
+        for (unsigned int i = 0; i < _ray_problem.numGroups(); i++)
+          _average_finishing_angular_flux[i] += ray->_data[i];
 
-      _total_distance += ray->distance();
-
-      _total_integrated_distance += ray->integratedDistance();
-
-      for (unsigned int i = 0; i < _ray_problem.numGroups(); i++)
-        _average_finishing_angular_flux[i] += ray->_data[i];
-
-      _rays_finished++;
+        _rays_finished++;
+      }
     }
   }
 

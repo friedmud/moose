@@ -119,13 +119,7 @@ PerfGraph::getTime(const TimeType type, const std::string & section_name)
 void
 PerfGraph::push(const PerfID id)
 {
-  if (!_active)
-    return;
-
   auto new_node = _stack[_current_position]->getChild(id);
-
-  // Set the start time
-  new_node->setStartTime(std::chrono::steady_clock::now());
 
   // Increment the number of calls
   new_node->incrementNumCalls();
@@ -136,15 +130,17 @@ PerfGraph::push(const PerfID id)
     mooseError("PerfGraph is out of stack space!");
 
   _stack[_current_position] = new_node;
+
+  // Set the start time
+  if (_active)
+    new_node->setStartTime(std::chrono::steady_clock::now());
 }
 
 void
 PerfGraph::pop()
 {
-  if (!_active)
-    return;
-
-  _stack[_current_position]->addTime(std::chrono::steady_clock::now());
+  if (_active)
+    _stack[_current_position]->addTime(std::chrono::steady_clock::now());
 
   _current_position--;
 }

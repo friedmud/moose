@@ -5,6 +5,7 @@
 #include "Moose.h"
 #include "MooseTypes.h"
 #include "StaticallyAllocatedSet.h"
+#include "PerfGraphInterface.h"
 
 // libMesh Includes
 #include "libmesh/id_types.h"
@@ -31,10 +32,11 @@ class Mesh;
 
 extern const std::vector<std::vector<unsigned int>> quad4_side_to_children;
 
-class TraceRay
+class TraceRay : public PerfGraphInterface
 {
 public:
-  TraceRay(const MeshBase & mesh,
+  TraceRay(PerfGraph & perf_graph,
+           const MeshBase & mesh,
            const BoundingBox & b_box,
            const std::map<const Elem *, std::vector<Point>> & elem_normals,
            unsigned int halo_size,
@@ -129,6 +131,11 @@ protected:
   THREAD_ID _tid;
 
   unsigned long _num_intersections;
+
+  PerfID _trace_timer;
+  PerfID _intersection_timer;
+  PerfID _try_harder_timer;
+  PerfID _found_intersection;
 
   /// Which boundary IDs have already been applied, The '18' is the maximum.
   /// I expect that the most a ray will have is 6: 3 from one corner, 3 in another
