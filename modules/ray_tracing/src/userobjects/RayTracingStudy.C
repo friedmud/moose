@@ -15,6 +15,8 @@
 #include "unistd.h"
 #include <numeric>
 
+// #include "gperftools/profiler.h"
+
 #define BATCH_SIZE 10
 
 template <>
@@ -118,6 +120,11 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
 void
 RayTracingStudy::executeStudy()
 {
+//  static unsigned int call = 0;
+//  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call) + ".prof";
+//  ProfilerStart(fname.c_str());
+//  call++;
+
   TIME_SECTION(_execute_study_timer);
 
   // Reset the internal data
@@ -205,7 +212,7 @@ RayTracingStudy::executeStudy()
 
   auto generation_start_time = std::chrono::steady_clock::now();
   {
-    TIME_SECTION(_generate_timer);
+//    TIME_SECTION(_generate_timer);
     generateRays();
   }
   _generation_time = std::chrono::steady_clock::now() - generation_start_time;
@@ -217,7 +224,7 @@ RayTracingStudy::executeStudy()
 
   auto propagation_start_time = std::chrono::steady_clock::now();
   {
-    TIME_SECTION(_propagate_timer);
+//    TIME_SECTION(_propagate_timer);
     propagateRays();
   }
   _propagation_time = std::chrono::steady_clock::now() - propagation_start_time;
@@ -231,6 +238,8 @@ RayTracingStudy::executeStudy()
   _comm.sum(_old_average_finishing_angular_flux);
   for (auto & v : _old_average_finishing_angular_flux)
     v /= _all_rays_finished;
+
+//  ProfilerStop();
 }
 
 void
@@ -283,14 +292,14 @@ void
 RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begin,
                                 std::vector<std::shared_ptr<Ray>>::iterator end)
 {
-  TIME_SECTION(_trace_and_buffer_timer);
+//  TIME_SECTION(_trace_and_buffer_timer);
 
   _chunks_traced++;
 
   _rays_traced += std::distance(begin, end);
 
   {
-    TIME_SECTION(_trace_timer);
+//    TIME_SECTION(_trace_timer);
 #pragma omp parallel
     {
       auto thread_num = omp_get_thread_num();
@@ -322,7 +331,7 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
   }
 
   {
-    TIME_SECTION(_buffer_timer);
+//    TIME_SECTION(_buffer_timer);
 
     // Figure out where they went
     for (auto it = begin; it < end; ++it)
@@ -381,7 +390,7 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 }
 
 void
-RayTracingStudy::chunkyTraceAndBuffer()
+RayTracingStudy::chunkyTraceAndBuffer(bool start_receives_only)
 {
   while (!_working_buffer.empty())
   {
@@ -389,7 +398,7 @@ RayTracingStudy::chunkyTraceAndBuffer()
     // The check for the buffer size just says: if we have a ton of work to do - let's not look for
     // more right now
     if (_method == SMART && _working_buffer.size() < 2 * _chunk_size)
-      _receive_buffer.receive(_working_buffer);
+      _receive_buffer.receive(_working_buffer, start_receives_only);
 
     auto current_chunk_size = _chunk_size;
 
@@ -412,25 +421,6 @@ RayTracingStudy::chunkyTraceAndBuffer()
     {
       traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
       _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
-    }
-
-    // If we're running out of work to do - try to pull in some more
-    if (_method == SMART && _working_buffer.size() < _chunk_size)
-    {
-      // Try to do some receiving
-      _receive_buffer.receive(_working_buffer);
-
-      // If there's actually nothing to do - try to do other work
-      if (_working_buffer.empty())
-      {
-        // Do some sending while we wait
-        for (auto & buffer : _send_buffers)
-          buffer.second->forceSend();
-
-        // Wait for any receives to finish
-        while (_working_buffer.empty() && _receive_buffer.currentlyReceiving())
-          _receive_buffer.receive(_working_buffer);
-      }
     }
   }
 }

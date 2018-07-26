@@ -81,7 +81,7 @@ public:
    *
    * Adds the to the working buffer
    */
-  void receive(WorkBufferType & working_buffer)
+  void receive(WorkBufferType & working_buffer, bool start_receives_only = false)
   {
     bool flag = false;
     Parallel::Status stat;
@@ -131,7 +131,8 @@ public:
 
     current_clicks++;
 
-    cleanupRequests(working_buffer);
+    if (!start_receives_only)
+      cleanupRequests(working_buffer);
   }
 
   /**

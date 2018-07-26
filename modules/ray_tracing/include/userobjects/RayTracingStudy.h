@@ -342,7 +342,7 @@ protected:
   /**
    * Traces out the given Ray's in chunks
    */
-  void chunkyTraceAndBuffer();
+  void chunkyTraceAndBuffer(bool start_receives_only = false);
 
   /**
    * Reeive packets of Rays from other processors and trace
