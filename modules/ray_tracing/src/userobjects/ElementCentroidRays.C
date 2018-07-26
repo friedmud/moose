@@ -2,6 +2,7 @@
 
 // MOOSE Includes
 #include "MooseMesh.h"
+#include "RayProblem.h"
 
 template <>
 InputParameters
@@ -44,7 +45,7 @@ ElementCentroidRays::generateRays()
     {
       _rays_started++;
 
-      auto ray = std::make_shared<Ray>(
+      std::shared_ptr<Ray> ray = _ray_problem._ray_pool.acquire(
           start_elem->centroid(), end_elem->centroid(), _num_groups, start_elem);
 
       ray->setID(i);

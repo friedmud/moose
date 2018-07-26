@@ -21,6 +21,7 @@
 // MOOSE Includes
 #include "FEProblem.h"
 #include "MooseObjectWarehouse.h"
+#include "SharedPool.h"
 
 // libMesh Includes
 #include "libmesh/petsc_vector.h"
@@ -134,6 +135,11 @@ public:
    * Get the outward facing normals for each element side
    */
   const std::map<const Elem *, std::vector<Point>> & elemNormals() { return _elem_normals; }
+
+  /**
+   * A pool of Rays to be reused
+   */
+  MooseUtils::SharedPool<Ray> _ray_pool;
 
 protected:
   unsigned int _num_groups;

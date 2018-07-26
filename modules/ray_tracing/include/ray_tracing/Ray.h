@@ -447,33 +447,25 @@ public:
     ray->setIsReverse((*in++));
 
     // Reserve space for the data
-    ray->_data.reserve(data_size);
+    ray->_data.resize(data_size);
 
     // Copy out data
-    ray->_data.insert(ray->_data.end(), in, in + data_size);
-
-    // Move the iterator forward
-    in += data_size;
+    for (unsigned int i = 0; i < data_size; i++)
+      ray->_data[i] = *in++;
 
     // Reserve space for the polar_sins
-    ray->_polar_sins.reserve(polar_sins_size);
+    ray->_polar_sins.resize(polar_sins_size);
 
     // Copy out the polar_sins
-    ray->_polar_sins.insert(ray->_polar_sins.end(), in, in + polar_sins_size);
-
-    // Move the iterator forward
-    in += polar_sins_size;
+    for (unsigned int i = 0; i < polar_sins_size; i++)
+      ray->_polar_sins[i] = *in++;
 
     // Reserve space for the polar_weights
-    ray->_polar_weights.reserve(polar_weights_size);
+    ray->_polar_weights.resize(polar_weights_size);
 
     // Copy out the polar_weights
-    ray->_polar_weights.insert(ray->_polar_weights.end(), in, in + polar_weights_size);
-
-    // Move the iterator forward
-    in += polar_weights_size;
-
-    //    global_unpacking_time += std::chrono::steady_clock::now() - unpacking_start_time;
+    for (unsigned int i = 0; i < polar_weights_size; i++)
+      ray->_polar_weights[i] = *in++;
 
     return ray;
   }
