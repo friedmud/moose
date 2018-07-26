@@ -4,6 +4,8 @@
 #include "LIFOBuffer.h"
 #include "CircularBuffer.h"
 
+class Ray;
+
 enum RayTracingMethod
 {
   SMART,

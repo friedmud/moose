@@ -82,8 +82,10 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _chunk_size(getParam<unsigned int>("chunk_size")),
     _my_pid(_comm.rank()),
     _ray_length(_ray_problem.domainMaxLength()),
-    _receive_buffer(
-        _comm, _mesh, getParam<unsigned int>("clicks_per_receive"), getParam<bool>("blocking")),
+    _receive_buffer(_comm,
+                    _ray_problem,
+                    getParam<unsigned int>("clicks_per_receive"),
+                    getParam<bool>("blocking")),
     _clicks_per_communication(getParam<unsigned int>("clicks_per_communication")),
     _clicks_per_root_communication(getParam<unsigned int>("clicks_per_root_communication")),
     _clicks_per_receive(getParam<unsigned int>("clicks_per_receive")),

@@ -17,6 +17,8 @@
 #include <list>
 #include <queue>
 
+class RayProblemBase;
+
 /**
  * Keeps track of many non-blocking receives
  */
@@ -28,11 +30,11 @@ public:
    * @param comm The Communicator to use
    */
   ReceiveBuffer(const Parallel::Communicator & comm,
-                MeshBase & mesh,
+                RayProblemBase & ray_problem,
                 unsigned int clicks_per_receive,
                 bool blocking = false)
     : ParallelObject(comm),
-      _mesh(mesh),
+      _ray_problem(ray_problem),
       _clicks_per_receive(clicks_per_receive),
       _blocking(blocking),
       _method(SMART),
@@ -106,7 +108,7 @@ public:
           if (_method == HARM || _method == BS)
             blocking_receive_packed_range(_communicator,
                                           stat.source(),
-                                          &_mesh,
+                                          &_ray_problem,
                                           std::back_inserter(*rays),
                                           (std::shared_ptr<Ray> *)(libmesh_nullptr),
                                           *req,
@@ -115,7 +117,7 @@ public:
           else
             _communicator.nonblocking_receive_packed_range(
                 stat.source(),
-                &_mesh,
+                &_ray_problem,
                 std::back_inserter(*rays),
                 (std::shared_ptr<Ray> *)(libmesh_nullptr),
                 *req,
@@ -197,9 +199,9 @@ public:
       std::cout << "Num receive requests: " << _requests.size() << "\n";
     */
 
-    _requests.remove_if([&](std::pair<std::shared_ptr<Parallel::Request>,
-                                      std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> &
-                                request_pair) {
+    _requests.remove_if([&](
+        std::pair<std::shared_ptr<Parallel::Request>,
+                  std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> & request_pair) {
       auto req = request_pair.first;
       auto rays = request_pair.second;
 
@@ -227,8 +229,8 @@ public:
   }
 
 protected:
-  /// The Mesh we're working on
-  MeshBase & _mesh;
+  /// The problem we're working on
+  RayProblemBase & _ray_problem;
 
   /// Number of iterations to wait before looking for more rays
   unsigned int _clicks_per_receive;
