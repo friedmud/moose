@@ -131,11 +131,12 @@ protected:
   THREAD_ID _tid;
 
   unsigned long _num_intersections;
-
-  PerfID _trace_timer;
-  PerfID _intersection_timer;
-  PerfID _try_harder_timer;
-  PerfID _found_intersection;
+  /*
+    PerfID _trace_timer;
+    PerfID _intersection_timer;
+    PerfID _try_harder_timer;
+    PerfID _found_intersection;
+  */
 
   /// Which boundary IDs have already been applied, The '18' is the maximum.
   /// I expect that the most a ray will have is 6: 3 from one corner, 3 in another

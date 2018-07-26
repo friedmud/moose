@@ -375,6 +375,9 @@ protected:
   /// Size of the "halo" zone
   unsigned int _halo_size;
 
+  /// Number of rays to generate before tracing
+  unsigned int _chunk_size;
+
   /// Number of Rays to start in the volume
   unsigned int _total_rays;
 
@@ -398,9 +401,6 @@ protected:
 
   /// Minimum size of a SendBuffer
   unsigned int _min_buffer_size;
-
-  /// Number of rays to generate before tracing
-  unsigned int _chunk_size;
 
   /// The rank of this processor (this actually takes time to lookup - so just do it once)
   processor_id_type _my_pid;

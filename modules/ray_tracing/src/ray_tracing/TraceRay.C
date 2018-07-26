@@ -65,11 +65,13 @@ TraceRay::TraceRay(PerfGraph & perf_graph,
     _ray_length(ray_length),
     _tolerate_failure(tolerate_failure),
     _tid(tid),
-    _num_intersections(0),
-    _trace_timer(registerTimedSection("trace", 1)),
-    _intersection_timer(registerTimedSection("intersection", 1)),
-    _try_harder_timer(registerTimedSection("try_harder", 1)),
-    _found_intersection(registerTimedSection("found_intersection", 1))
+    _num_intersections(0)
+/*
+_trace_timer(registerTimedSection("trace", 1)),
+_intersection_timer(registerTimedSection("intersection", 1)),
+_try_harder_timer(registerTimedSection("try_harder", 1)),
+_found_intersection(registerTimedSection("found_intersection", 1))
+*/
 {
   _ids.reserve(20);
 }
@@ -1370,7 +1372,7 @@ TraceRay::checkForCornerHitAndApplyBCs(const Elem * current_elem,
 void
 TraceRay::trace(std::shared_ptr<Ray> & ray)
 {
-  TIME_SECTION(_trace_timer);
+  //  TIME_SECTION(_trace_timer);
 
   const Elem * current_elem = NULL;
   int intersected_side = -1;
