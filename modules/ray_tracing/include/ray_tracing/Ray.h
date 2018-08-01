@@ -83,6 +83,7 @@ public:
   {
     _should_continue = true;
     _is_reverse = false;
+    _ending_elem_id = DofObject::invalid_id;
     _ends_within_mesh = false;
     resetCounters();
     _data.resize(data_size);
@@ -105,6 +106,7 @@ public:
   {
     _should_continue = true;
     _is_reverse = false;
+    _ending_elem_id = DofObject::invalid_id;
     _ends_within_mesh = false;
     resetCounters();
     _data.resize(data.size());
@@ -139,6 +141,9 @@ public:
 
   void setStartingElem(const Elem * starting_elem) { _starting_elem = starting_elem; }
   const Elem * startingElem() const { return _starting_elem; }
+
+  void setEndingElemId(dof_id_type ending_elem_id) { _ending_elem_id = ending_elem_id; }
+  dof_id_type endingElemId() { return _ending_elem_id; }
 
   void setEndsWithinMesh(bool ends_within_mesh = true) { _ends_within_mesh = ends_within_mesh; }
   bool endsWithinMesh() { return _ends_within_mesh; }
@@ -209,6 +214,9 @@ protected:
 
   /// The element the Ray begins in
   const Elem * _starting_elem;
+
+  /// The id of the element the Ray ends in (used to optimize when _ends_within_mesh)
+  dof_id_type _ending_elem_id = DofObject::invalid_id;
 
   /// Whether or not the Ray ends within the Mesh, when this is false it means the ray ends on the boundary (or ends at a distance)
   bool _ends_within_mesh = false;
@@ -302,6 +310,9 @@ public:
 
     // Starting element
     data_out = b->startingElem()->id();
+
+    // Ending element
+    data_out = b->endingElemId();
 
     // Ends within mesh
     data_out = b->endsWithinMesh();

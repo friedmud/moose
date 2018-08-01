@@ -1474,14 +1474,20 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       if (DEBUG_IF)
         std::cerr << "ends within mesh!" << std::endl;
 #endif
+      // Check the ending elem id
+      if (ray->endingElemId() == current_elem->id())
+        ends_in_elem = true;
+      // Ending elem id is not set: check with contains_point
+      else if (ray->endingElemId() == DofObject::invalid_id &&
+               current_elem->contains_point(ray->end()))
+        ends_in_elem = true;
 
-      if (current_elem->contains_point(ray->end()))
+      if (ends_in_elem)
       {
 #ifdef USE_DEBUG_RAY
         if (DEBUG_IF)
           std::cerr << " ends within current elem!" << std::endl;
 #endif
-        ends_in_elem = true;
         intersection_point = ray->end();
       }
     }

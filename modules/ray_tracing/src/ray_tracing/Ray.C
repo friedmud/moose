@@ -14,6 +14,7 @@ Ray::operator==(const Ray & other)
          _azimuthal_weight == other._azimuthal_weight && _polar_spacing == other._polar_spacing &&
          _polar_sins == other._polar_sins && _polar_weights == other._polar_weights &&
          _ends_within_mesh == other._ends_within_mesh &&
+         _ending_elem_id == other._ending_elem_id &&
          _should_continue == other._should_continue;
 }
 
@@ -48,10 +49,11 @@ Packing<std::shared_ptr<Ray>>::packed_size(typename std::vector<Real>::const_ite
   // Points
   total_size += LIBMESH_DIM * 2;
 
-  // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
-  // distance, integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id,
-  // is_reverse, should continue
-  total_size += 13;
+  // Starting element, ending element id, ends within mesh, incoming side,
+  // processor crosssings, intersections, distance, integrated_distance,
+  // azimuthal_spacing, azimuthal_weight, polar_spacing, id, is_reverse,
+  // should continue
+  total_size += 14;
 
   return total_size;
 }
@@ -82,10 +84,11 @@ Packing<std::shared_ptr<Ray>>::packable_size(const std::shared_ptr<Ray> & ray, c
   // Points
   total_size += LIBMESH_DIM * 2;
 
-  // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
-  // distance, integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id,
-  // is_reverse, should continue
-  total_size += 13;
+  // Starting element, ending element id, ends within mesh, incoming side,
+  // processor crosssings, intersections, distance, integrated_distance,
+  // azimuthal_spacing, azimuthal_weight, polar_spacing, id, is_reverse,
+  // should continue
+  total_size += 14;
 
   return total_size;
 }
@@ -122,6 +125,13 @@ Packing<std::shared_ptr<Ray>>::unpack(typename std::vector<Real>::const_iterator
   // Starting Element
   auto mesh = static_cast<MeshBase *>(&ray_problem->mesh().getMesh());
   ray->setStartingElem(mesh->elem((*in++)));
+
+  // Ending element
+  auto id = (*in++);
+  if (id == (Real)DofObject::invalid_id)
+    ray->setEndingElemId(DofObject::invalid_id);
+  else
+    ray->setEndingElemId(id);
 
   // Ends Within Mesh
   ray->setEndsWithinMesh((*in++));
