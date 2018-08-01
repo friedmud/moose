@@ -40,6 +40,8 @@ class Ray
 public:
   Ray() {}
 
+  virtual ~Ray() {}
+
   Ray(const Point & start,
       const Point & end,
       unsigned int data_size,
@@ -69,17 +71,44 @@ public:
   bool operator==(const Ray & other);
 
   /**
-   * "Reset" the ray using new information
-   * Useful for reusing a ray without have to reallocate it.
+   * Reset a ray with a given data size and constant data.
+   * Useful for reusing a ray acquired from the SharedPool.
    */
   void reset(const Point & start,
              const Point & end,
              unsigned int data_size,
+             Real constant_data = 0,
              const Elem * starting_elem = NULL,
              unsigned int incoming_side = -1)
   {
+    _should_continue = true;
+    _is_reverse = false;
+    _ends_within_mesh = false;
+    resetCounters();
     _data.resize(data_size);
-    std::fill(_data.begin(), _data.end(), 100);
+    std::fill(_data.begin(), _data.end(), constant_data);
+    _start = start;
+    _end = end;
+    _starting_elem = starting_elem;
+    _incoming_side = incoming_side;
+  }
+
+  /**
+   * Reset a ray with a given data vector.
+   * Useful for reusing a ray acquired from the SharedPool.
+   */
+  void reset(const Point & start,
+             const Point & end,
+             const std::vector<Real> & data,
+             const Elem * starting_elem = NULL,
+             unsigned int incoming_side = -1)
+  {
+    _should_continue = true;
+    _is_reverse = false;
+    _ends_within_mesh = false;
+    resetCounters();
+    _data.resize(data.size());
+    _data.assign(data.begin(), data.end());
     _start = start;
     _end = end;
     _starting_elem = starting_elem;
@@ -221,8 +250,6 @@ protected:
   bool _is_reverse = false;
 
   /// Wether or not the Ray should continue to be traced
-  /// NOTE: This is NOT sent with the Ray in parallel!
-  /// Only a Ray that is actively being traced will be passed in parallel
   bool _should_continue = true;
 
   // Extra padding to avoid false sharing
@@ -308,6 +335,9 @@ public:
 
     // is_reverse
     data_out = b->isReverse();
+
+    // Should continue
+    data_out = b->shouldContinue();
 
     // Copy out data
     std::copy(b->_data.begin(), b->_data.end(), data_out);

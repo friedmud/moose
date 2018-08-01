@@ -13,7 +13,8 @@ Ray::operator==(const Ray & other)
          _azimuthal_spacing == other._azimuthal_spacing &&
          _azimuthal_weight == other._azimuthal_weight && _polar_spacing == other._polar_spacing &&
          _polar_sins == other._polar_sins && _polar_weights == other._polar_weights &&
-         _ends_within_mesh == other._ends_within_mesh;
+         _ends_within_mesh == other._ends_within_mesh &&
+         _should_continue == other._should_continue;
 }
 
 namespace libMesh
@@ -48,9 +49,9 @@ Packing<std::shared_ptr<Ray>>::packed_size(typename std::vector<Real>::const_ite
   total_size += LIBMESH_DIM * 2;
 
   // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
-  // distance,
-  // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id, is_reverse
-  total_size += 12;
+  // distance, integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id,
+  // is_reverse, should continue
+  total_size += 13;
 
   return total_size;
 }
@@ -82,9 +83,9 @@ Packing<std::shared_ptr<Ray>>::packable_size(const std::shared_ptr<Ray> & ray, c
   total_size += LIBMESH_DIM * 2;
 
   // Starting element, ends within mesh, incoming side, processor crosssings, intersections,
-  // distance,
-  // integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id, is_reverse
-  total_size += 12;
+  // distance, integrated_distance, azimuthal_spacing, azimuthal_weight, polar_spacing, id,
+  // is_reverse, should continue
+  total_size += 13;
 
   return total_size;
 }
@@ -154,6 +155,9 @@ Packing<std::shared_ptr<Ray>>::unpack(typename std::vector<Real>::const_iterator
 
   // is_reverse
   ray->setIsReverse((*in++));
+
+  // Should continue
+  ray->setShouldContinue((*in++));
 
   // Reserve space for the data
   ray->_data.resize(data_size);
