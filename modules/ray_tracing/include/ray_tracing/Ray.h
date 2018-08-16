@@ -186,9 +186,11 @@ public:
   /**
    * Creates a new Ray that is the reverse of this one
    */
-  std::shared_ptr<Ray> reverse()
+  void reverse(std::shared_ptr<Ray> reverse_ray)
   {
-    auto reverse_ray = std::make_shared<Ray>(_end, _start, _data.size());
+    reverse_ray->setStart(_end);
+    reverse_ray->setEnd(_start);
+    reverse_ray->data().resize(_data.size());
 
     reverse_ray->_is_reverse = true;
     reverse_ray->_azimuthal_angle = _azimuthal_angle;
@@ -197,8 +199,6 @@ public:
     reverse_ray->_polar_spacing = _polar_spacing;
     reverse_ray->_polar_sins = _polar_sins;
     reverse_ray->_polar_weights = _polar_weights;
-
-    return reverse_ray;
   }
 
   /// The data that is carried with the Ray
