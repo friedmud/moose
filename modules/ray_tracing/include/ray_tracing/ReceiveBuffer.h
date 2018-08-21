@@ -7,6 +7,7 @@
 
 // Moose Includes
 #include "MooseError.h"
+#include "SharedPool.h"
 
 // libMesh Includes
 #include "libmesh/parallel.h"
@@ -103,7 +104,10 @@ public:
         if (flag)
         {
           auto req = std::make_shared<Parallel::Request>();
-          auto rays = std::make_shared<std::vector<std::shared_ptr<Ray>>>();
+          std::shared_ptr<std::vector<std::shared_ptr<Ray>>> rays = _ray_buffer_pool.acquire();
+
+          // Make sure the buffer is clear - this shouldn't resize the storage though.
+          rays->clear();
 
           if (_method == HARM || _method == BS)
             blocking_receive_packed_range(_communicator,
@@ -115,6 +119,11 @@ public:
                                           stat,
                                           _ray_buffer_tag);
           else
+          {
+            std::shared_ptr<
+                std::vector<typename Parallel::Packing<std::shared_ptr<Ray>>::buffer_type>>
+                buffer = _buffer_pool.acquire();
+
             _communicator.nonblocking_receive_packed_range(
                 stat.source(),
                 &_ray_problem,
@@ -122,7 +131,9 @@ public:
                 (std::shared_ptr<Ray> *)(libmesh_nullptr),
                 *req,
                 stat,
+                buffer,
                 _ray_buffer_tag);
+          }
 
           _requests.emplace_back(std::make_pair(req, rays));
         }
@@ -264,6 +275,13 @@ protected:
 
   /// Total number of times we've polled for messages
   unsigned long int _num_probes;
+
+  /// Shared pool of ray buffers for incoming messages
+  MooseUtils::SharedPool<std::vector<std::shared_ptr<Ray>>> _ray_buffer_pool;
+
+  /// Shared pool of
+  MooseUtils::SharedPool<std::vector<typename Parallel::Packing<std::shared_ptr<Ray>>::buffer_type>>
+      _buffer_pool;
 
 private:
   template <typename Context, typename OutputIter, typename T>
