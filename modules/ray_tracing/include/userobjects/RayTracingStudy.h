@@ -49,6 +49,11 @@ public:
   RayTracingStudy(const InputParameters & parameters);
 
   /**
+   * A place to reset the starting point of rays before tracing
+   */
+  virtual void resetRays() {}
+
+  /**
    * Generates Rays from each element in random directions and traces them out across the domain
    */
   void executeStudy();
@@ -461,7 +466,7 @@ protected:
   /// How many processors have finished generating all of their rays
   processor_id_type _ranks_finished_generating = 0;
 
-  std::map<processor_id_type, std::shared_ptr<SendBuffer>> _send_buffers;
+  std::unordered_map<processor_id_type, std::shared_ptr<SendBuffer>> _send_buffers;
   ReceiveBuffer _receive_buffer;
 
   /// Tags used in parallel communication

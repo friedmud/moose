@@ -120,9 +120,11 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
 void
 RayTracingStudy::executeStudy()
 {
-  //  static unsigned int call = 0;
-  //  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
-  //  + ".prof"; ProfilerStart(fname.c_str()); call++;
+  static unsigned int call = 0;
+  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
+    + ".prof";
+//  ProfilerStart(fname.c_str());
+  call++;
 
   TIME_SECTION(_execute_study_timer);
 
@@ -238,7 +240,7 @@ RayTracingStudy::executeStudy()
   for (auto & v : _old_average_finishing_angular_flux)
     v /= _all_rays_finished;
 
-  //  ProfilerStop();
+//  ProfilerStop();
 }
 
 void
@@ -315,6 +317,9 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
   {
     auto & ray = *it;
 
+    if (!ray)
+      continue;
+
     // This will be false if we've picked up a
     // banked ray that needs to start on another
     // processor
@@ -335,6 +340,9 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
   for (auto it = begin; it < end; ++it)
   {
     auto & ray = *it;
+
+    if (!ray)
+      continue;
 
     // Means that the Ray needs to be given to another processor to finish tracing
     if (ray->shouldContinue())
