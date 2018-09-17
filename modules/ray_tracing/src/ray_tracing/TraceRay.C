@@ -32,13 +32,15 @@ unsigned long int ray_count = 0;
 
 // 0 ray_count: 156007 ray_id: 7244 Endless loop!
 
-unsigned int debug_ray = 64781;
+unsigned int debug_ray = 216;
 
 unsigned int debug_ray_id = 15524036;
 
 unsigned int debug_ray_pid = 1;
 
-#define DEBUG_IF ray->id() == debug_ray_id // ray_count > 197000 && debug_ray_id == ray->id()
+#define DEBUG_IF ray_count == debug_ray
+
+// ray->id() == debug_ray_id // ray_count > 197000 && debug_ray_id == ray->id()
 
 // && ray_count == debug_ray
 
@@ -1130,7 +1132,7 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
     {
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
-        std::cerr << "On domain boundary!" << std::endl;
+        std::cerr << "On domain boundary! And have moved: " << ray->distance() << std::endl;
 #endif
 
       // Now what we're going to do is search the sides of this element for a side

@@ -71,6 +71,29 @@ public:
   bool operator==(const Ray & other);
 
   /**
+   * Reset a ray with a given data size
+   * Useful for reusing a ray acquired from the SharedPool.
+   */
+  void reset(const Point & start,
+             const Point & end,
+             unsigned int data_size,
+             const Elem * starting_elem = NULL,
+             unsigned int incoming_side = -1)
+  {
+    _should_continue = true;
+    _is_reverse = false;
+    _ending_elem_id = DofObject::invalid_id;
+    _ends_within_mesh = false;
+    resetCounters();
+    _data.resize(data_size);
+    std::fill(_data.begin(), _data.end(), 0);
+    _start = start;
+    _end = end;
+    _starting_elem = starting_elem;
+    _incoming_side = incoming_side;
+  }
+
+  /**
    * Reset a ray with a given data size and constant data.
    * Useful for reusing a ray acquired from the SharedPool.
    */
