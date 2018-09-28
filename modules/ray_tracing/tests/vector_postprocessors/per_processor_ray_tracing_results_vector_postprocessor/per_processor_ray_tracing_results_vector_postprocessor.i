@@ -60,6 +60,26 @@
     family = MONOMIAL
     order = CONSTANT
   []
+
+  [./ray_pool_created]
+    family = MONOMIAL
+    order = CONSTANT
+  []
+
+  [./receive_ray_pool_created]
+    family = MONOMIAL
+    order = CONSTANT
+  []
+
+  [./receive_buffer_pool_created]
+    family = MONOMIAL
+    order = CONSTANT
+  []
+
+  [./send_buffer_pool_created]
+    family = MONOMIAL
+    order = CONSTANT
+  []
 []
 
 [Kernels]
@@ -152,6 +172,38 @@
     vector_name = propagation_time
     execute_on = timestep_end
   []
+
+  [./ray_pool_created]
+    type = VectorPostprocessorVisualizationAux
+    variable = ray_pool_created
+    vpp = per_proc_ray_tracing
+    vector_name = ray_pool_created
+    execute_on = timestep_end
+  []
+
+  [./receive_ray_pool_created]
+    type = VectorPostprocessorVisualizationAux
+    variable = receive_ray_pool_created
+    vpp = per_proc_ray_tracing
+    vector_name = receive_ray_pool_created
+    execute_on = timestep_end
+  []
+
+  [./receive_buffer_pool_created]
+    type = VectorPostprocessorVisualizationAux
+    variable = receive_buffer_pool_created
+    vpp = per_proc_ray_tracing
+    vector_name = receive_buffer_pool_created
+    execute_on = timestep_end
+  []
+
+  [./send_buffer_pool_created]
+    type = VectorPostprocessorVisualizationAux
+    variable = send_buffer_pool_created
+    vpp = per_proc_ray_tracing
+    vector_name = send_buffer_pool_created
+    execute_on = timestep_end
+  []
 []
 
 [BCs]
@@ -195,8 +247,8 @@
 [VectorPostprocessors]
   [./per_proc_ray_tracing]
     type = PerProcessorRayTracingResultsVectorPostprocessor
-    results = 'rays_started rays_traced chunks_traced rays_received buffers_received rays_sent buffers_sent intersections generation_time propagation_time'
-    execute_on = 'timestep_begin'
+    results = 'rays_started rays_traced chunks_traced rays_received buffers_received rays_sent buffers_sent intersections generation_time propagation_time ray_pool_created receive_ray_pool_created receive_buffer_pool_created send_buffer_pool_created'
+    execute_on = 'timestep_end'
   [../]
 []
 

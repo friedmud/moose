@@ -78,6 +78,16 @@ public:
   unsigned long int numProbes() { return _num_probes; }
 
   /**
+   * Number of buffers created in the ray buffer pool
+   */
+  unsigned long int rayPoolCreated() { return _ray_buffer_pool.num_created(); }
+
+  /**
+   * Number of buffers created in the buffer pool
+   */
+  unsigned long int bufferPoolCreated() { return _buffer_pool.num_created(); }
+
+  /**
    * Start receives for all currently available messages
    *
    * Adds the to the working buffer
@@ -211,9 +221,9 @@ public:
       std::cout << "Num receive requests: " << _requests.size() << "\n";
     */
 
-    _requests.remove_if([&](
-        std::pair<std::shared_ptr<Parallel::Request>,
-                  std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> & request_pair) {
+    _requests.remove_if([&](std::pair<std::shared_ptr<Parallel::Request>,
+                                      std::shared_ptr<std::vector<std::shared_ptr<Ray>>>> &
+                                request_pair) {
       auto req = request_pair.first;
       auto rays = request_pair.second;
 

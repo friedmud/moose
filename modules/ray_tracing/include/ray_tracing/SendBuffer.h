@@ -76,6 +76,11 @@ public:
   unsigned long int buffersSent() { return _buffers_sent; }
 
   /**
+   * Get the number of buffers created in the buffer pool
+   */
+  unsigned long int bufferPoolCreated() { return _buffer_pool.num_created(); }
+
+  /**
    * Set the current algorithm
    */
   void setMethod(RayTracingMethod method) { _method = method; }

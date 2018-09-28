@@ -119,6 +119,29 @@ public:
   unsigned long int numProbes() { return _receive_buffer.numProbes(); }
 
   /**
+   * Total number of ray buffers created in the ReceiveBuffer
+   */
+  unsigned long int receiveRayPoolCreated() { return _receive_buffer.rayPoolCreated(); }
+
+  /**
+   * Total number of buffers created in the ReceiveBuffer
+   */
+  unsigned long int receiveBufferPoolCreated() { return _receive_buffer.bufferPoolCreated(); }
+
+  /**
+   * Total number of buffers created in the SendBuffers
+   */
+  unsigned long int sendBufferPoolCreated()
+  {
+    unsigned long int total = 0;
+
+    for (auto & buffer : _send_buffers)
+      total += buffer.second->bufferPoolCreated();
+
+    return total;
+  }
+
+  /**
    * Rays sent from this processor
    */
   unsigned long int raysSent()
