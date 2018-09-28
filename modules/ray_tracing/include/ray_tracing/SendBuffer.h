@@ -6,6 +6,9 @@
 #include "RayTracingMethod.h"
 #include "RayTracingCommon.h"
 
+// Moose Includes
+#include "SharedPool.h"
+
 // libMesh Includes
 #include "libmesh/parallel.h"
 #include "libmesh/parallel_object.h"
@@ -129,8 +132,11 @@ public:
       _rays_sent += _buffer.size();
       _buffers_sent++;
 
+      std::shared_ptr<std::vector<typename Parallel::Packing<std::shared_ptr<Ray>>::buffer_type>>
+          buffer = _buffer_pool.acquire();
+
       _communicator.nonblocking_send_packed_range(
-          _pid, &_buffer, _buffer.begin(), _buffer.end(), *req, _ray_buffer_tag);
+          _pid, &_buffer, _buffer.begin(), _buffer.end(), *req, buffer, _ray_buffer_tag);
 
       _buffer.clear();
       _buffer.reserve(_max_buff_size);
@@ -222,6 +228,10 @@ protected:
 
   /// List of Requests
   std::list<std::shared_ptr<Parallel::Request>> _requests;
+
+  /// Shared pool of buffers
+  MooseUtils::SharedPool<std::vector<typename Parallel::Packing<std::shared_ptr<Ray>>::buffer_type>>
+      _buffer_pool;
 
   /// MessageTag for sending rays
   Parallel::MessageTag _ray_buffer_tag = Parallel::MessageTag(RAY_BUFFER);
