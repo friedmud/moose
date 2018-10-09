@@ -12,7 +12,9 @@
 #include "MooseApp.h"
 #include "MooseUtils.h"
 #include "MooseMesh.h"
+
 #include "libmesh/checkpoint_io.h"
+#include "libmesh/map_point_neighbor_coupling.h"
 
 registerMooseAction("MooseApp", SplitMeshAction, "split_mesh");
 
@@ -29,6 +31,16 @@ void
 SplitMeshAction::act()
 {
   auto mesh = _app.actionWarehouse().mesh();
+
+  auto & lmesh = mesh->getMesh();
+
+  auto gf = new MapPointNeighborCoupling();
+  gf->set_mesh(&lmesh);
+
+  lmesh.clear_ghosting_functors();
+
+  lmesh.add_ghosting_functor(*(gf));
+
   auto split_file_arg = _app.parameters().get<std::string>("split_file");
 
   if (mesh->getFileName() == "" && split_file_arg == "")
