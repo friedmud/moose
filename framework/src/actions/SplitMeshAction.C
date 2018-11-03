@@ -16,6 +16,8 @@
 #include "libmesh/checkpoint_io.h"
 #include "libmesh/map_point_neighbor_coupling.h"
 
+// #include "gperftools/profiler.h"
+
 registerMooseAction("MooseApp", SplitMeshAction, "split_mesh");
 
 template <>
@@ -34,12 +36,17 @@ SplitMeshAction::act()
 
   auto & lmesh = mesh->getMesh();
 
-  auto gf = new MapPointNeighborCoupling();
-  gf->set_mesh(&lmesh);
-
   lmesh.clear_ghosting_functors();
 
+  auto gf = new MapPointNeighborCoupling();
+  gf->set_mesh(&lmesh);
+  gf->set_n_levels(1);
+
   lmesh.add_ghosting_functor(*(gf));
+
+  Moose::out << "Mesh to be split: \n\n";
+
+  mesh->printInfo();
 
   auto split_file_arg = _app.parameters().get<std::string>("split_file");
 
@@ -83,6 +90,8 @@ SplitMeshAction::act()
                  ", must not end in a file extension other than .cpr or .cpa");
   }
 
+//  ProfilerStart((std::string("split_mesh_") + std::to_string(mesh->comm().rank()) + ".prof").c_str());
+
   for (std::size_t i = 0; i < splits.size(); i++)
   {
     processor_id_type n = splits[i];
@@ -103,4 +112,6 @@ SplitMeshAction::act()
     fname = MooseUtils::stripExtension(fname) + (checkpoint_binary_flag ? ".cpr" : ".cpa");
     cp->write(fname);
   }
+
+//  ProfilerStop();
 }
