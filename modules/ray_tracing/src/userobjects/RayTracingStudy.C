@@ -389,10 +389,6 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 
 if (_method == HARM)
   flushBuffers();
-
-// Try to finish off some sends
-for (auto & send_buffer_iter : _send_buffers)
-  send_buffer_iter.second->cleanupRequests();
 }
 
 void
@@ -401,9 +397,7 @@ RayTracingStudy::chunkyTraceAndBuffer(bool start_receives_only)
   while (!_working_buffer.empty())
   {
     // Look for extra work first so that these transfers can be finishing while we're tracing
-    // The check for the buffer size just says: if we have a ton of work to do - let's not look for
-    // more right now
-    if (_method == SMART && _working_buffer.size() < 2 * _chunk_size)
+    if (_method == SMART)
       _receive_buffer.receive(_working_buffer, start_receives_only);
 
     auto current_chunk_size = _chunk_size;
