@@ -30,7 +30,7 @@ class Mesh;
 // Using 16 for safety
 #define MAX_POINT_NEIGHBORS 16
 
-extern const std::vector<std::vector<unsigned int>> quad4_side_to_children;
+extern const std::vector<std::vector<unsigned long int>> quad4_side_to_children;
 
 class TraceRay : public PerfGraphInterface
 {
@@ -39,7 +39,7 @@ public:
            const MeshBase & mesh,
            const BoundingBox & b_box,
            const std::map<const Elem *, std::vector<Point>> & elem_normals,
-           unsigned int halo_size,
+           unsigned long int halo_size,
            Real ray_max_distance,
            Real ray_length,
            bool tolerate_failure,
@@ -61,7 +61,7 @@ public:
    */
   static Elem * recursivelyFindChildContainingPoint(const Elem * current_child,
                                                     const Point & intersection_point,
-                                                    const std::vector<unsigned int> & children_ids);
+                                                    const std::vector<unsigned long int> & children_ids);
 
   /**
    * Find the child that contains the point on a side of the current element
@@ -73,7 +73,7 @@ public:
    * @param p The physical point to look for
    * @param side The side of current_elem that should be searched
    */
-  static Elem * childOnSide(const Elem * current_elem, const Point & p, unsigned int side);
+  static Elem * childOnSide(const Elem * current_elem, const Point & p, unsigned long int side);
 
   /**
    * Get the neighbor on the intersected_side of current_elem.
@@ -87,7 +87,7 @@ public:
    * adaptivity is active to find the child that contains the point)
    */
   static Elem *
-  getNeighbor(const Elem * current_elem, unsigned int intersected_side, Point & intersection_point);
+  getNeighbor(const Elem * current_elem, unsigned long int intersected_side, Point & intersection_point);
 
   /**
    * The number of intersections that were done
@@ -109,7 +109,7 @@ protected:
 
   virtual void onBoundary(const Elem * /* current_elem */,
                           const Point & /* intersection_point */,
-                          unsigned int /* intersected_side */,
+                          unsigned long int /* intersected_side */,
                           boundary_id_type /* bid */,
                           const Elem * /* neighbor */,
                           std::shared_ptr<Ray> & /* ray */)
@@ -121,7 +121,7 @@ protected:
   const MeshBase & _mesh;
   BoundingBox _b_box;
   const std::map<const Elem *, std::vector<Point>> & _elem_normals;
-  unsigned int _halo_size;
+  unsigned long int _halo_size;
   double _ray_max_distance;
   double _ray_length;
 
@@ -156,7 +156,7 @@ private:
   void possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
                           const Point & incoming_point,
                           const Elem * current_elem,
-                          unsigned int incoming_side,
+                          unsigned long int incoming_side,
                           Point & intersection_point,
                           int & intersected_side);
 
@@ -169,13 +169,13 @@ private:
                                       Point & boundary_intersection_point,
                                       int & intersected_side,
                                       const Elem *& best_neighbor,
-                                      unsigned int & best_side);
+                                      unsigned long int & best_side);
 
   void checkForCornerHitAndApplyBCs(const Elem * current_elem,
                                     const Point & intersection_point,
                                     std::shared_ptr<Ray> & ray);
 
-  unsigned int _mesh_dim;
+  unsigned long int _mesh_dim;
 
   Point _work_point;
   Point _work_point2;
@@ -192,7 +192,7 @@ class RayProblemTraceRay : public TraceRay
 public:
   RayProblemTraceRay(RayProblemBase & ray_problem,
                      const MeshBase & mesh,
-                     unsigned int halo_size,
+                     unsigned long int halo_size,
                      Real ray_max_distance,
                      Real ray_length,
                      bool tolerate_failure,
@@ -208,7 +208,7 @@ public:
 
   virtual void onBoundary(const Elem * current_elem,
                           const Point & intersection_point,
-                          unsigned int intersected_side,
+                          unsigned long int intersected_side,
                           boundary_id_type bid,
                           const Elem * /* neighbor */,
                           std::shared_ptr<Ray> & ray) override;

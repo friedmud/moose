@@ -32,8 +32,8 @@ public:
    */
   SendBuffer(const Parallel::Communicator & comm,
              processor_id_type pid,
-             unsigned int max_buff_size,
-             unsigned int min_buff_size,
+             unsigned long int max_buff_size,
+             unsigned long int min_buff_size,
              Real buffer_growth_multiplier,
              Real buffer_shrink_multiplier,
              RayTracingMethod method)
@@ -113,9 +113,9 @@ public:
       _current_buff_size_real = std::min(_buffer_growth_multiplier * _current_buff_size_real,
                                          static_cast<Real>(_max_buff_size));
 
-      if (_current_buff_size != static_cast<unsigned int>(_current_buff_size_real))
+      if (_current_buff_size != static_cast<unsigned long int>(_current_buff_size_real))
       {
-        _current_buff_size = static_cast<unsigned int>(_current_buff_size_real);
+        _current_buff_size = static_cast<unsigned long int>(_current_buff_size_real);
         std::cout << "Increasing buffer size to: " << _current_buff_size << "\n";
       }
 
@@ -151,9 +151,9 @@ public:
         _current_buff_size_real = std::max(static_cast<Real>(_min_buff_size),
                                            _current_buff_size_real * _buffer_shrink_multiplier);
 
-        if (_current_buff_size != static_cast<unsigned int>(_current_buff_size_real))
+        if (_current_buff_size != static_cast<unsigned long int>(_current_buff_size_real))
         {
-          _current_buff_size = static_cast<unsigned int>(_current_buff_size_real);
+          _current_buff_size = static_cast<unsigned long int>(_current_buff_size_real);
           std::cout << "Cutting buffer to: " << _current_buff_size << "\n";
         }
       }
@@ -211,10 +211,10 @@ protected:
   processor_id_type _pid;
 
   /// Maximum size of the buffer (in Rays)
-  unsigned int _max_buff_size;
+  unsigned long int _max_buff_size;
 
   /// Minimum size of the buffer (in Rays)
-  unsigned int _min_buff_size;
+  unsigned long int _min_buff_size;
 
   /// Multiplier for the buffer size for growing the buffer
   Real _buffer_growth_multiplier;
@@ -223,7 +223,7 @@ protected:
   Real _buffer_shrink_multiplier;
 
   /// Current size of the buffer (in Rays)
-  unsigned int _current_buff_size;
+  unsigned long int _current_buff_size;
 
   /// Running buffer size
   Real _current_buff_size_real;

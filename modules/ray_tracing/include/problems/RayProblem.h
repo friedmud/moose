@@ -100,12 +100,12 @@ public:
   /**
    * The number of energy groups currently being utilized.
    */
-  unsigned int numGroups() { return _num_groups; }
+  unsigned long int numGroups() { return _num_groups; }
 
   /**
    * The number of polar angles currently being used
    */
-  unsigned int numPolar() { return _num_polar; }
+  unsigned long int numPolar() { return _num_polar; }
 
   /**
    * Maximum length through the domain
@@ -142,8 +142,8 @@ public:
   MooseUtils::SharedPool<Ray> _ray_pool;
 
 protected:
-  unsigned int _num_groups;
-  unsigned int _num_polar;
+  unsigned long int _num_groups;
+  unsigned long int _num_polar;
 
   bool _solve_ray;
 

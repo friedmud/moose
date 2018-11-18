@@ -32,7 +32,7 @@ AverageGroupValueAux::computeValue()
 {
   Real total = 0;
 
-  for (unsigned int g = 0; g < _num_groups; g++)
+  for (unsigned long int g = 0; g < _num_groups; g++)
     total += _group_values[_current_offset + g];
 
   return total / static_cast<Real>(_num_groups);

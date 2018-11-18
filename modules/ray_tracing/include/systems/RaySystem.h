@@ -92,7 +92,7 @@ public:
     double padding[16];
   };
 
-  RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned int num_groups);
+  RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned long int num_groups);
   virtual ~RaySystem();
 
   virtual System & system() { return _sys; }
@@ -192,7 +192,7 @@ public:
    * Reinit a neighbor
    */
   virtual void
-  reinitNeighborFace(const Elem * elem, unsigned int side, BoundaryID bnd_id, THREAD_ID tid);
+  reinitNeighborFace(const Elem * elem, unsigned long int side, BoundaryID bnd_id, THREAD_ID tid);
 
   /**
    * The current offset into the solution vectors
@@ -233,7 +233,7 @@ public:
   /**
    * Total number of integrations done in the last transport sweep
    */
-  unsigned int totalIntegrations() { return _total_integrations; }
+  unsigned long int totalIntegrations() { return _total_integrations; }
 
   /**
    * The element currently being operated on by each thread
@@ -266,7 +266,7 @@ protected:
   std::vector<ThreadedData> _rs_threaded_data;
 
   /// Number of groups
-  unsigned int _num_groups;
+  unsigned long int _num_groups;
 
   /// These are the values that are used internally in the solver
   PetscVector<Number> & _current_group_solution;

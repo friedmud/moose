@@ -44,9 +44,9 @@ public:
 
   Ray(const Point & start,
       const Point & end,
-      unsigned int data_size,
+      unsigned long int data_size,
       const Elem * starting_elem = NULL,
-      unsigned int incoming_side = -1)
+      unsigned long int incoming_side = -1)
     : _data(data_size, 0),
       _start(start),
       _end(end),
@@ -59,7 +59,7 @@ public:
       const Point & end,
       const std::vector<Real> & data,
       const Elem * starting_elem = NULL,
-      unsigned int incoming_side = -1)
+      unsigned long int incoming_side = -1)
     : _data(data),
       _start(start),
       _end(end),
@@ -76,9 +76,9 @@ public:
    */
   void reset(const Point & start,
              const Point & end,
-             unsigned int data_size,
+             unsigned long int data_size,
              const Elem * starting_elem = NULL,
-             unsigned int incoming_side = -1)
+             unsigned long int incoming_side = -1)
   {
     _should_continue = true;
     _is_reverse = false;
@@ -99,10 +99,10 @@ public:
    */
   void reset(const Point & start,
              const Point & end,
-             unsigned int data_size,
+             unsigned long int data_size,
              Real constant_data = 0,
              const Elem * starting_elem = NULL,
-             unsigned int incoming_side = -1)
+             unsigned long int incoming_side = -1)
   {
     _should_continue = true;
     _is_reverse = false;
@@ -125,7 +125,7 @@ public:
              const Point & end,
              const std::vector<Real> & data,
              const Elem * starting_elem = NULL,
-             unsigned int incoming_side = -1)
+             unsigned long int incoming_side = -1)
   {
     _should_continue = true;
     _is_reverse = false;
@@ -151,8 +151,8 @@ public:
     _integrated_distance = 0;
   }
 
-  void setID(unsigned int id) { _id = id; }
-  unsigned int id() { return _id; }
+  void setID(unsigned long int id) { _id = id; }
+  unsigned long int id() { return _id; }
 
   void setStart(const Point & start) { _start = start; }
   const Point & start() const { return _start; }
@@ -171,8 +171,8 @@ public:
   void setEndsWithinMesh(bool ends_within_mesh = true) { _ends_within_mesh = ends_within_mesh; }
   bool endsWithinMesh() { return _ends_within_mesh; }
 
-  void setIncomingSide(unsigned int incoming_side) { _incoming_side = incoming_side; }
-  unsigned int incomingSide() const { return _incoming_side; }
+  void setIncomingSide(unsigned long int incoming_side) { _incoming_side = incoming_side; }
+  unsigned long int incomingSide() const { return _incoming_side; }
 
   Real & processorCrossings() { return _processor_crossings; }
 
@@ -229,7 +229,7 @@ public:
 
 protected:
   /// A unique ID for this Ray.
-  unsigned int _id;
+  unsigned long int _id;
 
   /// Start of the Ray
   Point _start;
@@ -245,7 +245,7 @@ protected:
   bool _ends_within_mesh = false;
 
   /// The side of the the _starting element the ray is incoming on.  -1 if the Ray is starting _in_ the element
-  unsigned int _incoming_side;
+  unsigned long int _incoming_side;
 
   /// Number of times this Ray has needed to be communicated
   Real _processor_crossings = 0;
@@ -303,9 +303,9 @@ class Packing<std::shared_ptr<Ray>>
 public:
   typedef Real buffer_type;
 
-  static unsigned int packed_size(typename std::vector<Real>::const_iterator in);
+  static unsigned long int packed_size(typename std::vector<Real>::const_iterator in);
 
-  static unsigned int packable_size(const std::shared_ptr<Ray> & ray, const void *);
+  static unsigned long int packable_size(const std::shared_ptr<Ray> & ray, const void *);
 
   template <typename Iter>
   static void pack(const std::shared_ptr<Ray> & b, Iter data_out, const void *)

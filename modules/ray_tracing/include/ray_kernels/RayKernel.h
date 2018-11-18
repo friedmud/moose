@@ -102,13 +102,13 @@ protected:
   THREAD_ID _tid;
 
   /// Number of groups
-  unsigned int _num_groups;
+  unsigned long int _num_groups;
 
   /// The Ray that's being worked on
   Ray * _ray;
 
   /// Number of polar angles
-  unsigned int _num_polar;
+  unsigned long int _num_polar;
 
   /// Offest into the vectors associated with the RaySystem
   dof_id_type & _current_offset;

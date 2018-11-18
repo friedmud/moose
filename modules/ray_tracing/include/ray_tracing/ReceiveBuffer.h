@@ -32,7 +32,7 @@ public:
    */
   ReceiveBuffer(const Parallel::Communicator & comm,
                 RayProblemBase & ray_problem,
-                unsigned int clicks_per_receive,
+                unsigned long int clicks_per_receive,
                 bool blocking = false)
     : ParallelObject(comm),
       _ray_problem(ray_problem),
@@ -97,7 +97,7 @@ public:
     bool flag = false;
     Parallel::Status stat;
 
-    static unsigned int current_clicks = 0;
+    static unsigned long int current_clicks = 0;
 
     if (current_clicks % _clicks_per_receive == 0)
     {
@@ -187,12 +187,12 @@ public:
   /**
    * Number of iterations before looking for new rays
    */
-  unsigned int receiveClicks() { return _clicks_per_receive; }
+  unsigned long int receiveClicks() { return _clicks_per_receive; }
 
   /**
    * Set Number of iterations before looking for new rays
    */
-  void setReceiveClicks(unsigned int clicks_per_receive)
+  void setReceiveClicks(unsigned long int clicks_per_receive)
   {
     _clicks_per_receive = clicks_per_receive;
   }
@@ -255,7 +255,7 @@ protected:
   RayProblemBase & _ray_problem;
 
   /// Number of iterations to wait before looking for more rays
-  unsigned int _clicks_per_receive;
+  unsigned long int _clicks_per_receive;
 
   /// List of Requests and buffers for each request
   std::list<std::pair<std::shared_ptr<Parallel::Request>,
@@ -296,7 +296,7 @@ protected:
 private:
   template <typename Context, typename OutputIter, typename T>
   inline void blocking_receive_packed_range(const Parallel::Communicator & comm,
-                                            const unsigned int src_processor_id,
+                                            const unsigned long int src_processor_id,
                                             Context * context,
                                             OutputIter out,
                                             const T * /* output_type */,
@@ -325,7 +325,7 @@ private:
         new libMesh::Parallel::PostWaitDeleteBuffer<std::vector<buffer_t>>(buffer));
   }
 
-  unsigned int _my_rank;
+  unsigned long int _my_rank;
 };
 
 #endif

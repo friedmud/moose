@@ -60,7 +60,7 @@ public:
 
 protected:
   /// Number of groups in the problem
-  unsigned int _num_groups;
+  unsigned long int _num_groups;
 
   /// Values to use for each group
   const std::vector<Real> & _input_group_values;

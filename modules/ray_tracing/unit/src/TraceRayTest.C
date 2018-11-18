@@ -21,7 +21,7 @@
 
 // Helper for comparing two vectors of doubles
 #define ASSERT_VECTOR_DOUBLE_EQ(vec1, vec2, message)                                               \
-  for (unsigned int vadei = beginIndex(vec1); vadei < vec1.size(); vadei++)                        \
+  for (unsigned long int vadei = beginIndex(vec1); vadei < vec1.size(); vadei++)                        \
     ASSERT_NEAR(vec1[vadei], vec2[vadei], TOLERANCE) << message;
 
 class DebugTraceRay : public TraceRay
@@ -29,7 +29,7 @@ class DebugTraceRay : public TraceRay
 public:
   DebugTraceRay(const MeshBase & mesh,
                 const BoundingBox & b_box,
-                unsigned int halo_size,
+                unsigned long int halo_size,
                 Real ray_max_distance,
                 Real ray_length,
                 THREAD_ID tid,
@@ -67,7 +67,7 @@ protected:
 
   virtual void onBoundary(const Elem * /* current_elem */,
                           const Point & /* intersection_point */,
-                          unsigned int /* intersected_side */,
+                          unsigned long int /* intersected_side */,
                           boundary_id_type bid,
                           const Elem * /* neighbor */,
                           std::shared_ptr<Ray> & ray)
@@ -98,8 +98,8 @@ TEST_F(TraceRayTest, trace_single_2d_quad)
   mesh_params.set<Real>("xmax") = 1.0;
   mesh_params.set<Real>("ymax") = 1.0;
 
-  mesh_params.set<unsigned int>("nx") = 1;
-  mesh_params.set<unsigned int>("ny") = 1;
+  mesh_params.set<unsigned long int>("nx") = 1;
+  mesh_params.set<unsigned long int>("ny") = 1;
 
   std::unique_ptr<MooseMesh> mesh = libmesh_make_unique<GeneratedMesh>(mesh_params);
   mesh->buildMesh();
@@ -131,8 +131,8 @@ TEST_F(TraceRayTest, trace_adapted_2d_quads)
   mesh_params.set<Real>("xmax") = 2.0;
   mesh_params.set<Real>("ymax") = 1.0;
 
-  mesh_params.set<unsigned int>("nx") = 2;
-  mesh_params.set<unsigned int>("ny") = 1;
+  mesh_params.set<unsigned long int>("nx") = 2;
+  mesh_params.set<unsigned long int>("ny") = 1;
 
   std::unique_ptr<MooseMesh> mesh = libmesh_make_unique<GeneratedMesh>(mesh_params);
   mesh->buildMesh();
@@ -172,8 +172,8 @@ TEST_F(TraceRayTest, trace_more_adapted_2d_quads)
   mesh_params.set<Real>("xmax") = 2.0;
   mesh_params.set<Real>("ymax") = 1.0;
 
-  mesh_params.set<unsigned int>("nx") = 2;
-  mesh_params.set<unsigned int>("ny") = 1;
+  mesh_params.set<unsigned long int>("nx") = 2;
+  mesh_params.set<unsigned long int>("ny") = 1;
 
   std::unique_ptr<MooseMesh> mesh = libmesh_make_unique<GeneratedMesh>(mesh_params);
   mesh->buildMesh();
@@ -225,8 +225,8 @@ TEST_F(TraceRayTest, trace_adapted_2d_quads_strike_level_mismatch_corner)
   mesh_params.set<Real>("xmax") = 2.0;
   mesh_params.set<Real>("ymax") = 1.0;
 
-  mesh_params.set<unsigned int>("nx") = 2;
-  mesh_params.set<unsigned int>("ny") = 1;
+  mesh_params.set<unsigned long int>("nx") = 2;
+  mesh_params.set<unsigned long int>("ny") = 1;
 
   std::unique_ptr<MooseMesh> mesh = libmesh_make_unique<GeneratedMesh>(mesh_params);
   mesh->buildMesh();

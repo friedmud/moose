@@ -28,12 +28,12 @@ InputParameters
 validParams<RayProblem>()
 {
   InputParameters params = validParams<FEProblem>();
-  params.addRequiredParam<unsigned int>("num_groups", "The number of value spots on a Ray");
-  params.addParam<unsigned int>(
+  params.addRequiredParam<unsigned long int>("num_groups", "The number of value spots on a Ray");
+  params.addParam<unsigned long int>(
       "num_polar", 1, "The number of polar angles being used (only valid for a 2D problem)");
 
-  params.addParam<unsigned int>(
-      "max_rays", std::numeric_limits<unsigned int>::max(), "Maximum number of rays to run.");
+  params.addParam<unsigned long int>(
+      "max_rays", std::numeric_limits<unsigned long int>::max(), "Maximum number of rays to run.");
 
   params.addParam<bool>("solve_ray", true, "Whether or not to solve the Ray problem");
   params.addParam<bool>("solve_fe", false, "Whether or not to actually solve the FE problem!");
@@ -51,8 +51,8 @@ validParams<RayProblem>()
 
 RayProblemBase::RayProblemBase(const InputParameters & params)
   : FEProblem(params),
-    _num_groups(getParam<unsigned int>("num_groups")),
-    _num_polar(getParam<unsigned int>("num_polar")),
+    _num_groups(getParam<unsigned long int>("num_groups")),
+    _num_polar(getParam<unsigned long int>("num_polar")),
     _solve_ray(getParam<bool>("solve_ray")),
     _solve_fe(getParam<bool>("solve_fe")),
     _ray_kernel_coverage_check(getParam<bool>("ray_kernel_coverage_check")),
@@ -203,7 +203,7 @@ void
 RayProblemBase::reinitNeighbor(const Elem * elem, unsigned int side, THREAD_ID tid)
 {
   const Elem * neighbor = elem->neighbor_ptr(side);
-  unsigned int neighbor_side = neighbor->which_neighbor_am_i(elem);
+  unsigned long int neighbor_side = neighbor->which_neighbor_am_i(elem);
 
   _ray_system->reinitNeighborFace(neighbor, neighbor_side, 0, tid);
 

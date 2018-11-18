@@ -33,7 +33,7 @@
 // System Includes
 #include <numeric>
 
-RaySystem::RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned int num_groups)
+RaySystem::RaySystem(RayProblemBase & subproblem, const std::string & name, unsigned long int num_groups)
   : SystemBase(subproblem, name, Moose::VAR_AUXILIARY),
     ConsoleStreamInterface(subproblem.getMooseApp()),
     _ray_problem(subproblem),
@@ -42,13 +42,13 @@ RaySystem::RaySystem(RayProblemBase & subproblem, const std::string & name, unsi
     _num_groups(num_groups),
     _current_group_solution(dynamic_cast<PetscVector<Number> &>(solution()))
 {
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (unsigned long int tid = 0; tid < libMesh::n_threads(); tid++)
     _rs_threaded_data[tid]._group_solution = dynamic_cast<PetscVector<Number> *>(
         &_sys.add_vector("thread_group_solution_" + std::to_string(tid), false, PARALLEL));
 
   FEType var_type(CONSTANT, MONOMIAL);
 
-  for (unsigned int g = 0; g < _num_groups; g++)
+  for (unsigned long int g = 0; g < _num_groups; g++)
     addVariable("group_" + std::to_string(g), var_type, 1.0);
 
   _console << "\nCreated RaySystem!!!\n" << std::endl;
@@ -117,20 +117,20 @@ RaySystem::initialSetup()
     }
   }
 
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _ray_kernels.initialSetup(tid);
     _ray_materials.initialSetup(tid);
   }
 
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
     updateActive(tid);
 }
 
 void
 RaySystem::timestepSetup()
 {
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _ray_kernels.timestepSetup(tid);
     _ray_materials.timestepSetup(tid);
@@ -140,7 +140,7 @@ RaySystem::timestepSetup()
 void
 RaySystem::subdomainSetup()
 {
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _ray_kernels.subdomainSetup(tid);
     _ray_materials.subdomainSetup(tid);
@@ -150,7 +150,7 @@ RaySystem::subdomainSetup()
 void
 RaySystem::jacobianSetup()
 {
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _ray_kernels.jacobianSetup(tid);
     _ray_materials.jacobianSetup(tid);
@@ -160,7 +160,7 @@ RaySystem::jacobianSetup()
 void
 RaySystem::residualSetup()
 {
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _ray_kernels.residualSetup(tid);
     _ray_materials.residualSetup(tid);
@@ -255,7 +255,7 @@ RaySystem::solve()
 {
   Moose::perf_log.push("RaySystem::solve()", "Execution");
 
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (unsigned long int tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _ray_kernels.updateActive(tid);
     _ray_materials.updateActive(tid);
@@ -288,7 +288,7 @@ RaySystem::reinitElem(const Elem * elem, THREAD_ID tid, bool only_sigma_t)
 
 void
 RaySystem::reinitNeighborFace(const Elem * elem,
-                              unsigned int /*side*/,
+                              unsigned long int /*side*/,
                               BoundaryID /*bnd_id*/,
                               THREAD_ID tid)
 {
@@ -313,7 +313,7 @@ void
 RaySystem::sweep()
 {
   VecGetArray(_current_group_solution.vec(), &_current_group_solution_values);
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (unsigned long int tid = 0; tid < libMesh::n_threads(); tid++)
     VecGetArray(_rs_threaded_data[tid]._group_solution->vec(),
                 &_rs_threaded_data[tid]._group_solution_values);
 
@@ -323,7 +323,7 @@ RaySystem::sweep()
   VecRestoreArray(_current_group_solution.vec(), &_current_group_solution_values);
   _current_group_solution.close();
 
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (unsigned long int tid = 0; tid < libMesh::n_threads(); tid++)
   {
     VecRestoreArray(_rs_threaded_data[tid]._group_solution->vec(),
                     &_rs_threaded_data[tid]._group_solution_values);
@@ -337,7 +337,7 @@ RaySystem::postSweep()
 {
   _current_group_solution.zero();
 
-  for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
+  for (unsigned long int tid = 0; tid < libMesh::n_threads(); tid++)
     _current_group_solution += (*_rs_threaded_data[tid]._group_solution);
 
   _current_group_solution.close();

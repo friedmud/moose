@@ -32,28 +32,28 @@ unsigned long int ray_count = 0;
 
 // 0 ray_count: 156007 ray_id: 7244 Endless loop!
 
-unsigned int debug_ray = 216;
+unsigned long int debug_ray = 216;
 
-unsigned int debug_ray_id = 15524036;
+unsigned long int debug_ray_id = 32021;
 
-unsigned int debug_ray_pid = 1;
+unsigned long int debug_ray_pid = 1;
 
-#define DEBUG_IF ray_count == debug_ray
+//#define DEBUG_IF ray_count == debug_ray
 
-// ray->id() == debug_ray_id // ray_count > 197000 && debug_ray_id == ray->id()
+#define DEBUG_IF ray->id() == debug_ray_id // ray_count > 197000 && debug_ray_id == ray->id()
 
 // && ray_count == debug_ray
 
 // #define USE_DEBUG_RAY
 
-const std::vector<std::vector<unsigned int>> quad4_side_to_children = {
+const std::vector<std::vector<unsigned long int>> quad4_side_to_children = {
     {0, 1}, {1, 3}, {3, 2}, {2, 0}};
 
 TraceRay::TraceRay(PerfGraph & perf_graph,
                    const MeshBase & mesh,
                    const BoundingBox & b_box,
                    const std::map<const Elem *, std::vector<Point>> & elem_normals,
-                   unsigned int halo_size,
+                   unsigned long int halo_size,
                    Real ray_max_distance,
                    Real ray_length,
                    bool tolerate_failure,
@@ -80,7 +80,7 @@ _found_intersection(registerTimedSection("found_intersection", 1))
 
 RayProblemTraceRay::RayProblemTraceRay(RayProblemBase & ray_problem,
                                        const MeshBase & mesh,
-                                       unsigned int halo_size,
+                                       unsigned long int halo_size,
                                        Real ray_max_distance,
                                        Real ray_length,
                                        bool tolerate_failure,
@@ -125,7 +125,7 @@ RayProblemTraceRay::onSegment(const Elem * current_elem,
 void
 RayProblemTraceRay::onBoundary(const Elem * current_elem,
                                const Point & intersection_point,
-                               unsigned int intersected_side,
+                               unsigned long int intersected_side,
                                boundary_id_type bid,
                                const Elem * /* neighbor */,
                                std::shared_ptr<Ray> & ray)
@@ -206,7 +206,7 @@ lineLineIntersect2DVanilla(const Point & o,
 template <typename T>
 int
 sideIntersectedByLine2D(const Elem * current_elem,
-                        unsigned int incoming_side,
+                        unsigned long int incoming_side,
                         const Point & incoming_point,
                         const std::shared_ptr<Ray> & ray,
                         const Point & ray_direction,
@@ -215,7 +215,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
                         Point & /*boundaryintersection_point*/)
 {
   int intersected_side = -1;
-  unsigned int n_sides = current_elem->n_sides();
+  unsigned long int n_sides = current_elem->n_sides();
 
   Point current_intersection_point;
   double current_intersection_distance = 0;
@@ -242,7 +242,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
     // *shrug*
     //    auto & normals = elem_normals.at(current_elem);
 
-    for (unsigned int i = 0; i < n_sides; i++)
+    for (unsigned long int i = 0; i < n_sides; i++)
     {
       if (i == incoming_side) // Don't search backwards
         continue;
@@ -632,7 +632,7 @@ intersectQuad(const Point & O,
 
 int
 sideIntersectedByLineHex8(const Elem * current_elem,
-                          unsigned int incoming_side,
+                          unsigned long int incoming_side,
                           const Point & incoming_point,
                           const std::shared_ptr<Ray> & ray,
                           const Point & ray_direction,
@@ -641,7 +641,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
                           Point & /*boundaryintersection_point*/)
 {
   int intersected_side = -1;
-  unsigned int n_sides = 6;
+  unsigned long int n_sides = 6;
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
@@ -686,7 +686,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
 
     //    auto & normals = elem_normals.find(current_elem)->second;
 
-    for (unsigned int i = 0; i < n_sides; i++)
+    for (unsigned long int i = 0; i < n_sides; i++)
     {
       if (i == incoming_side) // Don't search backwards
         continue;
@@ -774,7 +774,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
 
 int
 sideIntersectedByLine1D(const Elem * current_elem,
-                        unsigned int /*incoming_side*/,
+                        unsigned long int /*incoming_side*/,
                         const Point & /*incoming_point*/,
                         const std::shared_ptr<Ray> & /*ray*/,
                         const Point & in_ray_direction,
@@ -814,14 +814,14 @@ sideIntersectedByLine1D(const Elem * current_elem,
 int sideIntersectedByLine(const Elem * elem, std::vector<int> & not_side, const Ray & ray, Point &
 intersection_point)
 {
-  unsigned int n_sides = elem->n_sides();
+  unsigned long int n_sides = elem->n_sides();
 
   // Whether or not they intersect
   bool intersect = false;
 
-  unsigned int dim = elem->dim();
+  unsigned long int dim = elem->dim();
 
-  for (unsigned int i=0; i<n_sides; i++)
+  for (unsigned long int i=0; i<n_sides; i++)
   {
     // Don't search the "not_side"
     // Note: A linear search is fine here because this vector is going to be < n_sides
@@ -894,9 +894,9 @@ candidate
 int
 sideNeighborIsOn(const Elem * elem, const Elem * neighbor)
 {
- unsigned int n_sides = elem->n_sides();
+ unsigned long int n_sides = elem->n_sides();
 
- for (unsigned int i = 0; i < n_sides; i++)
+ for (unsigned long int i = 0; i < n_sides; i++)
  {
    if (elem->neighbor(i) == neighbor)
      return i;
@@ -945,7 +945,7 @@ TraceRay::find_point_neighbors(
 
       const auto n_sides = elem->n_sides();
 
-      for (unsigned int s = 0; s < n_sides; s++)
+      for (unsigned long int s = 0; s < n_sides; s++)
       {
         const Elem * current_neighbor = elem->neighbor_ptr(s);
 #ifdef USE_DEBUG_RAY
@@ -1007,7 +1007,7 @@ TraceRay::find_point_neighbors(
 Elem *
 TraceRay::recursivelyFindChildContainingPoint(const Elem * current_child,
                                               const Point & intersection_point,
-                                              const std::vector<unsigned int> & children_ids)
+                                              const std::vector<unsigned long int> & children_ids)
 {
   for (auto child_id : children_ids)
   {
@@ -1040,7 +1040,7 @@ TraceRay::recursivelyFindChildContainingPoint(const Elem * current_child,
 }
 
 Elem *
-TraceRay::childOnSide(const Elem * current_elem, const Point & p, unsigned int side)
+TraceRay::childOnSide(const Elem * current_elem, const Point & p, unsigned long int side)
 {
   // Get the children on that side
   auto & children_ids = quad4_side_to_children[side];
@@ -1050,7 +1050,7 @@ TraceRay::childOnSide(const Elem * current_elem, const Point & p, unsigned int s
 
 Elem *
 TraceRay::getNeighbor(const Elem * current_elem,
-                      unsigned int intersected_side,
+                      unsigned long int intersected_side,
                       Point & intersection_point)
 {
   return current_elem->neighbor(intersected_side);
@@ -1080,7 +1080,7 @@ void
 TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
                              const Point & incoming_point,
                              const Elem * current_elem,
-                             unsigned int incoming_side,
+                             unsigned long int incoming_side,
                              Point & intersection_point,
                              int & intersected_side)
 {
@@ -1088,7 +1088,7 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
   {
     const auto n_sides = current_elem->n_sides();
 
-    unsigned int sides_on_boundary = 0;
+    unsigned long int sides_on_boundary = 0;
     // First, see how many sides are by the boundary
     for (auto s = 0u; s < n_sides; s++)
       if (current_elem->neighbor(s) == NULL)
@@ -1113,13 +1113,13 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
     // We're going to look at our bounding box for the domain to know if we're
     // close to the side.  What we're looking for here are dims where the difference
     // between the Ray's dim and the bounding box dim is zero
-    unsigned int num_zero = 0;
+    unsigned long int num_zero = 0;
 
-    for (unsigned int i = 0; i < _mesh_dim; i++)
+    for (unsigned long int i = 0; i < _mesh_dim; i++)
       if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 5e-5))
         num_zero++;
 
-    for (unsigned int i = 0; i < _mesh_dim; i++)
+    for (unsigned long int i = 0; i < _mesh_dim; i++)
       if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 5e-5))
         num_zero++;
 
@@ -1197,7 +1197,7 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
                                          Point & boundary_intersection_point,
                                          int & intersected_side,
                                          const Elem *& best_neighbor,
-                                         unsigned int & best_side)
+                                         unsigned long int & best_side)
 {
   // Let's first try grabbing the point_neighbors for this element to see if they are good
   // candidates
@@ -1306,13 +1306,13 @@ TraceRay::checkForCornerHitAndApplyBCs(const Elem * current_elem,
   _work_point = intersection_point - _b_box.min();
   _work_point2 = intersection_point - _b_box.max();
 
-  unsigned int num_zero = 0;
+  unsigned long int num_zero = 0;
 
-  for (unsigned int i = 0; i < _mesh_dim; i++)
+  for (unsigned long int i = 0; i < _mesh_dim; i++)
     if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point(i)), 0., 1e-6))
       num_zero++;
 
-  for (unsigned int i = 0; i < _mesh_dim; i++)
+  for (unsigned long int i = 0; i < _mesh_dim; i++)
     if (MooseUtils::absoluteFuzzyEqual(std::abs(_work_point2(i)), 0., 1e-6))
       num_zero++;
 
@@ -1386,13 +1386,13 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
   current_elem = ray->startingElem();
 
-  unsigned int incoming_side = ray->incomingSide();
+  unsigned long int incoming_side = ray->incomingSide();
 
   bool keep_tracing = true;
 
   unsigned long int count = 0;
 
-  unsigned int halo_count = 0;
+  unsigned long int halo_count = 0;
 
   ray_count++;
 
@@ -1401,7 +1401,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #ifdef USE_DEBUG_RAY
   Mesh * debug_mesh = NULL;
 
-  unsigned int debug_node_count = 0;
+  unsigned long int debug_node_count = 0;
 #endif
 
   auto pid = _mesh.comm().rank();
@@ -1454,14 +1454,17 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
-      std::cerr << "Debug ray UID: " << ray->id() << std::endl;
+    {
+      sleep(1);
+      std::cerr << pid << " Debug ray UID: " << ray->id() << std::endl;
+    }
 #endif
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
     {
-      std::cerr << "current_elem: " << current_elem->id() << std::endl;
-      std::cerr << *current_elem << std::endl;
+      std::cerr << pid << " current_elem: " << current_elem->id() << std::endl;
+      std::cerr << pid << *current_elem << std::endl;
     }
 #endif
 
@@ -1472,7 +1475,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     {
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
-        std::cerr << "ends within mesh!" << std::endl;
+        std::cerr << pid << " ends within mesh!" << std::endl;
 #endif
       // Check the ending elem id
       if (ray->endingElemId() == current_elem->id())
@@ -1486,7 +1489,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       {
 #ifdef USE_DEBUG_RAY
         if (DEBUG_IF)
-          std::cerr << " ends within current elem!" << std::endl;
+          std::cerr << pid << " ends within current elem!" << std::endl;
 #endif
         intersection_point = ray->end();
       }
@@ -1505,7 +1508,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     if (debug_mesh && ray->id() == debug_ray_id && pid == debug_ray_pid)
   //  if ( == 1)
       {
-        for (unsigned int i=0; i<current_elem->n_nodes(); i++)
+        for (unsigned long int i=0; i<current_elem->n_nodes(); i++)
         {
           debug_mesh->add_point(*current_elem->get_node(i));
           debug_node_count++;
@@ -1517,7 +1520,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
         debug_elem = debug_mesh->add_elem(debug_elem);
 
-        for (unsigned int i=0; i<current_elem->n_nodes(); i++)
+        for (unsigned long int i=0; i<current_elem->n_nodes(); i++)
         {
   //        libMesh::err<<"Elem nodes: "<<*debug_mesh->node_ptr((debug_node_count -
   current_elem->n_nodes()) + i)<<std::endl;
@@ -1531,7 +1534,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
     if (ray->id() == debug_ray_id && pid == debug_ray_pid)
     {
-      for (unsigned int s=0; s<current_elem->n_sides(); s++)
+      for (unsigned long int s=0; s<current_elem->n_sides(); s++)
       {
         fe_face->reinit(current_elem, s);
         libMesh::err<<"Side "<<s<<" normal: "<<normals[0]<<std::endl;
@@ -1584,8 +1587,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
       {
-        std::cerr << "Didn't find a side... trying harder" << std::endl;
-        std::cerr << "ray->distance(): " << ray->distance() << std::endl;
+        std::cerr << pid << " Didn't find a side... trying harder" << std::endl;
+        std::cerr << pid << " ray->distance(): " << ray->distance() << std::endl;
       }
 #endif
 
@@ -1595,7 +1598,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       if (intersected_side == -1) // Need to do a more exhaustive search
       {
         const Elem * best_neighbor = NULL;
-        unsigned int best_side = 0;
+        unsigned long int best_side = 0;
 
         tryToMoveThroughPointNeighbors(current_elem,
                                        elem_type,
@@ -1612,7 +1615,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         {
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
-            std::cerr << "best_neighbor: " << best_neighbor->id() << " best_side: " << best_side
+            std::cerr << pid << " best_neighbor: " << best_neighbor->id() << " best_side: " << best_side
                       << std::endl;
 #endif
           current_elem = best_neighbor;
@@ -1621,6 +1624,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
         if (current_elem->processor_id() != pid)
         {
+#ifdef USE_DEBUG_RAY
+          if (DEBUG_IF)
+            std::cerr << pid << " point neighbor off processor: " << current_elem->processor_id() << std::endl;
+#endif
           ray->setStartingElem(current_elem);
           ray->setIncomingSide(incoming_side);
           ray->setStart(incoming_point);
@@ -1694,7 +1701,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
-        std::cerr << "Found a side!" << std::endl;
+        std::cerr << pid << " Found a side!" << std::endl;
 #endif
 
       ray->intersections()++;
@@ -1737,7 +1744,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       {
 #ifdef USE_DEBUG_RAY
         if (DEBUG_IF)
-          std::cerr << "Killing because at max distance!" << std::endl;
+          std::cerr << pid << " Killing because at max distance!" << std::endl;
 #endif
         //        libMesh::err<<"Ray over max distance: "<<ray->distance()<<std::endl;
         ray->setShouldContinue(false);
@@ -1759,14 +1766,14 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
 #ifdef USE_DEBUG_RAY
         if (DEBUG_IF)
-          std::cerr << "Neighbor: " << neighbor << std::endl;
+          std::cerr << pid << " Neighbor: " << neighbor << std::endl;
 #endif
 
         if (neighbor)
         {
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
-            std::cerr << "Neighbor_id: " << neighbor->id() << std::endl;
+            std::cerr << pid << " Neighbor_id: " << neighbor->id() << std::endl;
 #endif
           // Note: This is finding the side the current_elem is on for the neighbor.  That's the
           // "incoming_side" for the neighbor
@@ -1788,7 +1795,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
             {
 #ifdef USE_DEBUG_RAY
               if (DEBUG_IF)
-                std::cerr << "Ray going off processor!" << std::endl;
+                std::cerr << pid << " Ray going off processor!" << std::endl;
 #endif
               ray->setStartingElem(neighbor);
               ray->setIncomingSide(incoming_side);

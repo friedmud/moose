@@ -25,19 +25,19 @@ validParams<RayTracingStudy>()
 {
   InputParameters params = validParams<GeneralUserObject>();
 
-  params.addParam<unsigned int>(
+  params.addParam<unsigned long int>(
       "halo_size", 1, "The size of the ghosted layer around each local set of elements");
-  params.addRequiredParam<unsigned int>("num_rays", "The number of rays to use");
+  params.addRequiredParam<unsigned long int>("num_rays", "The number of rays to use");
   params.addRequiredParam<Real>("ray_distance", "Rays will travel until they reach this distance");
 
-  params.addParam<unsigned int>("send_buffer_size", 100, "The size of the send buffer");
-  params.addParam<unsigned int>(
+  params.addParam<unsigned long int>("send_buffer_size", 100, "The size of the send buffer");
+  params.addParam<unsigned long int>(
       "chunk_size", 100, "The number of rays to process at one time during generation");
-  params.addParam<unsigned int>(
+  params.addParam<unsigned long int>(
       "clicks_per_communication", 100, "Iterations to wait before communicating");
-  params.addParam<unsigned int>(
+  params.addParam<unsigned long int>(
       "clicks_per_root_communication", 10000, "Iterations to wait before communicating with root");
-  params.addParam<unsigned int>(
+  params.addParam<unsigned long int>(
       "clicks_per_receive", 1, "Iterations to wait before checking for new rays");
 
   params.addParam<bool>("blocking", false, "Whether to do blocking or non-blocking receives");
@@ -45,7 +45,7 @@ validParams<RayTracingStudy>()
   params.addParam<bool>(
       "tolerate_failure", false, "Whether or not to tolerate a ray tracing failure");
 
-  params.addParam<unsigned int>("min_buffer_size",
+  params.addParam<unsigned long int>("min_buffer_size",
                                 "The initial size of the SendBuffer and the floor for shrinking "
                                 "it.  This defaults to send_buffer_size if not set (i.e. the "
                                 "buffer won't change size)");
@@ -75,22 +75,22 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _num_groups(_ray_problem.numGroups()),
     _mesh(_fe_problem.mesh()),
     _comm(_mesh.comm()),
-    _halo_size(getParam<unsigned int>("halo_size")),
-    _chunk_size(getParam<unsigned int>("chunk_size") * libMesh::n_threads()),
-    _total_rays(getParam<unsigned int>("num_rays")),
+    _halo_size(getParam<unsigned long int>("halo_size")),
+    _chunk_size(getParam<unsigned long int>("chunk_size") * libMesh::n_threads()),
+    _total_rays(getParam<unsigned long int>("num_rays")),
     _working_buffer(_chunk_size * 10),
-    _max_buffer_size(getParam<unsigned int>("send_buffer_size")),
+    _max_buffer_size(getParam<unsigned long int>("send_buffer_size")),
     _buffer_growth_multiplier(getParam<Real>("buffer_growth_multiplier")),
     _buffer_shrink_multiplier(getParam<Real>("buffer_shrink_multiplier")),
     _my_pid(_comm.rank()),
     _ray_length(_ray_problem.domainMaxLength()),
     _receive_buffer(_comm,
                     _ray_problem,
-                    getParam<unsigned int>("clicks_per_receive"),
+                    getParam<unsigned long int>("clicks_per_receive"),
                     getParam<bool>("blocking")),
-    _clicks_per_communication(getParam<unsigned int>("clicks_per_communication")),
-    _clicks_per_root_communication(getParam<unsigned int>("clicks_per_root_communication")),
-    _clicks_per_receive(getParam<unsigned int>("clicks_per_receive")),
+    _clicks_per_communication(getParam<unsigned long int>("clicks_per_communication")),
+    _clicks_per_root_communication(getParam<unsigned long int>("clicks_per_root_communication")),
+    _clicks_per_receive(getParam<unsigned long int>("clicks_per_receive")),
     _ray_max_distance(getParam<Real>("ray_distance")),
     _tolerate_failure(getParam<bool>("tolerate_failure")),
     _average_finishing_angular_flux(_ray_problem.numGroups() * _ray_problem.numPolar()),
@@ -104,7 +104,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _buffer_timer(registerTimedSection("buffer", 1))
 {
   if (parameters.isParamSetByUser("min_buffer_size"))
-    _min_buffer_size = getParam<unsigned int>("min_buffer_size");
+    _min_buffer_size = getParam<unsigned long int>("min_buffer_size");
   else
     _min_buffer_size = _max_buffer_size;
 
@@ -120,7 +120,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
 void
 RayTracingStudy::executeStudy()
 {
-  static unsigned int call = 0;
+  static unsigned long int call = 0;
   std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
     + ".prof";
 //  ProfilerStart(fname.c_str());
@@ -379,7 +379,7 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
 
       _total_integrated_distance += ray->integratedDistance();
 
-      for (unsigned int i = 0; i < _ray_problem.numGroups(); i++)
+      for (unsigned long int i = 0; i < _ray_problem.numGroups(); i++)
         _average_finishing_angular_flux[i] += ray->_data[i];
 
       _rays_finished++;
@@ -435,7 +435,7 @@ RayTracingStudy::receiveAndTrace()
   else
     _receive_buffer.receive(_working_buffer);
 
-  unsigned int received_count = 0;
+  unsigned long int received_count = 0;
 
   while (_working_buffer.size())
   {
@@ -479,8 +479,8 @@ RayTracingStudy::smartPropagate()
   flushBuffers();
 
   // Use these to try to delay some forced communication
-  unsigned int non_tracing_clicks = 0;
-  unsigned int non_tracing_root_clicks = 0;
+  unsigned long int non_tracing_clicks = 0;
+  unsigned long int non_tracing_root_clicks = 0;
 
   bool traced_some = true;
 
@@ -552,7 +552,7 @@ RayTracingStudy::harmPropagate()
 
   // HARM only does some communication based on times through the loop.
   // This counter will be used for that
-  unsigned int communication_clicks;
+  unsigned long int communication_clicks;
 
   // Cache these
   processor_id_type num_procs = _comm.size();
@@ -637,8 +637,8 @@ RayTracingStudy::bsPropagate()
     bool sending = false;
 
     Parallel::Request some_left_request;
-    unsigned int some_left = 0;
-    unsigned int all_some_left = 1;
+    unsigned long int some_left = 0;
+    unsigned long int all_some_left = 1;
 
     do
     {

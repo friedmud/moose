@@ -41,7 +41,7 @@ protected:
   RaySystem & _ray_sys;
 
   /// Number of energy groups in the problem
-  unsigned int _num_groups;
+  unsigned long int _num_groups;
 
   /// Offest into the vectors
   dof_id_type & _current_offset;

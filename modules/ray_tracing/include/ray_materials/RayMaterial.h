@@ -56,7 +56,7 @@ protected:
   RayProblemBase & _ray_problem;
 
   /// Number of energy groups
-  unsigned int _num_groups;
+  unsigned long int _num_groups;
 
   /// The thread ID this object is assigned to
   THREAD_ID _tid;

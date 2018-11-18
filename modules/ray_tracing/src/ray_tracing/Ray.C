@@ -23,10 +23,10 @@ namespace libMesh
 namespace Parallel
 {
 
-unsigned int
+unsigned long int
 Packing<std::shared_ptr<Ray>>::packed_size(typename std::vector<Real>::const_iterator in)
 {
-  unsigned int total_size = 0;
+  unsigned long int total_size = 0;
 
   // Spot for the data length
   total_size += 1;
@@ -58,10 +58,10 @@ Packing<std::shared_ptr<Ray>>::packed_size(typename std::vector<Real>::const_ite
   return total_size;
 }
 
-unsigned int
+unsigned long int
 Packing<std::shared_ptr<Ray>>::packable_size(const std::shared_ptr<Ray> & ray, const void *)
 {
-  unsigned int total_size = 0;
+  unsigned long int total_size = 0;
 
   // Spot for the data length
   total_size += 1;
@@ -104,13 +104,13 @@ Packing<std::shared_ptr<Ray>>::unpack(typename std::vector<Real>::const_iterator
   std::shared_ptr<Ray> ray = ray_problem->_ray_pool.acquire();
 
   // Grab the data size
-  unsigned int data_size = *in++;
+  unsigned long int data_size = *in++;
 
   // Grab the polar_sins size
-  unsigned int polar_sins_size = *in++;
+  unsigned long int polar_sins_size = *in++;
 
   // Grab the polar_weights size
-  unsigned int polar_weights_size = *in++;
+  unsigned long int polar_weights_size = *in++;
 
   // Start Point
   ray->_start(0) = (*in++);
@@ -173,21 +173,21 @@ Packing<std::shared_ptr<Ray>>::unpack(typename std::vector<Real>::const_iterator
   ray->_data.resize(data_size);
 
   // Copy out data
-  for (unsigned int i = 0; i < data_size; i++)
+  for (unsigned long int i = 0; i < data_size; i++)
     ray->_data[i] = *in++;
 
   // Reserve space for the polar_sins
   ray->_polar_sins.resize(polar_sins_size);
 
   // Copy out the polar_sins
-  for (unsigned int i = 0; i < polar_sins_size; i++)
+  for (unsigned long int i = 0; i < polar_sins_size; i++)
     ray->_polar_sins[i] = *in++;
 
   // Reserve space for the polar_weights
   ray->_polar_weights.resize(polar_weights_size);
 
   // Copy out the polar_weights
-  for (unsigned int i = 0; i < polar_weights_size; i++)
+  for (unsigned long int i = 0; i < polar_weights_size; i++)
     ray->_polar_weights[i] = *in++;
 
   return ray;

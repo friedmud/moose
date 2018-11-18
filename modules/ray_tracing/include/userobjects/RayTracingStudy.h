@@ -190,17 +190,17 @@ public:
   /**
    * Get the total number of rays to run on
    */
-  unsigned int totalRays() { return _total_rays; }
+  unsigned long int totalRays() { return _total_rays; }
 
   /**
    * Set the total number of rays
    */
-  void setTotalRays(unsigned int total_rays) { _total_rays = total_rays; }
+  void setTotalRays(unsigned long int total_rays) { _total_rays = total_rays; }
 
   /**
    * Set the max ray distance
    */
-  void setRayMaxDistance(unsigned int ray_max_distance) { _ray_max_distance = ray_max_distance; }
+  void setRayMaxDistance(unsigned long int ray_max_distance) { _ray_max_distance = ray_max_distance; }
 
   /**
    * Duration for execute() in seconds
@@ -273,37 +273,37 @@ public:
   /**
    * Number of halo layers
    */
-  unsigned int haloSize() { return _halo_size; }
+  unsigned long int haloSize() { return _halo_size; }
 
   /**
    * Number of Rays to buffer before flushing
    */
-  unsigned int maxBufferSize() { return _max_buffer_size; }
+  unsigned long int maxBufferSize() { return _max_buffer_size; }
 
   /**
    * Set Number of Rays to buffer before flushing
    */
-  void setMaxBufferSize(unsigned int max_buffer_size) { _max_buffer_size = max_buffer_size; }
+  void setMaxBufferSize(unsigned long int max_buffer_size) { _max_buffer_size = max_buffer_size; }
 
   /**
    * Number of Rays to generate before tracing
    */
-  unsigned int chunkSize() { return _chunk_size; }
+  unsigned long int chunkSize() { return _chunk_size; }
 
   /**
    * Number of Rays to generate before tracing
    */
-  void setChunkSize(unsigned int chunk_size) { _chunk_size = chunk_size; }
+  void setChunkSize(unsigned long int chunk_size) { _chunk_size = chunk_size; }
 
   /**
    * Number of iterations before focing communication.
    */
-  unsigned int clicks() { return _clicks_per_communication; }
+  unsigned long int clicks() { return _clicks_per_communication; }
 
   /**
    * Set Number of iterations before forcing communication.
    */
-  void setClicks(unsigned int clicks_per_communication)
+  void setClicks(unsigned long int clicks_per_communication)
   {
     _clicks_per_communication = clicks_per_communication;
   }
@@ -311,12 +311,12 @@ public:
   /**
    * Number of iterations before forcing root communication.
    */
-  unsigned int rootClicks() { return _clicks_per_root_communication; }
+  unsigned long int rootClicks() { return _clicks_per_root_communication; }
 
   /**
    * Set Number of iterations before forcing root communication.
    */
-  void setRootClicks(unsigned int clicks_per_root_communication)
+  void setRootClicks(unsigned long int clicks_per_root_communication)
   {
     _clicks_per_root_communication = clicks_per_root_communication;
   }
@@ -324,12 +324,12 @@ public:
   /**
    * Number of iterations before looking for new rays
    */
-  unsigned int receiveClicks() { return _clicks_per_receive; }
+  unsigned long int receiveClicks() { return _clicks_per_receive; }
 
   /**
    * Set Number of iterations before looking for new rays
    */
-  void setReceiveClicks(unsigned int clicks_per_receive)
+  void setReceiveClicks(unsigned long int clicks_per_receive)
   {
     _clicks_per_receive = clicks_per_receive;
     _receive_buffer.setReceiveClicks(clicks_per_receive);
@@ -392,7 +392,7 @@ protected:
   RayProblemBase & _ray_problem;
 
   /// Number of groups
-  unsigned int _num_groups;
+  unsigned long int _num_groups;
 
   /// The Mesh
   MooseMesh & _mesh;
@@ -401,13 +401,13 @@ protected:
   const Parallel::Communicator & _comm;
 
   /// Size of the "halo" zone
-  unsigned int _halo_size;
+  unsigned long int _halo_size;
 
   /// Number of rays to generate before tracing
-  unsigned int _chunk_size;
+  unsigned long int _chunk_size;
 
   /// Number of Rays to start in the volume
-  unsigned int _total_rays;
+  unsigned long int _total_rays;
 
   /// Total volume of the domain
   Real _volume;
@@ -419,7 +419,7 @@ protected:
   WorkBufferType _working_buffer;
 
   /// Number of Rays to buffer before communication
-  unsigned int _max_buffer_size;
+  unsigned long int _max_buffer_size;
 
   /// Multiplier for the buffer size for growing the buffer
   Real _buffer_growth_multiplier;
@@ -428,7 +428,7 @@ protected:
   Real _buffer_shrink_multiplier;
 
   /// Minimum size of a SendBuffer
-  unsigned int _min_buffer_size;
+  unsigned long int _min_buffer_size;
 
   /// The rank of this processor (this actually takes time to lookup - so just do it once)
   processor_id_type _my_pid;
@@ -442,7 +442,7 @@ protected:
   Real _ray_length;
 
   /// Processor 0 will tell us when to stop
-  unsigned int _stop = 0;
+  unsigned long int _stop = 0;
 
   /// Number of Rays started on this processor
   unsigned long int _rays_started = 0;
@@ -511,9 +511,9 @@ protected:
   std::chrono::steady_clock::duration _root_time = std::chrono::steady_clock::duration::zero();
 
   /// Timouts for communication
-  unsigned int _clicks_per_communication;
-  unsigned int _clicks_per_root_communication;
-  unsigned int _clicks_per_receive;
+  unsigned long int _clicks_per_communication;
+  unsigned long int _clicks_per_root_communication;
+  unsigned long int _clicks_per_receive;
 
   /// Max distance a Ray can travel before being killed
   Real _ray_max_distance;
@@ -542,10 +542,10 @@ protected:
   std::vector<Parallel::Request> _rays_finished_requests;
 
   /// Values of rays destroyed on this processor that are being sent to other processors
-  std::vector<unsigned int> _rays_finished_requests_temps;
+  std::vector<unsigned long int> _rays_finished_requests_temps;
 
   /// Rays finished by each processor
-  std::vector<unsigned int> _rays_finished_per_proc;
+  std::vector<unsigned long int> _rays_finished_per_proc;
 
 private:
   /**

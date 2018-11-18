@@ -49,7 +49,7 @@ ConstantGroupValues::onSegment(const Elem * /*elem*/,
                                const Point & /* end */,
                                bool /* ends_in_elem */)
 {
-  for (unsigned int g = 0; g < _num_groups; g++)
+  for (unsigned long int g = 0; g < _num_groups; g++)
     _group_solution_values[_current_offset + g] = _input_group_values[g];
 }
 

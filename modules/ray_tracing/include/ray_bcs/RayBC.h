@@ -53,7 +53,7 @@ public:
    * Must modify the Ray
    */
   virtual void apply(const Elem * elem,
-                     const unsigned int intersected_side,
+                     const unsigned long int intersected_side,
                      const Point & intersection_point,
                      const std::shared_ptr<Ray> & ray) = 0;
 
