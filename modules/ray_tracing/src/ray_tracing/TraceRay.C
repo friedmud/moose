@@ -1223,7 +1223,6 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
       // First find the side the point is on in the neighbor
       auto side = -1;
 
-      /*
       const auto n_sides = neighbor->n_sides();
 
 
@@ -1246,7 +1245,6 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
 #endif
         continue;
       }
-      */
 
       // Now try to find an intersection in that neighbor
       if (elem_type == QUAD4)
