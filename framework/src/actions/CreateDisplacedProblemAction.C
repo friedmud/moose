@@ -130,24 +130,32 @@ CreateDisplacedProblemAction::act()
 
     if (_current_task == "add_algebraic_rm")
     {
-      auto & undisplaced_nl = _problem->getNonlinearSystem();
-      auto & undisplaced_aux = _problem->getAuxiliarySystem();
+      std::cerr << _app.isAdapting() << std::endl;
 
-      auto displaced_problem_ptr = _problem->getDisplacedProblem();
+      // These proxies don't work with mesh adaptivity
+      if (!_app.isAdapting())
+      {
+        /*
+        auto & undisplaced_nl = _problem->getNonlinearSystem();
+        auto & undisplaced_aux = _problem->getAuxiliarySystem();
 
-      auto & displaced_nl = displaced_problem_ptr->nlSys();
-      auto & displaced_aux = displaced_problem_ptr->auxSys();
+        auto displaced_problem_ptr = _problem->getDisplacedProblem();
 
-      // Note the "to" system doesn't actually matter much - the GF will
-      // get added to both systems on the receiving side
-      addProxyAlgebraicRelationshipManagers(undisplaced_nl, displaced_nl);
-      addProxyAlgebraicRelationshipManagers(displaced_nl, undisplaced_nl);
+        auto & displaced_nl = displaced_problem_ptr->nlSys();
+        auto & displaced_aux = displaced_problem_ptr->auxSys();
 
-      addProxyAlgebraicRelationshipManagers(undisplaced_aux, displaced_aux);
-      addProxyAlgebraicRelationshipManagers(displaced_aux, undisplaced_aux);
+        // Note the "to" system doesn't actually matter much - the GF will
+        // get added to both systems on the receiving side
+        addProxyAlgebraicRelationshipManagers(undisplaced_nl, displaced_nl);
+        addProxyAlgebraicRelationshipManagers(displaced_nl, undisplaced_nl);
 
-      addProxyGeometricRelationshipManagers(undisplaced_nl, displaced_nl);
-      addProxyGeometricRelationshipManagers(displaced_nl, undisplaced_nl);
+        addProxyAlgebraicRelationshipManagers(undisplaced_aux, displaced_aux);
+        addProxyAlgebraicRelationshipManagers(displaced_aux, undisplaced_aux);
+
+        addProxyGeometricRelationshipManagers(undisplaced_nl, displaced_nl);
+        addProxyGeometricRelationshipManagers(displaced_nl, undisplaced_nl);
+        */
+      }
     }
   }
 }

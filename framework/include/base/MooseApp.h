@@ -324,6 +324,16 @@ public:
   }
 
   /**
+   * Whether or not this run contains mesh adaptivity
+   */
+  bool isAdapting() const { return _adapting; }
+
+  /**
+   * Set whether or not this run contains mesh adaptivity
+   */
+  void setIsAdapting(bool adapting) { _adapting = adapting; }
+
+  /**
    * Whether or not this is a "recover" calculation.
    */
   bool isRecovering() const;
@@ -744,6 +754,9 @@ protected:
   /// This variable indicates that DistributedMesh should be used for the libMesh mesh underlying MooseMesh.
   bool _distributed_mesh_on_command_line;
 
+  /// Whether or not this run will do some mesh adaptivity
+  bool _adapting = false;
+
   /// Whether or not this is a recovery run
   bool _recover;
 
@@ -773,6 +786,9 @@ protected:
 
   /// true if we want to just check the input file
   bool _check_input;
+
+  std::vector<std::tuple<std::string, std::string, InputParameters>>
+      _relationship_managers_to_be_built;
 
   std::vector<std::shared_ptr<RelationshipManager>> _relationship_managers;
 

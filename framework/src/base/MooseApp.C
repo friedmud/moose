@@ -309,7 +309,7 @@ MooseApp::MooseApp(InputParameters parameters)
     _create_minimal_app_timer(_perf_graph.registerSection("MooseApp::createMinimalApp", 3))
 {
   // Turn off default geometric ghosting
-  MeshBase::use_default_ghosting = false;
+  //  MeshBase::use_default_ghosting = false;
 
   Registry::addKnownLabel(_type);
   Moose::registerAll(_factory, _action_factory, _syntax);
@@ -1573,8 +1573,11 @@ MooseApp::hasRelationshipManager(const std::string & name) const
 }
 
 bool
-MooseApp::addRelationshipManager(std::shared_ptr<RelationshipManager> relationship_manager)
+MooseApp::addRelationshipManager(const std::string & object_type,
+                                 const std::string & name,
+                                 InputParameters & params)
 {
+  _relationship_managers_to_be_built.emplace_back(
   bool add = true;
   for (const auto & rm : _relationship_managers)
   {
@@ -1607,6 +1610,8 @@ MooseApp::addRelationshipManager(std::shared_ptr<RelationshipManager> relationsh
 void
 MooseApp::attachRelationshipManagers(const Moose::RelationshipManagerType & rm_type)
 {
+  // return;
+
   for (auto & rm : _relationship_managers)
   {
     if (rm->isType(rm_type))
@@ -1622,10 +1627,10 @@ MooseApp::attachRelationshipManagers(const Moose::RelationshipManagerType & rm_t
 
         rm->init();
 
-        if (rm->useDisplacedMesh() && _action_warehouse.displacedMesh())
+        if (/*rm->useDisplacedMesh() &&*/ _action_warehouse.displacedMesh())
           _action_warehouse.displacedMesh()->getMesh().add_ghosting_functor(*rm);
-        else
-          mesh->getMesh().add_ghosting_functor(*rm);
+        // else
+        mesh->getMesh().add_ghosting_functor(*rm);
       }
 
       if (rm_type == Moose::RelationshipManagerType::ALGEBRAIC)
@@ -1639,10 +1644,10 @@ MooseApp::attachRelationshipManagers(const Moose::RelationshipManagerType & rm_t
 
           rm->init();
 
-          if (rm->useDisplacedMesh() && _action_warehouse.displacedMesh())
+          if (/*rm->useDisplacedMesh() &&*/ _action_warehouse.displacedMesh())
             _action_warehouse.displacedMesh()->getMesh().add_ghosting_functor(*rm);
-          else
-            mesh.getMesh().add_ghosting_functor(*rm);
+          // else
+          mesh.getMesh().add_ghosting_functor(*rm);
         }
 
         auto & problem = _executioner->feProblem();
@@ -1651,12 +1656,12 @@ MooseApp::attachRelationshipManagers(const Moose::RelationshipManagerType & rm_t
         if (!rm->isType(Moose::RelationshipManagerType::GEOMETRIC))
           rm->init();
 
-        if (rm->useDisplacedMesh() && problem.getDisplacedProblem())
+        if (/*rm->useDisplacedMesh() &&*/ problem.getDisplacedProblem())
         {
           problem.getDisplacedProblem()->nlSys().dofMap().add_algebraic_ghosting_functor(*rm);
           problem.getDisplacedProblem()->auxSys().dofMap().add_algebraic_ghosting_functor(*rm);
         }
-        else
+        /*else*/
         {
           problem.getNonlinearSystemBase().dofMap().add_algebraic_ghosting_functor(*rm);
           problem.getAuxiliarySystem().dofMap().add_algebraic_ghosting_functor(*rm);

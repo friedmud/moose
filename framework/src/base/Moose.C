@@ -158,6 +158,8 @@ addActionTypes(Syntax & syntax)
   registerTask("common_output", true);
   registerTask("setup_recover_file_base", true);
 
+  registerTask("notify_adaptivity", false);
+
   registerTask("add_bounds_vectors", false);
   registerTask("add_periodic_bc", false);
   registerTask("add_aux_variable", false);
@@ -234,6 +236,7 @@ addActionTypes(Syntax & syntax)
                            "(set_global_params)"
                            "(setup_recover_file_base)"
                            "(check_copy_nodal_vars)"
+                           "(notify_adaptivity)"
                            "(setup_mesh)"
                            "(add_partitioner)"
                            "(add_geometric_rm)"

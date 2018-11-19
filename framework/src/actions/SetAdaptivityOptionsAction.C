@@ -13,6 +13,7 @@
 
 #include "libmesh/fe.h"
 
+registerMooseAction("MooseApp", SetAdaptivityOptionsAction, "notify_adaptivity");
 registerMooseAction("MooseApp", SetAdaptivityOptionsAction, "set_adaptivity_options");
 registerMooseAction("MooseApp", SetAdaptivityOptionsAction, "add_geometric_rm");
 
@@ -54,6 +55,10 @@ SetAdaptivityOptionsAction::SetAdaptivityOptionsAction(InputParameters params) :
 void
 SetAdaptivityOptionsAction::act()
 {
+  if (_current_task == "notify_adaptivity")
+    if (isParamValid("marker"))
+      _app.setIsAdapting(true);
+
   if (_current_task == "add_geometric_rm")
   {
     auto rm_params = _factory.getValidParams("ElementSideNeighborLayers");

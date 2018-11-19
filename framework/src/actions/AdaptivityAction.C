@@ -24,6 +24,7 @@
 #include "libmesh/system_norm.h"
 #include "libmesh/enum_norm_type.h"
 
+registerMooseAction("MooseApp", AdaptivityAction, "notify_adaptivity");
 registerMooseAction("MooseApp", AdaptivityAction, "setup_adaptivity");
 registerMooseAction("MooseApp", AdaptivityAction, "add_geometric_rm");
 
@@ -85,6 +86,8 @@ AdaptivityAction::AdaptivityAction(InputParameters params) : Action(params) {}
 void
 AdaptivityAction::act()
 {
+  if (_current_task == "notify_adaptivity")
+    _app.setIsAdapting(true);
 
   if (_current_task == "add_geometric_rm")
   {

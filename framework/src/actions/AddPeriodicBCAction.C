@@ -168,6 +168,9 @@ AddPeriodicBCAction::act()
     // the PeriodicBoundaries object needs to exist!
     rm_params.set<bool>("attach_geometric_early") = false;
 
+    _app.addRelationshipManager(
+        "ElementSideNeighborLayers", "periodc_bc_ghosting" + Moose::stringify(count++), rm_params);
+
     if (rm_params.areAllRequiredParamsValid())
     {
       auto rm_obj =
