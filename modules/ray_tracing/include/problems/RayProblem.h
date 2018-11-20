@@ -62,9 +62,8 @@ public:
   virtual void RaySubdomainSetup(SubdomainID subdomain, THREAD_ID tid);
 
   virtual void reinitElem(const Elem * elem, THREAD_ID tid) override;
-  virtual void reinitElemPhys(const Elem * elem,
-                              const std::vector<Point> & phys_points_in_elem,
-                              THREAD_ID tid) override;
+  virtual void
+  reinitElemPhys(const Elem * elem, const std::vector<Point> & phys_points_in_elem, THREAD_ID tid);
 
   virtual void reinitNeighbor(const Elem * elem, unsigned int side, THREAD_ID tid) override;
 

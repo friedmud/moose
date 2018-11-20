@@ -245,6 +245,11 @@ public:
    */
   void setRayTracingStudy(RayTracingStudy * study) { _study = study; }
 
+  virtual NumericVector<Number> * solutionUDot() { mooseError("Not implemented"); };
+  virtual NumericVector<Number> * solutionUDotOld() { mooseError("Not implemented"); };
+  virtual NumericVector<Number> * solutionUDotDot() { mooseError("Not implemented"); };
+  virtual NumericVector<Number> * solutionUDotDotOld() { mooseError("Not implemented"); };
+
 protected:
   /**
    * Sweep over all the Rays, applying the Kernels/BCs
