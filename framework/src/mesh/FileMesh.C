@@ -112,7 +112,14 @@ FileMesh::buildMesh()
       }
 
       if (!MooseUtils::pathExists(_file_name))
-        mooseError("cannot locate mesh file '", _file_name, "'");
+      {
+        char proc_name[MPI_MAX_PROCESSOR_NAME];
+        int rlen;
+        MPI_Get_processor_name(proc_name, &rlen);
+
+        mooseError("cannot locate mesh file '", _file_name, "' on host ", proc_name);
+      }
+
       getMesh().read(_file_name);
 
       if (restarting)
