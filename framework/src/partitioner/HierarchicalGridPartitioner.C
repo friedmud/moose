@@ -84,7 +84,7 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
   if (mesh.spatial_dimension() == 3)
     procs_per_node *= _nz_procs;
 
-  if (procs_per_node * total_nodes != _communicator.size())
+  if (procs_per_node * total_nodes != mesh.n_partitions())
     mooseError("Partitioning in ", name(), " doesn't add up to the total number of elements");
 
   // Figure out the physical bounds of the given mesh
