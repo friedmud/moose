@@ -13,6 +13,7 @@
 #include "libmesh/parallel.h"
 #include "libmesh/parallel_object.h"
 #include "libmesh/mesh.h"
+#include "libmesh/mesh_tools.h"
 
 // System Includes
 #include <list>
@@ -33,14 +34,18 @@ public:
   ReceiveBuffer(const Parallel::Communicator & comm,
                 RayProblemBase & ray_problem,
                 unsigned long int clicks_per_receive,
-                bool blocking = false)
+                bool use_fast_lane,
+                const MeshTools::BoundingBox & domain_bounding_box,
+                bool blocking)
     : ParallelObject(comm),
       _ray_problem(ray_problem),
       _clicks_per_receive(clicks_per_receive),
       _blocking(blocking),
       _method(SMART),
-      _my_rank(processor_id())
+      _my_rank(processor_id()),
+      _use_fast_lane(use_fast_lane)
   {
+    _domain_centroid = (domain_bounding_box.min() + domain_bounding_box.max()) / 2.;
   }
 
   /**
@@ -78,6 +83,11 @@ public:
   unsigned long int numProbes() { return _num_probes; }
 
   /**
+   * The number of rays that were fast laned
+   */
+  unsigned long int fastLaneRays() { return _fast_lane_rays; }
+
+  /**
    * Number of buffers created in the ray buffer pool
    */
   unsigned long int rayPoolCreated() { return _ray_buffer_pool.num_created(); }
@@ -92,7 +102,9 @@ public:
    *
    * Adds the to the working buffer
    */
-  void receive(WorkBufferType & working_buffer, bool start_receives_only = false)
+  void receive(WorkBufferType & working_buffer,
+               WorkBufferType & fast_lane,
+               bool start_receives_only = false)
   {
     bool flag = false;
     Parallel::Status stat;
@@ -153,7 +165,7 @@ public:
     current_clicks++;
 
     if (!start_receives_only)
-      cleanupRequests(working_buffer);
+      cleanupRequests(working_buffer, fast_lane);
   }
 
   /**
@@ -182,6 +194,7 @@ public:
     _rays_received = 0;
     _buffers_received = 0;
     _num_probes = 0;
+    _fast_lane_rays = 0;
   }
 
   /**
@@ -210,7 +223,7 @@ public:
   /**
    * Checks to see if any Requests can be finished
    */
-  void cleanupRequests(WorkBufferType & working_buffer)
+  void cleanupRequests(WorkBufferType & working_buffer, WorkBufferType & fast_lane)
   {
     //    auto cleanup_requests_start = std::chrono::steady_clock::now();
 
@@ -234,7 +247,32 @@ public:
         _buffers_received++;
         _rays_received += rays->size();
 
-        working_buffer.append(rays->begin(), rays->end());
+        if (_method == SMART && _use_fast_lane)
+        {
+          for (auto & ray : *rays)
+          {
+            // Create a vector between the centroid and the current start point of the ray
+            auto direction_to_center = _domain_centroid - ray->start();
+            direction_to_center /= direction_to_center.norm();
+
+            // Get direction of ray
+            auto ray_direction = ray->end() - ray->start();
+            ray_direction /= ray_direction.norm();
+
+            // Dot them together
+            auto dot = direction_to_center * ray_direction;
+
+            if (dot > 0.5) // 60 degree angle toward the center
+            {
+              fast_lane.push_back(ray);
+              _fast_lane_rays++;
+            }
+            else
+              working_buffer.push_back(ray);
+          }
+        }
+        else
+          working_buffer.append(rays->begin(), rays->end());
 
         return true;
       }
@@ -286,6 +324,8 @@ protected:
   /// Total number of times we've polled for messages
   unsigned long int _num_probes;
 
+  unsigned long int _fast_lane_rays = 0;
+
   /// Shared pool of ray buffers for incoming messages
   MooseUtils::SharedPool<std::vector<std::shared_ptr<Ray>>> _ray_buffer_pool;
 
@@ -326,6 +366,10 @@ private:
   }
 
   unsigned long int _my_rank;
+
+  bool _use_fast_lane;
+
+  Point _domain_centroid;
 };
 
 #endif

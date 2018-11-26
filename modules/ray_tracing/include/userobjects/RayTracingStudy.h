@@ -119,6 +119,11 @@ public:
   unsigned long int numProbes() { return _receive_buffer.numProbes(); }
 
   /**
+   * Total number of rays that got fast laned
+   */
+  unsigned long int fastLaneRays() { return _receive_buffer.fastLaneRays(); }
+
+  /**
    * Total number of ray buffers created in the ReceiveBuffer
    */
   unsigned long int receiveRayPoolCreated() { return _receive_buffer.rayPoolCreated(); }
@@ -417,6 +422,13 @@ protected:
 
   /// The set of rays we're currently working on
   WorkBufferType _working_buffer;
+
+  /// Rays that are headed toward the center of the domain.
+  /// They should be processed first
+  WorkBufferType _fast_lane;
+
+  /// Whether or not to use the fast lane buffer
+  bool _use_fast_lane;
 
   /// Number of Rays to buffer before communication
   unsigned long int _max_buffer_size;

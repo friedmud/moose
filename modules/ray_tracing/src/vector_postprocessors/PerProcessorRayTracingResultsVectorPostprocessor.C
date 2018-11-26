@@ -31,7 +31,7 @@ validParams<PerProcessorRayTracingResultsVectorPostprocessor>()
       "rays_started rays_traced chunks_traced rays_received buffers_received "
       "rays_sent buffers_sent intersections generation_time propagation_time num_probes "
       "ray_pool_created receive_ray_pool_created receive_buffer_pool_created "
-      "send_buffer_pool_created");
+      "send_buffer_pool_created fast_lane_rays");
 
   params.addParam<MultiMooseEnum>("results", results, "The selection of results you want reported");
 
@@ -126,6 +126,9 @@ PerProcessorRayTracingResultsVectorPostprocessor::execute()
         break;
       case 14: // send_buffer_pool_created
         (*_result_values[14])[_pid] = _ray_tracing_study.sendBufferPoolCreated();
+        break;
+      case 15: // fast_lane_rays
+        (*_result_values[15])[_pid] = _ray_tracing_study.fastLaneRays();
         break;
       default:
         mooseError("Unknown result type '",

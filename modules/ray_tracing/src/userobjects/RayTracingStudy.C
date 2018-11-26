@@ -61,6 +61,9 @@ validParams<RayTracingStudy>()
                                     "Multiplier (between 0 and 1) to apply to the current buffer "
                                     "size if it is force dumped.  Will stop at "
                                     "min_buffer_size.");
+  params.addParam<bool>("use_fast_lane",
+                        false,
+                        "Whether or not to prioritize rays headed toward the center of the domain");
 
   MooseEnum methods("smart harm bs", "smart");
 
@@ -79,6 +82,8 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _chunk_size(getParam<unsigned long int>("chunk_size") * libMesh::n_threads()),
     _total_rays(getParam<unsigned long int>("num_rays")),
     _working_buffer(_chunk_size * 10),
+    _fast_lane(_chunk_size * 10),
+    _use_fast_lane(getParam<bool>("use_fast_lane")),
     _max_buffer_size(getParam<unsigned long int>("send_buffer_size")),
     _buffer_growth_multiplier(getParam<Real>("buffer_growth_multiplier")),
     _buffer_shrink_multiplier(getParam<Real>("buffer_shrink_multiplier")),
@@ -87,6 +92,8 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _receive_buffer(_comm,
                     _ray_problem,
                     getParam<unsigned long int>("clicks_per_receive"),
+                    getParam<bool>("use_fast_lane"),
+                    _ray_problem.boundingBox(),
                     getParam<bool>("blocking")),
     _clicks_per_communication(getParam<unsigned long int>("clicks_per_communication")),
     _clicks_per_root_communication(getParam<unsigned long int>("clicks_per_root_communication")),
@@ -394,33 +401,55 @@ if (_method == HARM)
 void
 RayTracingStudy::chunkyTraceAndBuffer(bool start_receives_only)
 {
-  while (!_working_buffer.empty())
+  while (!_working_buffer.empty() || !_fast_lane.empty())
   {
     // Look for extra work first so that these transfers can be finishing while we're tracing
     if (_method == SMART)
-      _receive_buffer.receive(_working_buffer, start_receives_only);
+      _receive_buffer.receive(_working_buffer, _fast_lane, start_receives_only);
 
     auto current_chunk_size = _chunk_size;
 
-    // Trace them all for these methods
-    if (_method != SMART)
-      current_chunk_size = _working_buffer.size();
-
-    // Can't trace more than we have
-    if (current_chunk_size > _working_buffer.size())
-      current_chunk_size = _working_buffer.size();
-
-    // Trace out some rays
-
-    if (_is_lifo) // LIFOBuffer
+    if (_use_fast_lane && !_fast_lane.empty()) // Prefer tracing fast_lane first
     {
-      traceAndBuffer(_working_buffer.end() - current_chunk_size, _working_buffer.end());
-      _working_buffer.erase(current_chunk_size);
+      // Can't trace more than we have
+      if (current_chunk_size > _fast_lane.size())
+        current_chunk_size = _fast_lane.size();
+
+      // Trace out some rays
+
+      if (_is_lifo) // LIFOBuffer
+      {
+        traceAndBuffer(_fast_lane.end() - current_chunk_size, _fast_lane.end());
+        _fast_lane.erase(current_chunk_size);
+      }
+      else // CircularBuffer
+      {
+        traceAndBuffer(_fast_lane.begin(), _fast_lane.begin() + current_chunk_size);
+        _fast_lane.erase(_fast_lane.begin() + current_chunk_size);
+      }
     }
-    else // CircularBuffer
+    else
     {
-      traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
-      _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
+      // Trace them all for these methods
+      if (_method != SMART)
+        current_chunk_size = _working_buffer.size();
+
+      // Can't trace more than we have
+      if (current_chunk_size > _working_buffer.size())
+        current_chunk_size = _working_buffer.size();
+
+      // Trace out some rays
+
+      if (_is_lifo) // LIFOBuffer
+      {
+        traceAndBuffer(_working_buffer.end() - current_chunk_size, _working_buffer.end());
+        _working_buffer.erase(current_chunk_size);
+      }
+      else // CircularBuffer
+      {
+        traceAndBuffer(_working_buffer.begin(), _working_buffer.begin() + current_chunk_size);
+        _working_buffer.erase(_working_buffer.begin() + current_chunk_size);
+      }
     }
   }
 }
@@ -431,13 +460,13 @@ RayTracingStudy::receiveAndTrace()
   bool traced_some = false;
 
   if (_receive_buffer.currentlyReceiving())
-    _receive_buffer.cleanupRequests(_working_buffer);
+    _receive_buffer.cleanupRequests(_working_buffer, _fast_lane);
   else
-    _receive_buffer.receive(_working_buffer);
+    _receive_buffer.receive(_working_buffer, _fast_lane);
 
   unsigned long int received_count = 0;
 
-  while (_working_buffer.size())
+  while (_working_buffer.size() || _fast_lane.size())
   {
     traced_some = true;
 
@@ -642,7 +671,7 @@ RayTracingStudy::bsPropagate()
 
     do
     {
-      _receive_buffer.receive(_working_buffer);
+      _receive_buffer.receive(_working_buffer, _fast_lane);
       flushBuffers();
 
       receiving = _receive_buffer.currentlyReceiving();
