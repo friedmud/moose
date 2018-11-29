@@ -35,7 +35,7 @@ public:
                 RayProblemBase & ray_problem,
                 unsigned long int clicks_per_receive,
                 bool use_fast_lane,
-                const MeshTools::BoundingBox & domain_bounding_box,
+                Real fast_lane_distance,
                 bool blocking)
     : ParallelObject(comm),
       _ray_problem(ray_problem),
@@ -43,9 +43,9 @@ public:
       _blocking(blocking),
       _method(SMART),
       _my_rank(processor_id()),
-      _use_fast_lane(use_fast_lane)
+      _use_fast_lane(use_fast_lane),
+      _fast_lane_distance(fast_lane_distance)
   {
-    _domain_centroid = (domain_bounding_box.min() + domain_bounding_box.max()) / 2.;
   }
 
   /**
@@ -251,18 +251,9 @@ public:
         {
           for (auto & ray : *rays)
           {
-            // Create a vector between the centroid and the current start point of the ray
-            auto direction_to_center = _domain_centroid - ray->start();
-            direction_to_center /= direction_to_center.norm();
+            auto ray_distance = (ray->end() - ray->start()).norm();
 
-            // Get direction of ray
-            auto ray_direction = ray->end() - ray->start();
-            ray_direction /= ray_direction.norm();
-
-            // Dot them together
-            auto dot = direction_to_center * ray_direction;
-
-            if (dot > 0.5) // 60 degree angle toward the center
+            if (ray_distance > _fast_lane_distance)
             {
               fast_lane.push_back(ray);
               _fast_lane_rays++;
@@ -369,7 +360,7 @@ private:
 
   bool _use_fast_lane;
 
-  Point _domain_centroid;
+  Real _fast_lane_distance;
 };
 
 #endif

@@ -430,6 +430,9 @@ protected:
   /// Whether or not to use the fast lane buffer
   bool _use_fast_lane;
 
+  /// Tipping point for getting into the 'fast_lane'
+  const Real & _fast_lane_distance;
+
   /// Number of Rays to buffer before communication
   unsigned long int _max_buffer_size;
 

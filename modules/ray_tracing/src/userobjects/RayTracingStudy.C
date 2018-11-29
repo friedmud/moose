@@ -65,6 +65,8 @@ validParams<RayTracingStudy>()
                         false,
                         "Whether or not to prioritize rays headed toward the center of the domain");
 
+  params.addParam<Real>("fast_lane_distance", std::numeric_limits<Real>::max(), "Distance beyond which a ray will be put into the 'fast_lane'");
+
   MooseEnum methods("smart harm bs", "smart");
 
   params.addParam<MooseEnum>("method", methods, "The ray tracing algorithm to use");
@@ -84,6 +86,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _working_buffer(_chunk_size * 10),
     _fast_lane(_chunk_size * 10),
     _use_fast_lane(getParam<bool>("use_fast_lane")),
+    _fast_lane(distance(getParam<Real>("fast_lane_distance"))),
     _max_buffer_size(getParam<unsigned long int>("send_buffer_size")),
     _buffer_growth_multiplier(getParam<Real>("buffer_growth_multiplier")),
     _buffer_shrink_multiplier(getParam<Real>("buffer_shrink_multiplier")),
@@ -128,8 +131,8 @@ void
 RayTracingStudy::executeStudy()
 {
   static unsigned long int call = 0;
-  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
-    + ".prof";
+//  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
+//    + ".prof";
 //  ProfilerStart(fname.c_str());
   call++;
 
@@ -218,12 +221,19 @@ RayTracingStudy::executeStudy()
 
   //  _communicator.barrier();
 
+//  std::string gname = std::string("/local/generation_cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
+//    + ".prof";
+
+//  ProfilerStart(gname.c_str());
+
   auto generation_start_time = std::chrono::steady_clock::now();
   {
     //    TIME_SECTION(_generate_timer);
     generateRays();
   }
   _generation_time = std::chrono::steady_clock::now() - generation_start_time;
+
+//  ProfilerStop();
 
   std::cout << "Generation time: " << std::chrono::duration<Real>(_generation_time).count()
             << std::endl;
@@ -403,11 +413,11 @@ RayTracingStudy::chunkyTraceAndBuffer(bool start_receives_only)
 {
   while (!_working_buffer.empty() || !_fast_lane.empty())
   {
+    auto current_chunk_size = _chunk_size;
+
     // Look for extra work first so that these transfers can be finishing while we're tracing
     if (_method == SMART)
-      _receive_buffer.receive(_working_buffer, _fast_lane, start_receives_only);
-
-    auto current_chunk_size = _chunk_size;
+      _receive_buffer.receive(_working_buffer, _fast_lane, start_receives_only || _working_buffer.size() > (2*current_chunk_size) || _fast_lane.size() > (2*current_chunk_size));
 
     if (_use_fast_lane && !_fast_lane.empty()) // Prefer tracing fast_lane first
     {
@@ -539,6 +549,7 @@ RayTracingStudy::smartPropagate()
     {
       non_tracing_clicks = 0;
       flushBuffers();
+//      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     if (non_tracing_root_clicks >= _clicks_per_root_communication)
