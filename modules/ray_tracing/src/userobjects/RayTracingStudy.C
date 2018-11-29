@@ -45,10 +45,11 @@ validParams<RayTracingStudy>()
   params.addParam<bool>(
       "tolerate_failure", false, "Whether or not to tolerate a ray tracing failure");
 
-  params.addParam<unsigned long int>("min_buffer_size",
-                                "The initial size of the SendBuffer and the floor for shrinking "
-                                "it.  This defaults to send_buffer_size if not set (i.e. the "
-                                "buffer won't change size)");
+  params.addParam<unsigned long int>(
+      "min_buffer_size",
+      "The initial size of the SendBuffer and the floor for shrinking "
+      "it.  This defaults to send_buffer_size if not set (i.e. the "
+      "buffer won't change size)");
 
   params.addParam<Real>("buffer_growth_multiplier",
                         2.,
@@ -65,7 +66,9 @@ validParams<RayTracingStudy>()
                         false,
                         "Whether or not to prioritize rays headed toward the center of the domain");
 
-  params.addParam<Real>("fast_lane_distance", std::numeric_limits<Real>::max(), "Distance beyond which a ray will be put into the 'fast_lane'");
+  params.addParam<Real>("fast_lane_distance",
+                        std::numeric_limits<Real>::max(),
+                        "Distance beyond which a ray will be put into the 'fast_lane'");
 
   MooseEnum methods("smart harm bs", "smart");
 
@@ -86,7 +89,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
     _working_buffer(_chunk_size * 10),
     _fast_lane(_chunk_size * 10),
     _use_fast_lane(getParam<bool>("use_fast_lane")),
-    _fast_lane(distance(getParam<Real>("fast_lane_distance"))),
+    _fast_lane_distance(getParam<Real>("fast_lane_distance")),
     _max_buffer_size(getParam<unsigned long int>("send_buffer_size")),
     _buffer_growth_multiplier(getParam<Real>("buffer_growth_multiplier")),
     _buffer_shrink_multiplier(getParam<Real>("buffer_shrink_multiplier")),
@@ -96,7 +99,7 @@ RayTracingStudy::RayTracingStudy(const InputParameters & parameters)
                     _ray_problem,
                     getParam<unsigned long int>("clicks_per_receive"),
                     getParam<bool>("use_fast_lane"),
-                    _ray_problem.boundingBox(),
+                    _fast_lane_distance,
                     getParam<bool>("blocking")),
     _clicks_per_communication(getParam<unsigned long int>("clicks_per_communication")),
     _clicks_per_root_communication(getParam<unsigned long int>("clicks_per_root_communication")),
@@ -131,9 +134,9 @@ void
 RayTracingStudy::executeStudy()
 {
   static unsigned long int call = 0;
-//  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
-//    + ".prof";
-//  ProfilerStart(fname.c_str());
+  //  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
+  //    + ".prof";
+  //  ProfilerStart(fname.c_str());
   call++;
 
   TIME_SECTION(_execute_study_timer);
@@ -221,10 +224,11 @@ RayTracingStudy::executeStudy()
 
   //  _communicator.barrier();
 
-//  std::string gname = std::string("/local/generation_cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
-//    + ".prof";
+  //  std::string gname = std::string("/local/generation_cpu") + std::to_string(_my_pid) + "_" +
+  //  std::to_string(call)
+  //    + ".prof";
 
-//  ProfilerStart(gname.c_str());
+  //  ProfilerStart(gname.c_str());
 
   auto generation_start_time = std::chrono::steady_clock::now();
   {
@@ -233,7 +237,7 @@ RayTracingStudy::executeStudy()
   }
   _generation_time = std::chrono::steady_clock::now() - generation_start_time;
 
-//  ProfilerStop();
+  //  ProfilerStop();
 
   std::cout << "Generation time: " << std::chrono::duration<Real>(_generation_time).count()
             << std::endl;
@@ -257,7 +261,7 @@ RayTracingStudy::executeStudy()
   for (auto & v : _old_average_finishing_angular_flux)
     v /= _all_rays_finished;
 
-//  ProfilerStop();
+  //  ProfilerStop();
 }
 
 void
@@ -417,7 +421,11 @@ RayTracingStudy::chunkyTraceAndBuffer(bool start_receives_only)
 
     // Look for extra work first so that these transfers can be finishing while we're tracing
     if (_method == SMART)
-      _receive_buffer.receive(_working_buffer, _fast_lane, start_receives_only || _working_buffer.size() > (2*current_chunk_size) || _fast_lane.size() > (2*current_chunk_size));
+      _receive_buffer.receive(_working_buffer,
+                              _fast_lane,
+                              start_receives_only ||
+                                  _working_buffer.size() > (2 * current_chunk_size) ||
+                                  _fast_lane.size() > (2 * current_chunk_size));
 
     if (_use_fast_lane && !_fast_lane.empty()) // Prefer tracing fast_lane first
     {
@@ -549,7 +557,7 @@ RayTracingStudy::smartPropagate()
     {
       non_tracing_clicks = 0;
       flushBuffers();
-//      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      //      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     if (non_tracing_root_clicks >= _clicks_per_root_communication)
