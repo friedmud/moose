@@ -207,7 +207,8 @@ SetupMeshAction::act()
       }
     }
 
-    std::cout << "Reading mesh: " << _moose_object_pars.set<MeshFileName>("file") << std::endl;
+    if (_moose_object_pars.isParamValid("file"))
+      std::cout << "Reading mesh: " << _moose_object_pars.set<MeshFileName>("file") << std::endl;
 
     _mesh = _factory.create<MooseMesh>(_type, "mesh", _moose_object_pars);
     if (isParamValid("displacements"))
