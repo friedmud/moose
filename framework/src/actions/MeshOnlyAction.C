@@ -74,6 +74,7 @@ MeshOnlyAction::act()
   else
   {
     // Just write the file using the name requested by the user.
+    std::cout << "Writing mesh file: " << mesh_file << std::endl;
     mesh_ptr->getMesh().write(mesh_file);
   }
 }

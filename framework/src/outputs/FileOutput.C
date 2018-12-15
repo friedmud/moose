@@ -59,8 +59,8 @@ FileOutput::FileOutput(const InputParameters & parameters)
   if (isParamValid("file_base"))
   {
     _file_base = getParam<std::string>("file_base");
-    if (!_file_base.empty() && _file_base[0] == '/')
-      mooseError("absolute paths not allowed in output 'file_base' param");
+//    if (!_file_base.empty() && _file_base[0] == '/')
+//      mooseError("absolute paths not allowed in output 'file_base' param");
   }
   else if (getParam<bool>("_built_by_moose"))
     _file_base = getOutputFileBase(_app);
@@ -88,21 +88,34 @@ FileOutput::FileOutput(const InputParameters & parameters)
   }
 
   // Check the file directory of file_base and create if needed
-  std::string base = "./" + _file_base;
+  std::string base;
+
+  if (!_file_base.empty() && _file_base[0] == '/')
+    base = _file_base;
+  else
+    base = "./" + _file_base;
+
   base = base.substr(0, base.find_last_of('/'));
 
-  if (_app.processor_id() == 0 && access(base.c_str(), W_OK) == -1)
+  if (/*_app.processor_id() == 0 &&*/ access(base.c_str(), W_OK) == -1)
   {
     // Directory does not exist. Loop through incremental directories and create as needed.
     std::vector<std::string> path_names;
     MooseUtils::tokenize(base, path_names);
     std::string inc_path = path_names[0];
+
+    if (!_file_base.empty() && _file_base[0] == '/')
+      inc_path = "/" + inc_path;
+
     for (unsigned int i = 1; i < path_names.size(); ++i)
     {
       inc_path += '/' + path_names[i];
       if (access(inc_path.c_str(), W_OK) == -1)
+      {
+        std::cout << "Trying to create: " << std::endl;
         if (mkdir(inc_path.c_str(), S_IRWXU | S_IRGRP) == -1)
           mooseError("Could not create directory: " + inc_path + " for file base: " + _file_base);
+      }
     }
   }
 }
