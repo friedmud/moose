@@ -34,7 +34,7 @@ unsigned long int ray_count = 0;
 
 unsigned long int debug_ray = 216;
 
-unsigned long int debug_ray_id = 32021;
+unsigned long int debug_ray_id = 6745938;
 
 unsigned long int debug_ray_pid = 1;
 
@@ -221,7 +221,7 @@ sideIntersectedByLine2D(const Elem * current_elem,
   double current_intersection_distance = 0;
 
   {
-  //    int boundary_side = -1;
+    //    int boundary_side = -1;
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
@@ -281,6 +281,89 @@ sideIntersectedByLine2D(const Elem * current_elem,
   return intersected_side;
 }
 
+// Code adapted from:
+// http://webserver2.tecgraf.puc-rio.br/~mgattass/cg/trbRR/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
+bool
+rayIntersectsTriangleCulled(const Point & O,
+                            const Point & D,
+                            const Point & V00,
+                            const Point & V10,
+                            const Point & V11,
+                            Real & u,
+                            Real & v,
+                            Real & t,
+                            const std::shared_ptr<Ray> &
+#ifdef USE_DEBUG_RAY
+                                ray
+#endif
+)
+{
+  const Real EPSILON = 0.000001;
+  const Point & vert0 = V00;
+  const Point & vert1 = V10;
+  const Point & vert2 = V11;
+
+  const Point & orig = O;
+  const Point & dir = D;
+
+  auto edge1 = vert1 - vert0;
+  auto edge2 = vert2 - vert0;
+
+  auto pvec = dir.cross(edge2);
+
+  auto det = edge1 * pvec;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  det: " << det << std::endl;
+#endif
+
+  if (det < EPSILON)
+    return false;
+
+  auto tvec = orig - vert0;
+
+  u = tvec * pvec;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  u: " << u << std::endl;
+#endif
+
+  if (u < 0. || u > det)
+    return false;
+
+  auto qvec = tvec.cross(edge1);
+
+  v = dir * qvec;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  v: " << v << std::endl;
+#endif
+
+  if (v < 0. || u + v > det)
+    return false;
+
+  t = edge2 * qvec;
+
+  auto inv_det = 1. / det;
+
+  t *= inv_det;
+  u *= inv_det;
+  v *= inv_det;
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  t: " << v << std::endl;
+#endif
+
+  if (t <= 0)
+    return false;
+
+  return true;
+}
+
 // Code from: https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
 bool
 rayIntersectsTriangle(const Point & O,
@@ -323,8 +406,12 @@ rayIntersectsTriangle(const Point & O,
     std::cerr << "  a: " << a << std::endl;
 #endif
 
-  if (a > -EPSILON && a < EPSILON)
+  // This is commnted out because in the paper
+  // http://webserver2.tecgraf.puc-rio.br/~mgattass/cg/trbRR/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
+  // They are able to do this test for backface culling...
+  if (/*a > -EPSILON &&*/ a < EPSILON)
     return false;
+
   f = 1 / a;
   s = rayOrigin - vertex0;
   u = f * (s * h);
@@ -337,6 +424,12 @@ rayIntersectsTriangle(const Point & O,
   if (u < -EPSILON || u > 1. + EPSILON)
     return false;
   q = s.cross(edge1);
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "  q: " << q << std::endl;
+#endif
+
   v = f * rayVector * q;
 
 #ifdef USE_DEBUG_RAY
@@ -355,7 +448,7 @@ rayIntersectsTriangle(const Point & O,
     std::cerr << "  t: " << t << std::endl;
 #endif
 
-  if (t > -EPSILON) // ray intersection
+  if (t > 0) // ray intersection
     return true;
   else // This means that there is a line intersection but not a ray intersection.
     return false;
@@ -373,26 +466,26 @@ intersectQuadUsingTriangles(const Point & O,
                             Real & t,
                             const std::shared_ptr<Ray> & ray)
 {
-/*
-auto normal = (V10 - V00).cross(V11 - V10);
+  /*
+  auto normal = (V10 - V00).cross(V11 - V10);
 
-// Backface culling
-if (D * normal > -TOLERANCE)
-  return false;
-*/
+  // Backface culling
+  if (D * normal > -TOLERANCE)
+    return false;
+  */
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
     std::cerr << " Trying first triangle " << std::endl;
 #endif
-  if (rayIntersectsTriangle(O, D, V00, V10, V11, u, v, t, ray))
+  if (rayIntersectsTriangleCulled(O, D, V00, V10, V11, u, v, t, ray))
     return true;
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
     std::cerr << " Trying second triangle " << std::endl;
 #endif
-  if (rayIntersectsTriangle(O, D, V11, V01, V00, u, v, t, ray))
+  if (rayIntersectsTriangleCulled(O, D, V11, V01, V00, u, v, t, ray))
     return true;
 
   /*
@@ -712,11 +805,6 @@ sideIntersectedByLineHex8(const Elem * current_elem,
                                       t,
                                       ray);
 
-#ifdef USE_DEBUG_RAY
-      if (DEBUG_IF)
-        libMesh::err << "t: " << t << std::endl;
-#endif
-
       if (intersected)
       {
 #ifdef USE_DEBUG_RAY
@@ -725,7 +813,7 @@ sideIntersectedByLineHex8(const Elem * current_elem,
 #endif
         if (t > intersection_distance)
         {
-        //          Elem * neighbor = current_elem->neighbor(i);
+          //          Elem * neighbor = current_elem->neighbor(i);
 
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
@@ -735,13 +823,13 @@ sideIntersectedByLineHex8(const Elem * current_elem,
           intersection_distance = t;
 
           intersection_point = incoming_point + t * ray_direction;
-
-          if (t > 1e-9)
-            return intersected_side;
-#ifdef USE_DEBUG_RAY
-          else if (DEBUG_IF)
-            libMesh::err << t << " Not larger than 1e-9 so rejected " << std::endl;
-#endif
+          /*
+                    if (t > 1e-9)
+                      return intersected_side;
+          #ifdef USE_DEBUG_RAY
+                    else if (DEBUG_IF) libMesh::err << t << " Not larger than 1e-9 so rejected " <<
+          std::endl; #endif
+          */
         }
 
         /*
@@ -951,6 +1039,9 @@ TraceRay::find_point_neighbors(
 #ifdef USE_DEBUG_RAY
         if (current_neighbor && DEBUG_IF)
           std::cerr << " Testing neighbor " << current_neighbor->id() << std::endl;
+
+        if (current_neighbor == remote_elem)
+          std::cerr << " Neighbor is remote! " << std::endl;
 #endif
 
         if (current_neighbor &&
@@ -1071,6 +1162,128 @@ TraceRay::getNeighbor(const Elem * current_elem,
 }
 
 /**
+ * Checks to see if the ray is perfectly hitting any nodes on this element
+ */
+void
+TraceRay::possiblyHittingNode(const std::shared_ptr<Ray> &
+
+#ifdef USE_DEBUG_RAY
+                                  ray
+#endif
+                              ,
+                              const Point & incoming_point,
+                              const Elem * current_elem,
+                              const Point & ray_direction,
+                              int & node_hit,
+                              Point & intersection_point,
+                              int & intersected_side)
+{
+  // To do this we're simply going to see if the direction from the incoming point
+  // to each node is the same as the direction the Ray is traveling in... simple
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "Checking to see if the ray is perfectly hitting a node:" << std::endl;
+#endif
+
+  for (unsigned int n = 0; n < current_elem->n_nodes(); n++)
+  {
+    const auto & node_ptr = current_elem->node_ptr(n);
+
+    // Make a normalized direction vector
+    Point node_direction = (*node_ptr) - incoming_point;
+
+    auto distance = node_direction.size();
+
+    // Don't collide with a node we're already at
+    if (distance < 1e-8)
+      continue;
+
+    node_direction /= distance;
+
+    // Now see if things are in the same direction
+
+    //    std::cout << "Node direction: " << node_direction << std::endl;
+    //    std::cout << "Ray direction: " << ray_direction << std::endl;
+
+    auto dot = node_direction * ray_direction;
+
+    //    if (dot > 0.8)
+    //      std::cout << "Dot: " << dot << std::endl;
+#ifdef USE_DEBUG_RAY
+    if (DEBUG_IF)
+      std::cerr << " " << n << " Node Dot: " << dot << std::endl;
+#endif
+
+    // Did we find a match?
+    // This number was experimentally determined by slowly ramping it up
+    // Might need further tweaking
+    if (dot > 0.99999999)
+    {
+      node_hit = n;
+
+      std::cerr << "Hit node! Dot: " << dot << std::endl;
+
+      // We're going to intersect at the node
+      intersection_point = *node_ptr;
+
+      // Pick any side the node is on
+      for (unsigned int s = 0; s < current_elem->n_sides(); s++)
+      {
+        if (current_elem->is_node_on_side(n, s))
+        {
+          intersected_side = s;
+          break;
+        }
+      }
+
+      break;
+    }
+  }
+}
+
+void
+TraceRay::endPossiblyOnBoundarySide(const std::shared_ptr<Ray> & ray,
+                                    const Elem * current_elem,
+                                    Point & intersection_point,
+                                    int & intersected_side)
+{
+  const auto n_sides = current_elem->n_sides();
+
+#ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << "Does the endpoint lie within a boundary side?" << std::endl;
+#endif
+
+  // Loop over the sides and see if they are on the boundary - if they are, then
+  // see if they contain the end point
+  for (auto s = 0u; s < n_sides; s++)
+  {
+    if (current_elem->neighbor(s) == NULL)
+    {
+      auto side_elem = current_elem->build_side(s);
+
+#ifdef USE_DEBUG_RAY
+      if (DEBUG_IF)
+        std::cerr << " Checking boundary side: " << s << std::endl;
+#endif
+
+      if (side_elem->contains_point(ray->end()))
+      {
+#ifdef USE_DEBUG_RAY
+        if (DEBUG_IF)
+          std::cerr << "  Contained in side!" << std::endl;
+#endif
+
+        intersection_point = ray->end();
+        intersected_side = s;
+        break;
+      }
+    }
+  }
+}
+
+/**
  * This routine checks to see if the current start point of the ray is already REALLY
  * close to the side of the domeain where it will need to be stopped.  This keeps badness
  * from happening when a ray strikes a side right at a junction that is on the boundary -
@@ -1084,7 +1297,7 @@ TraceRay::possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
                              Point & intersection_point,
                              int & intersected_side)
 {
-  if (ray->distance() > 1e-9) // Only allow this if the ray has moved a bit
+  if ((ray->end() - ray->start()).size() < 1e-8) // Only allow this if we're near the end
   {
     const auto n_sides = current_elem->n_sides();
 
@@ -1193,7 +1406,6 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
                                          const Point & incoming_point,
                                          const std::shared_ptr<Ray> & ray,
                                          const Point & ray_direction,
-                                         Point & intersection_point,
                                          Point & boundary_intersection_point,
                                          int & intersected_side,
                                          const Elem *& best_neighbor,
@@ -1202,6 +1414,8 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
   // Let's first try grabbing the point_neighbors for this element to see if they are good
   // candidates
   find_point_neighbors(current_elem, incoming_point, _point_neighbors, ray);
+
+  Point intersection_point;
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
@@ -1224,7 +1438,6 @@ TraceRay::tryToMoveThroughPointNeighbors(const Elem * current_elem,
       auto side = -1;
 
       const auto n_sides = neighbor->n_sides();
-
 
       for (auto s = 0u; s < n_sides; s++)
       {
@@ -1388,6 +1601,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
   unsigned long int incoming_side = ray->incomingSide();
 
+  // The node number of the current element that might have been hit by the ray
+  // -1 means it didn't hit a node on the current element
+  int node_hit = -1;
+
   bool keep_tracing = true;
 
   unsigned long int count = 0;
@@ -1455,8 +1672,12 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
     {
-      sleep(1);
+      std::cerr << "\n\n" << pid << " At top!" << std::endl;
       std::cerr << pid << " Debug ray UID: " << ray->id() << std::endl;
+      std::cerr << pid << " Ray Start: " << ray->start() << std::endl;
+      std::cerr << pid << " Ray End: " << ray->end() << std::endl;
+      std::cerr << pid << " Traveled: " << ray->distance() << std::endl;
+      std::cerr << pid << " To Go: " << (ray->end() - ray->start()).size() << std::endl;
     }
 #endif
 
@@ -1582,7 +1803,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
     if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder
     {
-    //      TIME_SECTION(_try_harder_timer);
+      //      TIME_SECTION(_try_harder_timer);
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -1592,8 +1813,26 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
       }
 #endif
 
-      possiblyOnBoundary(
-          ray, incoming_point, current_elem, incoming_side, intersection_point, intersected_side);
+      // Check to see if the ray perfectly strikes any nodes of this element
+      if (intersected_side == -1)
+      {
+        node_hit = -1;
+
+        possiblyHittingNode(ray,
+                            incoming_point,
+                            current_elem,
+                            ray_direction,
+                            node_hit,
+                            intersection_point,
+                            intersected_side);
+      }
+
+      if (intersected_side == -1)
+        endPossiblyOnBoundarySide(ray, current_elem, intersection_point, intersected_side);
+
+      if (intersected_side == -1)
+        possiblyOnBoundary(
+            ray, incoming_point, current_elem, incoming_side, intersection_point, intersected_side);
 
       if (intersected_side == -1) // Need to do a more exhaustive search
       {
@@ -1605,7 +1844,6 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                        incoming_point,
                                        ray,
                                        ray_direction,
-                                       intersection_point,
                                        boundary_intersection_point,
                                        intersected_side,
                                        best_neighbor,
@@ -1615,18 +1853,31 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
         {
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
-            std::cerr << pid << " best_neighbor: " << best_neighbor->id() << " best_side: " << best_side
-                      << std::endl;
+            std::cerr << pid << " best_neighbor: " << best_neighbor->id()
+                      << " best_side: " << best_side << std::endl;
 #endif
           current_elem = best_neighbor;
           incoming_side = best_side;
+        }
+        else
+        {
+          std::cerr << pid << " Ray " << ray->id()
+                    << " is unable to find a point neighbor to move through!" << std::endl;
+
+          if (!_tolerate_failure)
+          {
+            std::cerr << pid << " All options have been exhausted... failing!" << std::endl;
+
+            std::abort();
+          }
         }
 
         if (current_elem->processor_id() != pid)
         {
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
-            std::cerr << pid << " point neighbor off processor: " << current_elem->processor_id() << std::endl;
+            std::cerr << pid << " point neighbor off processor: " << current_elem->processor_id()
+                      << std::endl;
 #endif
           ray->setStartingElem(current_elem);
           ray->setIncomingSide(incoming_side);
@@ -1697,7 +1948,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
     if (intersected_side != -1 || ends_in_elem) // This is true if we have found an intersection
     {
-    //      TIME_SECTION(_found_intersection);
+      //      TIME_SECTION(_found_intersection);
 
 #ifdef USE_DEBUG_RAY
       if (DEBUG_IF)
@@ -1759,52 +2010,107 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
       // Grab the neighbor and set up where to go next
       {
-        // Get the neighbor on that side
-        Elem * neighbor = getNeighbor(current_elem, intersected_side, intersection_point);
+        const Elem * neighbor = NULL;
 
-        // Elem * neighbor = current_elem->neighbor(intersected_side);
-
-#ifdef USE_DEBUG_RAY
-        if (DEBUG_IF)
-          std::cerr << pid << " Neighbor: " << neighbor << std::endl;
-#endif
-
-        if (neighbor)
+        if (node_hit != -1)
         {
-#ifdef USE_DEBUG_RAY
-          if (DEBUG_IF)
-            std::cerr << pid << " Neighbor_id: " << neighbor->id() << std::endl;
-#endif
-          // Note: This is finding the side the current_elem is on for the neighbor.  That's the
-          // "incoming_side" for the neighbor
-          incoming_side = neighbor->which_neighbor_am_i(
-              current_elem); // sideNeighborIsOn(neighbor, current_elem);
+          // Since we hit a node - we know we're going to have trouble moving through the next
+          // element
+          // Let's go ahead and search for the best element to move through next
 
-          // Recurse
-          current_elem = neighbor;
-          incoming_point = intersection_point;
+          // First, see if this node is on the boundary - if it is, then let's just use a null
+          // neighbor
+          bool on_boundary = false;
 
-          // If the neighbor is off-processor... we need to set up the Ray data to be passed to
-          // the
-          // next processor
-          if (neighbor->processor_id() != pid)
+          for (unsigned int s = 0; s < current_elem->n_sides(); s++)
           {
-            halo_count++;
+            if (current_elem->is_node_on_side(node_hit, s))
+            {
+              if (!current_elem->neighbor(s))
+              {
+                on_boundary = true;
+                intersected_side = s;
+                break;
+              }
+            }
+          }
 
-            if (halo_count == _halo_size)
+          if (!on_boundary)
+          {
+            const Elem * best_neighbor = NULL;
+            unsigned long int best_side = 0;
+
+            tryToMoveThroughPointNeighbors(current_elem,
+                                           elem_type,
+                                           intersection_point,
+                                           ray,
+                                           ray_direction,
+                                           boundary_intersection_point,
+                                           intersected_side,
+                                           best_neighbor,
+                                           best_side);
+
+            if (best_neighbor)
             {
 #ifdef USE_DEBUG_RAY
               if (DEBUG_IF)
-                std::cerr << pid << " Ray going off processor!" << std::endl;
+                std::cerr << pid << " best_neighbor: " << best_neighbor->id()
+                          << " best_side: " << best_side << std::endl;
 #endif
-              ray->setStartingElem(neighbor);
-              ray->setIncomingSide(incoming_side);
-              ray->setStart(incoming_point);
-              break;
+              current_elem = neighbor = best_neighbor;
+              incoming_side = best_side;
+              incoming_point = intersection_point;
             }
           }
         }
-        else // Edge of the domain
+        else
+        {
+          // Get the neighbor on that side
+          neighbor = getNeighbor(current_elem, intersected_side, intersection_point);
+
+#ifdef USE_DEBUG_RAY
+          if (DEBUG_IF)
+            std::cerr << pid << " Neighbor: " << neighbor << std::endl;
+#endif
+
+          if (neighbor)
+          {
+#ifdef USE_DEBUG_RAY
+            if (DEBUG_IF)
+              std::cerr << pid << " Neighbor_id: " << neighbor->id() << std::endl;
+#endif
+            // Note: This is finding the side the current_elem is on for the neighbor.  That's the
+            // "incoming_side" for the neighbor
+            incoming_side = neighbor->which_neighbor_am_i(
+                current_elem); // sideNeighborIsOn(neighbor, current_elem);
+
+            // Recurse
+            current_elem = neighbor;
+            incoming_point = intersection_point;
+          }
+        }
+
+        // If the neighbor is off-processor... we need to set up the Ray data to be passed to
+        // the
+        // next processor
+        if (neighbor && neighbor->processor_id() != pid)
+        {
+          halo_count++;
+
+          if (halo_count == _halo_size)
+          {
+#ifdef USE_DEBUG_RAY
+            if (DEBUG_IF)
+              std::cerr << pid << " Ray going off processor!" << std::endl;
+#endif
+            ray->setStartingElem(neighbor);
+            ray->setIncomingSide(incoming_side);
+            ray->setStart(incoming_point);
+            break;
+          }
+        }
+
+        if (!neighbor) // Edge of the domain
         {
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)

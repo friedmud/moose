@@ -205,7 +205,10 @@ public:
   /**
    * Set the max ray distance
    */
-  void setRayMaxDistance(unsigned long int ray_max_distance) { _ray_max_distance = ray_max_distance; }
+  void setRayMaxDistance(unsigned long int ray_max_distance)
+  {
+    _ray_max_distance = ray_max_distance;
+  }
 
   /**
    * Duration for execute() in seconds

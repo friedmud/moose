@@ -45,7 +45,7 @@ public:
            bool tolerate_failure,
            THREAD_ID tid);
 
-  void trace(std::shared_ptr<Ray> & ray);
+  virtual void trace(std::shared_ptr<Ray> & ray);
 
   /**
    * Find the child of a refined element that contains the given point
@@ -59,9 +59,10 @@ public:
    * you only need to search the children on one specific side of the parent element.  Be aware:
    * these are used all the way down - so make sure what you do makes sense!
    */
-  static Elem * recursivelyFindChildContainingPoint(const Elem * current_child,
-                                                    const Point & intersection_point,
-                                                    const std::vector<unsigned long int> & children_ids);
+  static Elem *
+  recursivelyFindChildContainingPoint(const Elem * current_child,
+                                      const Point & intersection_point,
+                                      const std::vector<unsigned long int> & children_ids);
 
   /**
    * Find the child that contains the point on a side of the current element
@@ -86,8 +87,9 @@ public:
    * @param intersection_point The point on the side you want the neighbor for (only used when mesh
    * adaptivity is active to find the child that contains the point)
    */
-  static Elem *
-  getNeighbor(const Elem * current_elem, unsigned long int intersected_side, Point & intersection_point);
+  static Elem * getNeighbor(const Elem * current_elem,
+                            unsigned long int intersected_side,
+                            Point & intersection_point);
 
   /**
    * The number of intersections that were done
@@ -153,6 +155,19 @@ private:
       MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> & neighbor_set,
       const std::shared_ptr<Ray> &);
 
+  void possiblyHittingNode(const std::shared_ptr<Ray> & ray,
+                           const Point & incoming_point,
+                           const Elem * current_elem,
+                           const Point & ray_direction,
+                           int & node_hit,
+                           Point & intersection_point,
+                           int & intersected_side);
+
+  void endPossiblyOnBoundarySide(const std::shared_ptr<Ray> & ray,
+                                 const Elem * current_elem,
+                                 Point & intersection_point,
+                                 int & intersected_side);
+
   void possiblyOnBoundary(const std::shared_ptr<Ray> & ray,
                           const Point & incoming_point,
                           const Elem * current_elem,
@@ -165,7 +180,6 @@ private:
                                       const Point & incoming_point,
                                       const std::shared_ptr<Ray> & ray,
                                       const Point & ray_direction,
-                                      Point & intersection_point,
                                       Point & boundary_intersection_point,
                                       int & intersected_side,
                                       const Elem *& best_neighbor,
