@@ -163,6 +163,14 @@ private:
                            Point & intersection_point,
                            int & intersected_side);
 
+  void possiblyHittingEdge(const std::shared_ptr<Ray> & ray,
+                           const Point & incoming_point,
+                           const Elem * current_elem,
+                           const Point & ray_direction,
+                           int & edge_hit,
+                           Point & intersection_point,
+                           int & intersected_side);
+
   void endPossiblyOnBoundarySide(const std::shared_ptr<Ray> & ray,
                                  const Elem * current_elem,
                                  Point & intersection_point,
