@@ -34,11 +34,11 @@ unsigned long int ray_count = 0;
 
 unsigned long int debug_ray = 216;
 
-unsigned long int debug_ray_id = 42846600;
+unsigned long int debug_ray_id = 2654546;
 
 unsigned long int debug_ray_pid = 1;
 
-//#define DEBUG_IF ray_count == debug_ray
+// #define DEBUG_IF ray_count == debug_ray
 
 #define DEBUG_IF ray->id() == debug_ray_id // ray_count > 197000 && debug_ray_id == ray->id()
 
@@ -451,7 +451,7 @@ rayIntersectsTriangleCulled(const Point & O,
     std::cerr << "  u: " << u << std::endl;
 #endif
 
-  if (u < 0. || u > det)
+  if (u < -EPSILON || u > det)
     return false;
 
   auto qvec = tvec.cross(edge1);
@@ -463,7 +463,7 @@ rayIntersectsTriangleCulled(const Point & O,
     std::cerr << "  v: " << v << std::endl;
 #endif
 
-  if (v < 0. || u + v > det)
+  if (v < -EPSILON || u + v > det + EPSILON)
     return false;
 
   t = edge2 * qvec;
@@ -476,11 +476,16 @@ rayIntersectsTriangleCulled(const Point & O,
 
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
-    std::cerr << "  t: " << v << std::endl;
+    std::cerr << "  t: " << t << std::endl;
 #endif
 
   if (t <= 0)
     return false;
+
+  #ifdef USE_DEBUG_RAY
+  if (DEBUG_IF)
+    std::cerr << " Returning true!" << std::endl;
+  #endif
 
   return true;
 }
