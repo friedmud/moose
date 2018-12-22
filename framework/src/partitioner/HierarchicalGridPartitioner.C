@@ -70,7 +70,7 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
 {
   auto total_nodes = _nx_nodes;
 
-  if (mesh.spatial_dimension() == 2)
+  if (mesh.spatial_dimension() >= 2)
     total_nodes *= _ny_nodes;
 
   if (mesh.spatial_dimension() == 3)
@@ -78,14 +78,14 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
 
   auto procs_per_node = _nx_procs;
 
-  if (mesh.spatial_dimension() == 2)
+  if (mesh.spatial_dimension() >= 2)
     procs_per_node *= _ny_procs;
 
   if (mesh.spatial_dimension() == 3)
     procs_per_node *= _nz_procs;
 
   if (procs_per_node * total_nodes != mesh.n_partitions())
-    mooseError("Partitioning in ", name(), " doesn't add up to the total number of elements");
+    mooseError("Partitioning in ", name(), " doesn't add up to the total number of processors: ", procs_per_node * total_nodes);
 
   // Figure out the physical bounds of the given mesh
   auto nodes_bounding_box = MeshTools::create_bounding_box(mesh);
@@ -96,17 +96,30 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
   auto nodes_mesh = libmesh_make_unique<ReplicatedMesh>(this->_communicator);
   nodes_mesh->partitioner().reset(new LinearPartitioner);
 
-  MeshTools::Generation::build_cube(*nodes_mesh,
-                                    _nx_nodes,
-                                    _ny_nodes,
-                                    _nz_nodes,
-                                    nodes_min(0),
-                                    nodes_max(0),
-                                    nodes_min(1),
-                                    nodes_max(1),
-                                    nodes_min(2),
-                                    nodes_max(2),
-                                    QUAD4);
+  if (mesh.spatial_dimension() == 2)
+    MeshTools::Generation::build_cube(*nodes_mesh,
+                                      _nx_nodes,
+                                      _ny_nodes,
+                                      _nz_nodes,
+                                      nodes_min(0),
+                                      nodes_max(0),
+                                      nodes_min(1),
+                                      nodes_max(1),
+                                      nodes_min(2),
+                                      nodes_max(2),
+                                      QUAD4);
+  else
+    MeshTools::Generation::build_cube(*nodes_mesh,
+                                      _nx_nodes,
+                                      _ny_nodes,
+                                      _nz_nodes,
+                                      nodes_min(0),
+                                      nodes_max(0),
+                                      nodes_min(1),
+                                      nodes_max(1),
+                                      nodes_min(2),
+                                      nodes_max(2),
+                                      HEX8);
 
   // Now build the procs meshes
   std::vector<std::unique_ptr<ReplicatedMesh>> procs_meshes(nodes_mesh->n_elem());
@@ -136,17 +149,31 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
     auto procs_mesh = libmesh_make_unique<ReplicatedMesh>(this->_communicator);
     procs_mesh->partitioner().reset(new LinearPartitioner);
 
-    MeshTools::Generation::build_cube(*procs_mesh,
-                                      _nx_procs,
-                                      _ny_procs,
-                                      _nz_procs,
-                                      min(0),
-                                      max(0),
-                                      min(1),
-                                      max(1),
-                                      min(2),
-                                      max(2),
-                                      QUAD4);
+    if (mesh.spatial_dimension() == 2)
+      MeshTools::Generation::build_cube(*procs_mesh,
+                                        _nx_procs,
+                                        _ny_procs,
+                                        _nz_procs,
+                                        min(0),
+                                        max(0),
+                                        min(1),
+                                        max(1),
+                                        min(2),
+                                        max(2),
+                                        QUAD4);
+    else
+      MeshTools::Generation::build_cube(*procs_mesh,
+                                        _nx_procs,
+                                        _ny_procs,
+                                        _nz_procs,
+                                        min(0),
+                                        max(0),
+                                        min(1),
+                                        max(1),
+                                        min(2),
+                                        max(2),
+                                        HEX8);
+
 
     procs_meshes[elem_ptr->id()] = std::move(procs_mesh);
   }
