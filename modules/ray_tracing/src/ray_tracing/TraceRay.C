@@ -192,7 +192,7 @@ lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
                            Point & intersection_point,
                            Real & intersection_distance)
 {
-  const Real EPSILON = 1e-8;
+  const Real EPSILON = 1e-10;
 
   const Point & p = o;
   const Point & q = v0;
@@ -234,6 +234,7 @@ lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
 #endif
 
   if (t < -EPSILON || t > r_size + EPSILON)
+//  if (t < 0. || t > r_size)
     return false;
 
   // Change the second column to be r
@@ -246,7 +247,7 @@ lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
     std::cerr << " u: " << u << std::endl;
 #endif
 
-  if (u < -EPSILON || u > s_size + EPSILON)
+  if (u < 0. || u > s_size)
     return false;
 
   Point ppoint = p + (t * r);
@@ -419,7 +420,7 @@ rayIntersectsTriangleCulled(const Point & O,
 #endif
 )
 {
-  const Real EPSILON = 0.000001;
+  const Real EPSILON = 1e-10;
   const Point & vert0 = V00;
   const Point & vert1 = V10;
   const Point & vert2 = V11;
@@ -439,7 +440,7 @@ rayIntersectsTriangleCulled(const Point & O,
     std::cerr << "  det: " << det << std::endl;
 #endif
 
-  if (det < EPSILON)
+  if (det < -EPSILON)
     return false;
 
   auto tvec = orig - vert0;
@@ -451,7 +452,7 @@ rayIntersectsTriangleCulled(const Point & O,
     std::cerr << "  u: " << u << std::endl;
 #endif
 
-  if (u < -EPSILON || u > det)
+  if (u < -EPSILON || u > det + EPSILON)
     return false;
 
   auto qvec = tvec.cross(edge1);
