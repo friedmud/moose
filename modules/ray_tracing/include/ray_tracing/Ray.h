@@ -236,7 +236,7 @@ protected:
   Point _end;
 
   /// The element the Ray begins in
-  const Elem * _starting_elem;
+  const Elem * _starting_elem = NULL;
 
   /// The id of the element the Ray ends in (used to optimize when _ends_within_mesh)
   dof_id_type _ending_elem_id = DofObject::invalid_id;
@@ -245,7 +245,7 @@ protected:
   bool _ends_within_mesh = false;
 
   /// The side of the the _starting element the ray is incoming on.  -1 if the Ray is starting _in_ the element
-  unsigned long int _incoming_side;
+  unsigned long int _incoming_side = -1;
 
   /// Number of times this Ray has needed to be communicated
   Real _processor_crossings = 0;
@@ -332,7 +332,10 @@ public:
     data_out = b->_end(2);
 
     // Starting element
-    data_out = b->startingElem()->id();
+    if (b->startingElem())
+      data_out = b->startingElem()->id();
+    else
+      data_out = DofObject::invalid_id;
 
     // Ending element
     data_out = b->endingElemId();

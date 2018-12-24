@@ -86,12 +86,12 @@ public:
   /**
    * Total amount of distance traveled by the rays
    */
-  unsigned long int totalDistance() { return _total_distance; }
+  Real totalDistance() { return _total_distance; }
 
   /**
    * Total amount of distance integrated over by the rays
    */
-  unsigned long int totalIntegratedDistance() { return _total_integrated_distance; }
+  Real totalIntegratedDistance() { return _total_integrated_distance; }
 
   /**
    * Local Rays started

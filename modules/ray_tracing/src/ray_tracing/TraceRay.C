@@ -34,7 +34,7 @@ unsigned long int ray_count = 0;
 
 unsigned long int debug_ray = 216;
 
-unsigned long int debug_ray_id = 2654546;
+unsigned long int debug_ray_id = 13;
 
 unsigned long int debug_ray_pid = 1;
 
@@ -50,17 +50,20 @@ const std::vector<std::vector<unsigned long int>> quad4_side_to_children = {
     {0, 1}, {1, 3}, {3, 2}, {2, 0}};
 
 // The sides that adjoin each edge in a hex8
-const std::vector<std::vector<unsigned int>> hex8_edge_to_sides =
-{
-//0      1       2       3       4       5       6       7       8       9       10      11
-  {0,1}, {0, 2}, {0, 3}, {0, 4}, {1, 4}, {1, 2}, {2, 3}, {3, 4}, {1, 5}, {2, 5}, {3, 5}, {4, 5}
-};
-
-
-
-
-
-
+const std::vector<std::vector<unsigned int>> hex8_edge_to_sides = {
+    // 0      1       2       3       4       5       6       7       8       9       10      11
+    {0, 1},
+    {0, 2},
+    {0, 3},
+    {0, 4},
+    {1, 4},
+    {1, 2},
+    {2, 3},
+    {3, 4},
+    {1, 5},
+    {2, 5},
+    {3, 5},
+    {4, 5}};
 
 TraceRay::TraceRay(PerfGraph & perf_graph,
                    const MeshBase & mesh,
@@ -161,7 +164,8 @@ RayProblemTraceRay::onBoundary(const Elem * current_elem,
 
 void
 RayProblemTraceRay::finishedBoundary()
-{}
+{
+}
 
 /**
  * Pass in:
@@ -176,13 +180,14 @@ RayProblemTraceRay::finishedBoundary()
  *
  * Note this is the 3D version of the 2D only code below
  *
- * Also taken from "Intersection of two lines in three-space" by Ronald Goldman in Graphics Gems on page 304
+ * Also taken from "Intersection of two lines in three-space" by Ronald Goldman in Graphics Gems on
+ * page 304
  */
 bool
 lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
 
 #ifdef USE_DEBUG_RAY
-                           ray
+                               ray
 #endif
                            ,
                            const Point & o,
@@ -203,7 +208,8 @@ lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
 
   auto s = (v1 - v0);
   auto s_size = s.size();
-  s /= s_size;;
+  s /= s_size;
+  ;
 
   auto rxs = r.cross(s);
 
@@ -229,12 +235,12 @@ lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
   auto t = detfinder.det() / rxs_size_sq;
 
 #ifdef USE_DEBUG_RAY
-    if (DEBUG_IF)
-      std::cerr << " t: " << t << std::endl;
+  if (DEBUG_IF)
+    std::cerr << " t: " << t << std::endl;
 #endif
 
   if (t < -EPSILON || t > r_size + EPSILON)
-//  if (t < 0. || t > r_size)
+    //  if (t < 0. || t > r_size)
     return false;
 
   // Change the second column to be r
@@ -254,12 +260,12 @@ lineLineIntersect3DVanilla(const std::shared_ptr<Ray> &
   Point qpoint = q + (u * s);
 
 #ifdef USE_DEBUG_RAY
-    if (DEBUG_IF)
-    {
-      std::cerr << " ppoint: " << ppoint << std::endl;
-      std::cerr << " qpoint: " << qpoint << std::endl;
-      std::cerr << " difference: " << ppoint - qpoint << std::endl;
-    }
+  if (DEBUG_IF)
+  {
+    std::cerr << " ppoint: " << ppoint << std::endl;
+    std::cerr << " qpoint: " << qpoint << std::endl;
+    std::cerr << " difference: " << ppoint - qpoint << std::endl;
+  }
 #endif
 
   if (ppoint.absolute_fuzzy_equals(qpoint, 1e-8))
@@ -483,10 +489,10 @@ rayIntersectsTriangleCulled(const Point & O,
   if (t <= 0)
     return false;
 
-  #ifdef USE_DEBUG_RAY
+#ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
     std::cerr << " Returning true!" << std::endl;
-  #endif
+#endif
 
   return true;
 }
@@ -1097,7 +1103,6 @@ candidate
 }
 */
 
-
 /**
  * Returns the side number for elem that neighbor is on
  *
@@ -1372,12 +1377,12 @@ TraceRay::possiblyHittingNode(const std::shared_ptr<Ray> &
  */
 void
 TraceRay::possiblyHittingEdge(const std::shared_ptr<Ray> & ray,
-                                const Point & incoming_point,
-                                const Elem * current_elem,
-                                const Point & ray_direction,
-                                int & edge_hit,
-                                Point & intersection_point,
-                                int & intersected_side)
+                              const Point & incoming_point,
+                              const Elem * current_elem,
+                              const Point & ray_direction,
+                              int & edge_hit,
+                              Point & intersection_point,
+                              int & intersected_side)
 {
   if (current_elem->type() != HEX8)
   {
@@ -1386,8 +1391,8 @@ TraceRay::possiblyHittingEdge(const std::shared_ptr<Ray> & ray,
   }
 
 #ifdef USE_DEBUG_RAY
-    if (DEBUG_IF)
-      std::cerr << "Checking element edges: " << std::endl;
+  if (DEBUG_IF)
+    std::cerr << "Checking element edges: " << std::endl;
 #endif
   Real intersection_distance = 0;
 
@@ -1404,7 +1409,8 @@ TraceRay::possiblyHittingEdge(const std::shared_ptr<Ray> & ray,
     auto & n0 = current_elem->node_ref(edge_nodes[0]);
     auto & n1 = current_elem->node_ref(edge_nodes[1]);
 
-    bool intersected = lineLineIntersect3DVanilla(ray, incoming_point, ray->end(), n0, n1, intersection_point, intersection_distance);
+    bool intersected = lineLineIntersect3DVanilla(
+        ray, incoming_point, ray->end(), n0, n1, intersection_point, intersection_distance);
 
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
@@ -1437,7 +1443,6 @@ TraceRay::possiblyHittingEdge(const std::shared_ptr<Ray> & ray,
     intersected_side = best_side;
   }
 }
-
 
 void
 TraceRay::endPossiblyOnBoundarySide(const std::shared_ptr<Ray> & ray,
@@ -2089,18 +2094,16 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
 #endif
-          if (!_tolerate_failure)
-          {
-            std::cerr << pid << " Ray " << ray->id()
-                      << " is unable to find a point neighbor to move through!" << std::endl;
+            if (!_tolerate_failure)
+            {
+              std::cerr << pid << " Ray " << ray->id()
+                        << " is unable to find a point neighbor to move through!" << std::endl;
 
-            std::cerr << pid << " All options have been exhausted... failing!" << std::endl;
+              std::cerr << pid << " All options have been exhausted... failing!" << std::endl;
 
-            std::abort();
-          }
+              std::abort();
+            }
         }
-
-
 
         count++;
 
@@ -2120,19 +2123,19 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
 #endif
-          libMesh::err << pid << " "
-                       << "ray_count: " << ray_count << " ray_id: " << ray->id()
-                       << " Endless loop while trying harder!\n"
-                       << " Start: " << ray->start() << "\n"
-                       << " End: " << ray->end() << " Distance: " << ray->distance() << std::endl;
+            libMesh::err << pid << " "
+                         << "ray_count: " << ray_count << " ray_id: " << ray->id()
+                         << " Endless loop while trying harder!\n"
+                         << " Start: " << ray->start() << "\n"
+                         << " End: " << ray->end() << " Distance: " << ray->distance() << std::endl;
 
           ray->setShouldContinue(false);
 
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
 #endif
-          if (!_tolerate_failure)
-            std::abort();
+            if (!_tolerate_failure)
+              std::abort();
 
           break;
         }
@@ -2265,7 +2268,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                 {
                   on_boundary = true;
                   intersected_side = s;
-//                  intersection_point = ray->end();
+                  //                  intersection_point = ray->end();
                   break;
                 }
               }
@@ -2282,7 +2285,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
               {
                 on_boundary = true;
                 intersected_side = side;
-//                intersection_point = ray->end();
+                //                intersection_point = ray->end();
               }
             }
           }

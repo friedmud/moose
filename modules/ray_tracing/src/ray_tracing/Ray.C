@@ -13,8 +13,7 @@ Ray::operator==(const Ray & other)
          _azimuthal_spacing == other._azimuthal_spacing &&
          _azimuthal_weight == other._azimuthal_weight && _polar_spacing == other._polar_spacing &&
          _polar_sins == other._polar_sins && _polar_weights == other._polar_weights &&
-         _ends_within_mesh == other._ends_within_mesh &&
-         _ending_elem_id == other._ending_elem_id &&
+         _ends_within_mesh == other._ends_within_mesh && _ending_elem_id == other._ending_elem_id &&
          _should_continue == other._should_continue;
 }
 
@@ -123,8 +122,15 @@ Packing<std::shared_ptr<Ray>>::unpack(typename std::vector<Real>::const_iterator
   ray->_end(2) = (*in++);
 
   // Starting Element
-  auto mesh = static_cast<MeshBase *>(&ray_problem->mesh().getMesh());
-  ray->setStartingElem(mesh->elem((*in++)));
+  auto elem_id = (*in++);
+
+  if (elem_id != DofObject::invalid_id)
+  {
+    auto mesh = static_cast<MeshBase *>(&ray_problem->mesh().getMesh());
+    ray->setStartingElem(mesh->elem(elem_id));
+  }
+  else
+    ray->setStartingElem(NULL);
 
   // Ending element
   auto id = (*in++);
