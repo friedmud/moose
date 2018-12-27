@@ -64,7 +64,7 @@ WorkBalance::WorkBalance(const InputParameters & parameters)
     _num_partition_sides(declareVector("num_partition_sides")),
     _partition_surface_area(declareVector("partition_surface_area")),
     _num_partition_hardware_id_sides(declareVector("num_partition_hardware_id_sides")),
-    _partition_hardware_id_surface_area(declareVector("partition_harwdware_id_surface_area"))
+    _partition_hardware_id_surface_area(declareVector("partition_hardware_id_surface_area"))
 {
 }
 
