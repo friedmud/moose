@@ -72,7 +72,7 @@ SurfaceAreaWeightedPartitioner::computeElementWeight(Elem & elem)
   for (auto s : elem.side_index_range())
     elem_surface_area += elem.build_side(s)->volume();
 
-  return elem_surface_area / _min_elem_surface_area;
+  return 100*(elem_surface_area / _min_elem_surface_area);
 }
 
 dof_id_type
@@ -80,5 +80,5 @@ SurfaceAreaWeightedPartitioner::computeSideWeight(Elem & elem, unsigned int side
 {
   auto side_elem = elem.build_side(side);
 
-  return side_elem->volume() / _min_side_area;
+  return 100*(side_elem->volume() / _min_side_area);
 }
