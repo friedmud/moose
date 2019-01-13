@@ -24,7 +24,10 @@ from optparse import OptionParser, OptionGroup, Values
 #node_name_pattern = re.compile("(b\d{2})")
 #pstack_binary = 'pstack'
 ### FALCON
-node_name_pattern = re.compile("(r\di\dn\d{1,2})")
+#node_name_pattern = re.compile("(r\di\dn\d{1,2})")
+#pstack_binary = 'gstack'
+### LEMHI
+node_name_pattern = re.compile("(lemhi\d{4})")
 pstack_binary = 'gstack'
 ##################################################################
 
@@ -41,6 +44,7 @@ def generateTraces(job_num, application_name, num_hosts):
 
     # The machine name should go here!
     host_strs = node_name_pattern.findall(output)
+
     for i in host_strs:
         hosts.append(i)
 
