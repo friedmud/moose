@@ -148,6 +148,27 @@ protected:
   /// For calling point_neighbors
   MooseUtils::StaticallyAllocatedSet<const Elem *, MAX_POINT_NEIGHBORS> _point_neighbors;
 
+public:
+  /// Counters
+
+  /// Just a normal point being found using a line/face intersection algorithm
+  long unsigned int _normal_face_hit = 0;
+
+  /// Node hit
+  long unsigned int _node_hit = 0;
+
+  /// Edge hit
+  long unsigned int _edge_hit = 0;
+
+  /// End on boundary
+  long unsigned int _end_on_boundary_hit = 0;
+
+  /// Boundary hit
+  long unsigned int _on_boundary_hit = 0;
+
+  /// Point neighbors
+  long unsigned int _moved_through_point_neighbors = 0;
+
 private:
   void find_point_neighbors(
       const Elem * current_elem,

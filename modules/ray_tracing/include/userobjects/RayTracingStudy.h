@@ -504,6 +504,26 @@ protected:
   /// Number of received Ray chunks traced over
   unsigned long int _chunks_traced = 0;
 
+public:
+  /// Just a normal point being found using a line/face intersection algorithm
+  long unsigned int _normal_face_hit = 0;
+
+  /// Node hit
+  long unsigned int _node_hit = 0;
+
+  /// Edge hit
+  long unsigned int _edge_hit = 0;
+
+  /// When the end of the ray is detected to be on the boundary
+  long unsigned int _end_on_boundary_hit = 0;
+
+  /// Boundary hit
+  long unsigned int _on_boundary_hit = 0;
+
+  /// Point neighbors
+  long unsigned int _moved_through_point_neighbors = 0;
+
+protected:
   /// How many processors have finished generating all of their rays
   processor_id_type _ranks_finished_generating = 0;
 

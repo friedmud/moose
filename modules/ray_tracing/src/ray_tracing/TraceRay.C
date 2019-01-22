@@ -2010,6 +2010,10 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                                                    boundary_intersection_point);
     }
 
+    // Found a side
+    if (intersected_side != -1)
+      _normal_face_hit++;
+
     if (intersected_side == -1 && !ends_in_elem) // If we failed to find a side... try harder
     {
       //      TIME_SECTION(_try_harder_timer);
@@ -2024,6 +2028,7 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
       // Check to see if the ray perfectly strikes any nodes of this element
       if (intersected_side == -1)
+      {
         possiblyHittingNode(ray,
                             incoming_point,
                             current_elem,
@@ -2032,7 +2037,12 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                             intersection_point,
                             intersected_side);
 
+        if (intersected_side != -1)
+          _node_hit++;
+      }
+
       if (intersected_side == -1 && _mesh_dim == 3)
+      {
         possiblyHittingEdge(ray,
                             incoming_point,
                             current_elem,
@@ -2041,12 +2051,26 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                             intersection_point,
                             intersected_side);
 
-      if (intersected_side == -1)
-        endPossiblyOnBoundarySide(ray, current_elem, intersection_point, intersected_side);
+        if (intersected_side != -1)
+          _edge_hit++;
+      }
 
       if (intersected_side == -1)
+      {
+        endPossiblyOnBoundarySide(ray, current_elem, intersection_point, intersected_side);
+
+        if (intersected_side != -1)
+          _end_on_boundary_hit++;
+      }
+
+      if (intersected_side == -1)
+      {
         possiblyOnBoundary(
             ray, incoming_point, current_elem, incoming_side, intersection_point, intersected_side);
+
+        if (intersected_side != -1)
+          _on_boundary_hit++;
+      }
 
       if (intersected_side == -1) // Need to do a more exhaustive search
       {
@@ -2065,6 +2089,8 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
         if (best_neighbor)
         {
+          _moved_through_point_neighbors++;
+
 #ifdef USE_DEBUG_RAY
           if (DEBUG_IF)
             std::cerr << pid << " best_neighbor: " << best_neighbor->id()

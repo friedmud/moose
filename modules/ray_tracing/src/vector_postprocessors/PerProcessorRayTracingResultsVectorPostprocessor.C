@@ -31,7 +31,7 @@ validParams<PerProcessorRayTracingResultsVectorPostprocessor>()
       "rays_started rays_traced chunks_traced rays_received buffers_received "
       "rays_sent buffers_sent intersections generation_time propagation_time num_probes "
       "ray_pool_created receive_ray_pool_created receive_buffer_pool_created "
-      "send_buffer_pool_created fast_lane_rays");
+      "send_buffer_pool_created fast_lane_rays face_hit node_hit edge_hit end_on_boundary_hit on_boundary_hit moved_through_point_neighbors");
 
   params.addParam<MultiMooseEnum>("results", results, "The selection of results you want reported");
 
@@ -129,6 +129,23 @@ PerProcessorRayTracingResultsVectorPostprocessor::execute()
         break;
       case 15: // fast_lane_rays
         (*_result_values[15])[_pid] = _ray_tracing_study.fastLaneRays();
+    case 16: // face_hit
+      (*_result_values[16])[_pid] = _ray_tracing_study._normal_face_hit;
+      break;
+    case 17: // node_hit
+      (*_result_values[17])[_pid] = _ray_tracing_study._node_hit;
+      break;
+    case 18: // edge_hit
+      (*_result_values[18])[_pid] = _ray_tracing_study._edge_hit;
+      break;
+    case 19: // end_on_boundary_hit
+      (*_result_values[19])[_pid] = _ray_tracing_study._end_on_boundary_hit;
+      break;
+    case 20: // on_boundary_hit
+      (*_result_values[20])[_pid] = _ray_tracing_study._on_boundary_hit;
+        break;
+    case 21: // moved_through_point_neighbors
+      (*_result_values[21])[_pid] = _ray_tracing_study._moved_through_point_neighbors;
         break;
       default:
         mooseError("Unknown result type '",

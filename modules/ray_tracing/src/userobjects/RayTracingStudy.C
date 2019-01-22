@@ -152,6 +152,13 @@ RayTracingStudy::executeStudy()
   _all_rays_finished = 0;
   _local_intersections = 0;
 
+  _normal_face_hit = 0;
+  _node_hit = 0;
+  _edge_hit = 0;
+  _end_on_boundary_hit = 0;
+  _on_boundary_hit = 0;
+  _moved_through_point_neighbors = 0;
+
   /// Total number of processor crossings for Rays that finished on this processor
   _total_processor_crossings = 0;
 
@@ -349,8 +356,21 @@ RayTracingStudy::traceAndBuffer(std::vector<std::shared_ptr<Ray>>::iterator begi
   }
 
 #pragma omp critical
-  //    std::cout << thread_num << ": " << tr.intersections() << " intersections" << std::endl;
-  _local_intersections += tr.intersections();
+  {
+    _local_intersections += tr.intersections();
+
+    _normal_face_hit += tr._normal_face_hit;
+
+    _node_hit += tr._node_hit;
+
+    _edge_hit += tr._edge_hit;
+
+    _end_on_boundary_hit += tr._end_on_boundary_hit;
+
+    _on_boundary_hit += tr._on_boundary_hit;
+
+    _moved_through_point_neighbors += tr._moved_through_point_neighbors;
+  }
 }
 }
 
