@@ -15,7 +15,7 @@
 #include "unistd.h"
 #include <numeric>
 
-// #include "gperftools/profiler.h"
+#include "gperftools/profiler.h"
 
 #define BATCH_SIZE 10
 
@@ -134,9 +134,14 @@ void
 RayTracingStudy::executeStudy()
 {
   static unsigned long int call = 0;
-  //  std::string fname = std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
-  //    + ".prof";
-  //  ProfilerStart(fname.c_str());
+//  auto output_dir = std::getenv("output_dir");
+
+//  std::string fname = std::string(output_dir) + "/" + std::string("cpu") + std::to_string(_my_pid) + "_" + std::to_string(call)
+//    + ".prof";
+
+//  std::cerr << "Outputing profile to: " << fname << std::endl;
+
+//  ProfilerStart(fname.c_str());
   call++;
 
   TIME_SECTION(_execute_study_timer);
@@ -268,7 +273,7 @@ RayTracingStudy::executeStudy()
   for (auto & v : _old_average_finishing_angular_flux)
     v /= _all_rays_finished;
 
-  //  ProfilerStop();
+//  ProfilerStop();
 }
 
 void
