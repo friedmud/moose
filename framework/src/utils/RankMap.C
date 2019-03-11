@@ -5,7 +5,8 @@
 RankMap::RankMap(const Parallel::Communicator & comm, PerfGraph & perf_graph)
   : ParallelObject(comm),
     PerfGraphInterface(perf_graph, "RankMap"),
-    _construct_timer(registerTimedSection("construct", 2))
+    _construct_timer(registerTimedSection("construct", 2)),
+    _local_rank(0)
 {
   TIME_SECTION(_construct_timer);
 
@@ -27,6 +28,9 @@ RankMap::RankMap(const Parallel::Communicator & comm, PerfGraph & perf_graph)
   // Broadcast the world rank of the sub group root to all processes within this communicator
   world_rank = processor_id();
   shmem_comm.broadcast(world_rank, 0);
+
+  // Also grab the local rank
+  _local_rank = shmem_comm.rank();
 #endif
 
   // Send the info to everyone

@@ -60,6 +60,9 @@ protected:
   dof_id_type _local_num_partition_hardware_id_sides;
   Real _local_partition_hardware_id_surface_area;
 
+  processor_id_type _local_host_id;
+  processor_id_type _local_local_pid;
+
   VectorPostprocessorValue & _pid;
   VectorPostprocessorValue & _num_elems;
   VectorPostprocessorValue & _num_nodes;
@@ -68,6 +71,8 @@ protected:
   VectorPostprocessorValue & _partition_surface_area;
   VectorPostprocessorValue & _num_partition_hardware_id_sides;
   VectorPostprocessorValue & _partition_hardware_id_surface_area;
+  VectorPostprocessorValue & _host_id;
+  VectorPostprocessorValue & _local_pid;
 };
 
 #endif // WORKBALANCE_H

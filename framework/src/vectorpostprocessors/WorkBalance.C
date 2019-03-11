@@ -17,6 +17,10 @@
 #include "libmesh/quadrature.h"
 
 #include <numeric>
+#include <cctype>
+
+#include <unistd.h>
+#include <limits.h>
 
 registerMooseObject("MooseApp", WorkBalance);
 
@@ -64,7 +68,9 @@ WorkBalance::WorkBalance(const InputParameters & parameters)
     _num_partition_sides(declareVector("num_partition_sides")),
     _partition_surface_area(declareVector("partition_surface_area")),
     _num_partition_hardware_id_sides(declareVector("num_partition_hardware_id_sides")),
-    _partition_hardware_id_surface_area(declareVector("partition_hardware_id_surface_area"))
+    _partition_hardware_id_surface_area(declareVector("partition_hardware_id_surface_area")),
+    _host_id(declareVector("host_id")),
+    _local_pid(declareVector("local_pid"))
 {
 }
 
@@ -78,6 +84,28 @@ WorkBalance::initialize()
   _local_partition_surface_area = 0;
   _local_num_partition_hardware_id_sides = 0;
   _local_partition_hardware_id_surface_area = 0;
+
+  // Figure out the hardware name
+  // This is done by pulling out all of the numbers out
+  // of the local node's name
+  char hostname[HOST_NAME_MAX];
+  gethostname(hostname, HOST_NAME_MAX);
+
+  std::string host_id_string;
+
+  // Now go through each letter individually pulling out the numbers
+  for (unsigned int i = 0; i < HOST_NAME_MAX; i++)
+  {
+    if (hostname[i] == '\0')
+      break;
+
+    if (std::isdigit(hostname[i]))
+      host_id_string = host_id_string + hostname[i];
+  }
+
+  _local_host_id = MooseUtils::convert<processor_id_type>(host_id_string);
+
+  _local_local_pid = _rank_map.localRank();
 }
 
 namespace
@@ -298,8 +326,10 @@ WorkBalance::finalize()
     _communicator.gather(0,
                          static_cast<Real>(_local_num_partition_hardware_id_sides),
                          _num_partition_hardware_id_sides);
-    _communicator.gather(
-        0, _local_partition_hardware_id_surface_area, _partition_hardware_id_surface_area);
+    _communicator.gather(0,
+                         _local_partition_hardware_id_surface_area, _partition_hardware_id_surface_area);
+    _communicator.gather(0, static_cast<Real>(_local_host_id), _host_id);
+    _communicator.gather(0, static_cast<Real>(_local_local_pid), _local_pid);
   }
   else
   {
@@ -313,6 +343,8 @@ WorkBalance::finalize()
                             _num_partition_hardware_id_sides);
     _communicator.allgather(_local_partition_hardware_id_surface_area,
                             _partition_hardware_id_surface_area);
+    _communicator.allgather(static_cast<Real>(_local_host_id), _host_id);
+    _communicator.allgather(static_cast<Real>(_local_local_pid), _local_pid);
   }
 
   // Fill in the PID column - this just makes plotting easier

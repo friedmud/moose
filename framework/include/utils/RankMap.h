@@ -39,6 +39,11 @@ public:
    */
   const std::vector<unsigned int> & rankHardwareIds() const { return _rank_to_hardware_id; }
 
+  /**
+   * The local rank on the node
+   */
+  processor_id_type localRank() const { return _local_rank; }
+
 protected:
   PerfID _construct_timer;
 
@@ -47,6 +52,9 @@ protected:
 
   /// Each entry corresponds to the hardware_id for that PID
   std::vector<unsigned int> _rank_to_hardware_id;
+
+  /// The rank of the MPI process within its node
+  processor_id_type _local_rank;
 };
 
 #endif
