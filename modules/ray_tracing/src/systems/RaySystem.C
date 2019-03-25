@@ -239,8 +239,15 @@ RaySystem::addRayMaterial(const std::string & mk_name,
 void
 RaySystem::subdomainSetup(SubdomainID current_subdomain, THREAD_ID tid)
 {
-  _rs_threaded_data[tid]._current_ray_material =
-      _ray_materials.getBlockObjects(current_subdomain, tid)[0];
+  if (_ray_materials.getBlockObjects(current_subdomain, tid).size() == 0)
+    std::cerr << current_subdomain << std::endl;
+
+  auto & block_mats = _ray_materials.getBlockObjects(current_subdomain, tid);
+
+  if (block_mats.empty() || block_mats[0] == nullptr)
+    mooseError("No RayMaterial defined on ", current_subdomain);
+
+  _rs_threaded_data[tid]._current_ray_material = block_mats[0];
 }
 
 void
@@ -301,8 +308,12 @@ RaySystem::reinitNeighborFace(const Elem * elem,
   threaded_data._current_offset_neighbor =
       _current_group_solution.map_global_to_local_index(dof_number);
 
-  _rs_threaded_data[tid]._current_ray_material_neighbor =
-      _ray_materials_neighbor.getBlockObjects(elem->subdomain_id(), tid)[0];
+  auto & block_mats = _ray_materials_neighbor.getBlockObjects(elem->subdomain_id(), tid);
+
+  if (block_mats.empty() || block_mats[0] == nullptr)
+    mooseError("No RayMaterial on block ", elem->subdomain_id());
+
+  _rs_threaded_data[tid]._current_ray_material_neighbor = block_mats[0];
 
   threaded_data._current_ray_material_neighbor->reinit(elem);
 
