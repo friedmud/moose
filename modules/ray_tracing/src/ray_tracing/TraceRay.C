@@ -604,6 +604,14 @@ intersectQuadUsingTriangles(const Point & O,
     return false;
   */
 
+  // __builtin_prefetch(&O, /*write*/0);
+  // __builtin_prefetch(&D, /*write*/0);
+  // __builtin_prefetch(&V00, /*write*/0);
+  // __builtin_prefetch(&V10, /*write*/0);
+  // __builtin_prefetch(&V11, /*write*/0);
+  // __builtin_prefetch(&V01, /*write*/0);
+
+
 #ifdef USE_DEBUG_RAY
   if (DEBUG_IF)
     std::cerr << " Trying first triangle " << std::endl;
@@ -1878,6 +1886,35 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
     node_hit = -1;
     edge_hit = -1;
 
+
+    // Prefetch a bunch of stuff about this current element:
+    // __builtin_prefetch(current_elem, /*write*/0);
+
+    {
+//      const auto n_nodes = current_elem->n_nodes();
+
+//      for (unsigned int i = 0; i < n_nodes; i++)
+//      {
+//        const auto node_ptr = current_elem->node_ptr(i);
+
+//        __builtin_prefetch(node_ptr, /*write*/0);
+
+        // Nodes are 88 bytes in length.  The prefetch might only prefetch 64
+
+        // To fetch the next cache line we're going to cast the node_ptr to a char*
+        // (so that it's sizeof is 1) and then add 8 (move 8 bytes).
+        ///  __builtin_prefetch((char*)node_ptr + 8, /*write*/0);
+        // Nevermind that doesn't work
+
+      // const auto n_sides = current_elem->n_sides();
+
+      // // prefetch each neighbor
+      // for (unsigned int i = 0; i < n_sides; i++)
+      //   __builtin_prefetch(current_elem->neighbor_ptr(i), /*write*/0);
+//      }
+    }
+
+
 #ifdef USE_DEBUG_RAY
     if (DEBUG_IF)
     {
@@ -2339,6 +2376,16 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
                           << " best_side: " << best_side << std::endl;
 #endif
               current_elem = neighbor = best_neighbor;
+              // __builtin_prefetch(current_elem, /*write*/0);
+
+              // Grab the nodes array
+              const auto nodes_ptr = current_elem->get_nodes();
+              const auto num_nodes = current_elem->n_nodes();
+
+              // Prefetch the nodes
+              for (unsigned int i = 0; i < num_nodes; i++)
+                __builtin_prefetch(nodes_ptr[i], /*write*/0);
+
               incoming_side = best_side;
               incoming_point = intersection_point;
             }
@@ -2367,6 +2414,15 @@ TraceRay::trace(std::shared_ptr<Ray> & ray)
 
             // Recurse
             current_elem = neighbor;
+            //__builtin_prefetch(current_elem, /*write*/0);
+
+            // Grab the nodes array
+            const auto nodes_ptr = current_elem->get_nodes();
+            const auto num_nodes = current_elem->n_nodes();
+
+            // Prefetch the nodes
+            for (unsigned int i = 0; i < num_nodes; i++)
+              __builtin_prefetch(nodes_ptr[i], /*write*/0);
           }
         }
 

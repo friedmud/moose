@@ -244,7 +244,7 @@ RayTracingStudy::executeStudy()
 
   auto generation_start_time = std::chrono::steady_clock::now();
   {
-    //    TIME_SECTION(_generate_timer);
+    TIME_SECTION(_generate_timer);
     generateRays();
   }
   _generation_time = std::chrono::steady_clock::now() - generation_start_time;
@@ -258,7 +258,7 @@ RayTracingStudy::executeStudy()
 
   auto propagation_start_time = std::chrono::steady_clock::now();
   {
-    //    TIME_SECTION(_propagate_timer);
+    TIME_SECTION(_propagate_timer);
     propagateRays();
   }
   _propagation_time = std::chrono::steady_clock::now() - propagation_start_time;

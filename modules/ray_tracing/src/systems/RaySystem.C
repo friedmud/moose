@@ -52,6 +52,9 @@ RaySystem::RaySystem(RayProblemBase & subproblem, const std::string & name, unsi
     addVariable("group_" + std::to_string(g), var_type, 1.0);
 
   _console << "\nCreated RaySystem!!!\n" << std::endl;
+
+  std::cout << "Size of Node: " << sizeof(Node) << std::endl;
+  std::cout << "Size of Elem: " << sizeof(Elem) << std::endl;
 }
 
 RaySystem::~RaySystem() {}
