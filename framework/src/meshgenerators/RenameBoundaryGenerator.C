@@ -10,6 +10,9 @@
 #include "RenameBoundaryGenerator.h"
 #include "CastUniquePointer.h"
 
+#include "libmesh/mesh_tools.h"
+#include "libmesh/mesh_modification.h"
+
 registerMooseObject("MooseApp", RenameBoundaryGenerator);
 
 template <>

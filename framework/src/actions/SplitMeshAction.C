@@ -18,6 +18,7 @@
 #include "libmesh/map_point_neighbor_coupling.h"
 
 // #include "gperftools/profiler.h"
+#include <sys/stat.h>
 
 registerMooseAction("MooseApp", SplitMeshAction, "split_mesh");
 
