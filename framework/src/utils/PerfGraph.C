@@ -34,7 +34,8 @@ PerfGraph::PerfGraph(const std::string & root_name)
 
   MemoryUtils::Stats stats;
   MemoryUtils::getMemoryStats(stats);
-  auto start_memory =  MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
+  auto start_memory =
+      MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
   // Set the initial time
   _root_node->setStartTimeAndMemory(std::chrono::steady_clock::now(), start_memory);
@@ -154,7 +155,8 @@ PerfGraph::push(const PerfID id)
 
   MemoryUtils::Stats stats;
   MemoryUtils::getMemoryStats(stats);
-  auto start_memory =  MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
+  auto start_memory =
+      MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
   // Set the start time
   new_node->setStartTimeAndMemory(std::chrono::steady_clock::now(), start_memory);
@@ -178,7 +180,8 @@ PerfGraph::pop()
 
   MemoryUtils::Stats stats;
   MemoryUtils::getMemoryStats(stats);
-  auto now_memory =  MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
+  auto now_memory =
+      MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
   _stack[_current_position]->addTimeAndMemory(std::chrono::steady_clock::now(), now_memory);
 
@@ -193,7 +196,8 @@ PerfGraph::updateTiming()
 
   MemoryUtils::Stats stats;
   MemoryUtils::getMemoryStats(stats);
-  auto now_memory =  MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
+  auto now_memory =
+      MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
   for (unsigned int i = 0; i <= _current_position; i++)
   {
