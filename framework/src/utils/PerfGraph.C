@@ -26,9 +26,166 @@
 
 const std::string PerfGraph::ROOT_NAME = "Root";
 
-PerfGraph::PerfGraph(const std::string & root_name)
-  : _root_name(root_name), _current_position(0), _active(true)
+PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app)
+    : ConsoleStreamInterface(app), _root_name(root_name), _current_position(0),_execution_list_begin(0), _execution_list_end(0),  _active(true)
 {
+  // Start the printing thread
+  _print_thread = std::thread([this] {
+    auto & console = this->_console;
+
+    auto & execution_list = this->_execution_list;
+
+    auto & id_to_section_name = this->_id_to_section_name;
+
+    // The current nesting level
+    unsigned int current_level = 0;
+
+    unsigned int horizontal_position = 0;
+
+    unsigned int last_execution_list_end = 0;
+
+    unsigned int last_printed_level = 0;
+
+    // This is going to hold the entries to be printed going backward from the
+    // current entry to be printed
+    std::array<unsigned int, MAX_STACK_SIZE> back_buffer;
+
+    unsigned int back_buffer_position = 0;
+
+    while(true)
+    {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+
+      auto current_execution_list_begin = this->_execution_list_begin.load(std::memory_order_relaxed);
+
+      auto current_execution_list_end = this->_execution_list_end.load(std::memory_order_relaxed);
+
+      // The last entry in the current execution list
+      auto current_execution_list_last = current_execution_list_end - 1 >= 0 ? current_execution_list_end - 1 : MAX_EXECUTION_LIST_SIZE;
+
+//      std::cout << "current_execution_list_begin: " << current_execution_list_begin << std::endl;
+//      std::cout << "current_execution_list_end: " << current_execution_list_end << std::endl;
+
+      // This will synchronize with the thread_fence in addToExecutionList() so that all of the below
+      // reads, will be reading synchronized memory
+      std::atomic_thread_fence(std::memory_order_acquire);
+
+      // Iterate from the last thing printed (begin) to the last thing in the list (end)
+      // If the time or memory of any section is above the threshold, print everything inbetween and
+      // update begin
+
+      // Current position in the execution list
+      int p = current_execution_list_begin;
+
+      // Need to finish printing
+      if (current_execution_list_begin != current_execution_list_end && horizontal_position > 0)
+      {
+        console << " " << execution_list[current_execution_list_begin]._time << ", " << execution_list[current_execution_list_begin]._memory << std::endl;
+        horizontal_position = 0;
+      }
+
+
+      while (p != current_execution_list_end /*(current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0)*/)
+      {
+        auto next_p = p + 1 < MAX_EXECUTION_LIST_SIZE ? p + 1 : 0;
+//        std::cout << "p: " << p << std::endl;
+        auto & section_increment = execution_list[p];
+
+        if ((next_p == current_execution_list_end && current_execution_list_end == last_execution_list_end) || (section_increment._state == IncrementState::finished && (section_increment._time > 1. || section_increment._memory > 100)))
+        {
+          // We need to find the path from the thing we're currently at, back to the last level printed
+
+          auto q = p;
+
+          back_buffer_position = 0;
+
+          int back_level = 0;
+
+          int lowest_back_level = 0;
+
+          while (q != current_execution_list_begin)
+          {
+//            std::cout << "q: " << q << std::endl;
+
+            auto next_pos = q - 1 >= 0 ? q - 1 : MAX_EXECUTION_LIST_SIZE;
+
+            // This will only happen if the previous thing that ended was inside this scope (i.e. one level higher)
+            if (execution_list[q]._state == IncrementState::finished && execution_list[next_pos]._state == IncrementState::finished)
+              back_level++;
+            else if (execution_list[q]._state == IncrementState::started && execution_list[next_pos]._state == IncrementState::started)
+              back_level--;
+
+            // If we actually moved up in levels, then we need to print out the thing at next_pos
+            if (back_level < lowest_back_level)
+            {
+              lowest_back_level = back_level;
+
+              back_buffer[back_buffer_position] = next_pos;
+
+              back_buffer_position++;
+            }
+
+            q = next_pos;
+
+//            std::cout << "next q: " << q << std::endl;
+          }
+
+          // Now print out everything in the back buffer
+          for (int i = back_buffer_position - 1; i >= 0; i--)
+          {
+            auto & back_section_increment = execution_list[back_buffer[i]];
+
+            console /*<< "pre-"*/ << id_to_section_name[back_section_increment._id] << ": " << back_section_increment._time << ", " << back_section_increment._memory << std::endl;
+            horizontal_position = 0;
+          }
+
+          // Now print out the one that is over the limits
+          if (section_increment._state == IncrementState::finished)
+          {
+            console << id_to_section_name[section_increment._id] << ": " << section_increment._time << ", " << section_increment._memory << std::endl;
+
+            horizontal_position = 0;
+          }
+
+//          if (p != (current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0))
+          current_execution_list_begin = next_p;
+        }
+
+        p = next_p;
+
+//        std::cout << "new p: " << p << std::endl;
+//        std::cout << "stop p: " << (current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0) << std::endl;
+      }
+
+      if (current_execution_list_end == last_execution_list_end)
+      {
+        auto & section_increment = execution_list[current_execution_list_last];
+
+        // If we haven't printed anything yet, need to print the name
+        if (horizontal_position == 0)
+        {
+          if (section_increment._state == IncrementState::started)
+            console << id_to_section_name[section_increment._id] << std::flush;
+          else // This will happen if the enclosing scope still has more work to do after an enclosed scope has finished
+            console << "Still" << std::flush;
+
+          horizontal_position++;
+        }
+        else // Already printed the name - so print a dot
+        {
+          console << " ." << std::flush;
+          horizontal_position++;
+        }
+      }
+      else
+        horizontal_position = 0;
+
+      last_execution_list_end = current_execution_list_end;
+
+      this->_execution_list_begin.store(current_execution_list_begin, std::memory_order_relaxed);
+    }
+  });
+
   // Not done in the initialization list on purpose because this object needs to be complete first
   _root_node = libmesh_make_unique<PerfNode>(registerSection(ROOT_NAME, 0));
 
@@ -151,7 +308,9 @@ PerfGraph::push(const PerfID id)
       MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
   // Set the start time
-  new_node->setStartTimeAndMemory(std::chrono::steady_clock::now(), start_memory);
+  auto current_time = std::chrono::steady_clock::now();
+
+  new_node->setStartTimeAndMemory(current_time, start_memory);
 
   // Increment the number of calls
   new_node->incrementNumCalls();
@@ -162,6 +321,9 @@ PerfGraph::push(const PerfID id)
     mooseError("PerfGraph is out of stack space!");
 
   _stack[_current_position] = new_node;
+
+  // Add this to the exection list
+  addToExecutionList(id, IncrementState::started, 0., 0.);
 }
 
 void
@@ -175,9 +337,19 @@ PerfGraph::pop()
   auto now_memory =
       MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
-  _stack[_current_position]->addTimeAndMemory(std::chrono::steady_clock::now(), now_memory);
+  auto current_time = std::chrono::steady_clock::now();
+
+  auto & current_node = _stack[_current_position];
+
+  auto time_increment =  std::chrono::duration<double>(current_time - current_node->startTime()).count();
+  long int memory_increment = now_memory - current_node->startMemory();
+
+  current_node->addTimeAndMemory(current_time, now_memory);
 
   _current_position--;
+
+  // Add this to the exection list
+  addToExecutionList(current_node->id(), IncrementState::finished, time_increment, memory_increment);
 }
 
 void
