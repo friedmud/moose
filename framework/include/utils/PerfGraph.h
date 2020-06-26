@@ -240,7 +240,7 @@ protected:
     /// Whether or not this increment is the start of an increment or
     /// the finishing of an increment.
     IncrementState _state;
-    Real _time;
+    std::chrono::time_point<std::chrono::steady_clock> _time;
     long int _memory;
   };
 
@@ -249,7 +249,7 @@ protected:
    *
    * Should only be called by push() and pop()
    */
-  inline void addToExecutionList(const PerfID id, const IncrementState state, const Real time, const long int memory)
+  inline void addToExecutionList(const PerfID id, const IncrementState state, const std::chrono::time_point<std::chrono::steady_clock> time, const long int memory)
   {
     auto & section_increment = _execution_list[_execution_list_end];
 

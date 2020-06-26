@@ -37,28 +37,30 @@ PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app)
 
     auto & id_to_section_name = this->_id_to_section_name;
 
-    // The current nesting level
-    unsigned int current_level = 0;
+    // This is one beyond the last thing on the stack
+    unsigned int stack_level = 0;
 
-    unsigned int horizontal_position = 0;
+    // This is one beyond the last thing printed from the stack
+    unsigned int printed_stack_level_end = 0;
+
+    // The current stack for what the print thread has seen
+    std::array<SectionIncrement, MAX_STACK_SIZE> print_thread_stack;
 
     unsigned int last_execution_list_end = 0;
 
-    unsigned int last_printed_level = 0;
-
-    // This is going to hold the entries to be printed going backward from the
-    // current entry to be printed
-    std::array<unsigned int, MAX_STACK_SIZE> back_buffer;
-
-    unsigned int back_buffer_position = 0;
+    bool printed_name_of_current_section = false;
 
     while(true)
     {
       std::this_thread::sleep_for(std::chrono::seconds(1));
 
-      auto current_execution_list_begin = this->_execution_list_begin.load(std::memory_order_relaxed);
+      // Where we were last time in the execution list
+      // this should point at the first _new_ thing... or at end
+//      auto current_execution_list_begin = this->_execution_list_begin.load(std::memory_order_relaxed);
 
+      // The end will be one past the last
       auto current_execution_list_end = this->_execution_list_end.load(std::memory_order_relaxed);
+
 
       // The last entry in the current execution list
       auto current_execution_list_last = current_execution_list_end - 1 >= 0 ? current_execution_list_end - 1 : MAX_EXECUTION_LIST_SIZE;
@@ -74,115 +76,116 @@ PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app)
       // If the time or memory of any section is above the threshold, print everything inbetween and
       // update begin
 
-      // Current position in the execution list
-      int p = current_execution_list_begin;
-
-      // Need to finish printing
-      if (current_execution_list_begin != current_execution_list_end && horizontal_position > 0)
+      // Are we still sitting in the same place as the last iteration?  If so, we need to print progress
+      if (last_execution_list_end == current_execution_list_end)
       {
-        console << " " << execution_list[current_execution_list_begin]._time << ", " << execution_list[current_execution_list_begin]._memory << std::endl;
-        horizontal_position = 0;
+        auto & last_section_increment = execution_list[current_execution_list_last];
+
+        // Is the last section to run still running?
+        if (last_section_increment._state == IncrementState::started)
+        {
+          if (!printed_name_of_current_section)
+          {
+            // We need to print out everything on the stack before this that hasn't already been printed...
+            for (unsigned int s = printed_stack_level_end; s < stack_level - 1; s++)
+            {
+              console << std::string(s * 2, ' ') << id_to_section_name[print_thread_stack[s]._id] << '\n';
+              printed_stack_level_end++;
+            }
+
+            console << std::string(2 * (stack_level -1), ' ') << id_to_section_name[last_section_increment._id];
+
+            printed_name_of_current_section = true;
+
+            printed_stack_level_end++;
+          }
+          else // Need to print dots
+            console << " .";
+        }
+        else // If it's not, then we need to continue the section _before_ this
+        {
+          auto & last_stack_section = print_thread_stack[stack_level - 1];
+
+          if (!printed_name_of_current_section)
+          {
+            console << "Still " << id_to_section_name[last_stack_section._id];
+
+            printed_name_of_current_section = true;
+          }
+          else // Need to print dots
+            console << " .";
+        }
       }
 
+      // Current position in the execution list
+      auto p = last_execution_list_end;
+
+//      std::cout << "p: " << p << std::endl;
 
       while (p != current_execution_list_end /*(current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0)*/)
       {
+//        std::cout << "p: " << p << std::endl;
+
         auto next_p = p + 1 < MAX_EXECUTION_LIST_SIZE ? p + 1 : 0;
 //        std::cout << "p: " << p << std::endl;
         auto & section_increment = execution_list[p];
 
-        if ((next_p == current_execution_list_end && current_execution_list_end == last_execution_list_end) || (section_increment._state == IncrementState::finished && (section_increment._time > 1. || section_increment._memory > 100)))
+//        std::cout << "p: " << p << " Looking at: " << id_to_section_name[section_increment._id] << " " << section_increment._state << std::endl;
+
+        // Do we need to increase the stack?
+        if (section_increment._state == IncrementState::started)
         {
-          // We need to find the path from the thing we're currently at, back to the last level printed
+          // Store this increment in the stack
+          print_thread_stack[stack_level] = section_increment;
 
-          auto q = p;
+          stack_level++;
+        }
+        else // See if we need to print it
+        {
+          // Get the beginning information for this section... it is the thing currently on the top of the stack
+          auto & section_increment_start = print_thread_stack[stack_level - 1];
 
-          back_buffer_position = 0;
+          auto time_increment = std::chrono::duration<double>(section_increment._time - section_increment_start._time).count();
+          auto memory_increment = section_increment._memory - section_increment_start._memory;
 
-          int back_level = 0;
-
-          int lowest_back_level = 0;
-
-          while (q != current_execution_list_begin)
+          // Do they trigger the criteria or is it something that we were already partially printing?
+          if (time_increment > 1. || memory_increment > 100/* || printed_name_of_current_section*/)
           {
-//            std::cout << "q: " << q << std::endl;
-
-            auto next_pos = q - 1 >= 0 ? q - 1 : MAX_EXECUTION_LIST_SIZE;
-
-            // This will only happen if the previous thing that ended was inside this scope (i.e. one level higher)
-            if (execution_list[q]._state == IncrementState::finished && execution_list[next_pos]._state == IncrementState::finished)
-              back_level++;
-            else if (execution_list[q]._state == IncrementState::started && execution_list[next_pos]._state == IncrementState::started)
-              back_level--;
-
-            // If we actually moved up in levels, then we need to print out the thing at next_pos
-            if (back_level < lowest_back_level)
+            // We need to print out everything on the stack before this that hasn't already been printed...
+            for (unsigned int s = printed_stack_level_end; s < stack_level - 1; s++)
             {
-              lowest_back_level = back_level;
+              // Before printing more things - need to stop printing what we were printing before
+              if (printed_name_of_current_section)
+              {
+                console << '\n';
+                printed_name_of_current_section = false;
+              }
 
-              back_buffer[back_buffer_position] = next_pos;
-
-              back_buffer_position++;
+              console << std::string(s * 2, ' ') << id_to_section_name[print_thread_stack[s]._id] << '\n';
+              printed_stack_level_end++;
             }
 
-            q = next_pos;
+            // Now print this thing
+            if (!printed_name_of_current_section)
+              console << std::string(2 * (stack_level - 1), ' ') << "Finishing: " << id_to_section_name[section_increment._id];
 
-//            std::cout << "next q: " << q << std::endl;
+            console << ": " << time_increment << ", " << memory_increment << '\n';
+
+            printed_name_of_current_section = false;
           }
 
-          // Now print out everything in the back buffer
-          for (int i = back_buffer_position - 1; i >= 0; i--)
-          {
-            auto & back_section_increment = execution_list[back_buffer[i]];
+          stack_level--;
 
-            console /*<< "pre-"*/ << id_to_section_name[back_section_increment._id] << ": " << back_section_increment._time << ", " << back_section_increment._memory << std::endl;
-            horizontal_position = 0;
-          }
-
-          // Now print out the one that is over the limits
-          if (section_increment._state == IncrementState::finished)
-          {
-            console << id_to_section_name[section_increment._id] << ": " << section_increment._time << ", " << section_increment._memory << std::endl;
-
-            horizontal_position = 0;
-          }
-
-//          if (p != (current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0))
-          current_execution_list_begin = next_p;
+          printed_stack_level_end = std::min(printed_stack_level_end, stack_level);
         }
 
         p = next_p;
-
-//        std::cout << "new p: " << p << std::endl;
-//        std::cout << "stop p: " << (current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0) << std::endl;
       }
 
-      if (current_execution_list_end == last_execution_list_end)
-      {
-        auto & section_increment = execution_list[current_execution_list_last];
-
-        // If we haven't printed anything yet, need to print the name
-        if (horizontal_position == 0)
-        {
-          if (section_increment._state == IncrementState::started)
-            console << id_to_section_name[section_increment._id] << std::flush;
-          else // This will happen if the enclosing scope still has more work to do after an enclosed scope has finished
-            console << "Still" << std::flush;
-
-          horizontal_position++;
-        }
-        else // Already printed the name - so print a dot
-        {
-          console << " ." << std::flush;
-          horizontal_position++;
-        }
-      }
-      else
-        horizontal_position = 0;
+      // Make sure that everything comes out on the console
+      console << std::flush;
 
       last_execution_list_end = current_execution_list_end;
-
-      this->_execution_list_begin.store(current_execution_list_begin, std::memory_order_relaxed);
     }
   });
 
@@ -323,7 +326,7 @@ PerfGraph::push(const PerfID id)
   _stack[_current_position] = new_node;
 
   // Add this to the exection list
-  addToExecutionList(id, IncrementState::started, 0., 0.);
+  addToExecutionList(id, IncrementState::started, current_time, start_memory);
 }
 
 void
@@ -334,22 +337,19 @@ PerfGraph::pop()
 
   MemoryUtils::Stats stats;
   MemoryUtils::getMemoryStats(stats);
-  auto now_memory =
+  auto current_memory =
       MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
 
   auto current_time = std::chrono::steady_clock::now();
 
   auto & current_node = _stack[_current_position];
 
-  auto time_increment =  std::chrono::duration<double>(current_time - current_node->startTime()).count();
-  long int memory_increment = now_memory - current_node->startMemory();
-
-  current_node->addTimeAndMemory(current_time, now_memory);
+  current_node->addTimeAndMemory(current_time, current_memory);
 
   _current_position--;
 
   // Add this to the exection list
-  addToExecutionList(current_node->id(), IncrementState::finished, time_increment, memory_increment);
+  addToExecutionList(current_node->id(), IncrementState::finished, current_time, current_memory);
 }
 
 void
