@@ -97,7 +97,12 @@ SetupMeshAction::validParams()
   return params;
 }
 
-SetupMeshAction::SetupMeshAction(InputParameters params) : MooseObjectAction(params) {}
+SetupMeshAction::SetupMeshAction(InputParameters params) : MooseObjectAction(params),
+                                                           _setup_mesh_timer(registerTimedSection("SetupMeshAction::act::setup_mesh", 1, "Setting Up Mesh", true)),
+                                                           _set_mesh_base_timer(registerTimedSection("SetupMeshAction::act::set_mesh_base", 1, "Setting Mesh", true)),
+                                                           _init_mesh_timer(registerTimedSection("SetupMeshAction::act::set_mesh_base", 1, "Initializing Mesh", true))
+
+                    {}
 
 void
 SetupMeshAction::setupMesh(MooseMesh * mesh)
@@ -226,6 +231,8 @@ SetupMeshAction::act()
   // Create the mesh object and tell it to build itself
   if (_current_task == "setup_mesh")
   {
+    TIME_SECTION(_setup_mesh_timer);
+
     if (_app.masterMesh())
       _mesh = _app.masterMesh()->safeClone();
     else
@@ -277,6 +284,8 @@ SetupMeshAction::act()
 
   else if (_current_task == "set_mesh_base")
   {
+    TIME_SECTION(_set_mesh_base_timer);
+
     if (!_app.masterMesh() && !_mesh->hasMeshBase())
     {
       // We want to set the MeshBase object to that coming from mesh generators when the following
@@ -294,6 +303,8 @@ SetupMeshAction::act()
 
   else if (_current_task == "init_mesh")
   {
+    TIME_SECTION(_init_mesh_timer);
+
     if (_app.masterMesh())
     {
       if (_app.masterDisplacedMesh())
