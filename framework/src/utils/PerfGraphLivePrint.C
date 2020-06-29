@@ -23,7 +23,7 @@ void
 PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_increment)
 {
   // This line is different - need to finish the last line
-  if (_last_printed_increment && _last_printed_increment != &section_increment && (_last_printed_increment->_state == PerfGraph::IncrementState::printed || _last_printed_increment->_state == PerfGraph::IncrementState::continued))
+  if (_last_printed_increment && _last_printed_increment != &section_increment && (_last_printed_increment->_state == PerfGraph::IncrementState::printed || _last_printed_increment->_state == PerfGraph::IncrementState::continued) && _id_to_section_info[_last_printed_increment->_id]._print_dots)
     _console << '\n';
 
   if(_last_printed_increment && _last_printed_increment == &section_increment && (section_increment._state != PerfGraph::IncrementState::finished && (section_increment._state == PerfGraph::IncrementState::printed || section_increment._state == PerfGraph::IncrementState::continued))) // Add dots
@@ -37,11 +37,21 @@ PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_incre
   else if (section_increment._state == PerfGraph::IncrementState::printed || section_increment._state == PerfGraph::IncrementState::continued) // Printed before so print "Still"
   {
     _console << std::string(2 * section_increment._print_stack_level, ' ') << "Still " << _id_to_section_info[section_increment._id]._live_message;
+
+    // If we're not printing dots - just finish the line
+    if (!_id_to_section_info[section_increment._id]._print_dots)
+      _console << '\n';
+
     section_increment._num_dots = 0;
   }
   else // Just print the message
   {
     _console << std::string(2 * section_increment._print_stack_level, ' ') << _id_to_section_info[section_increment._id]._live_message;
+
+    // If we're not printind dots - just finish the line
+    if (!_id_to_section_info[section_increment._id]._print_dots)
+      _console << '\n';
+
     section_increment._num_dots = 0;
   }
 
@@ -71,6 +81,11 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
            << std::fixed << std::setprecision(2) << time_increment << " s" << COLOR_DEFAULT
            << ']' << " [" << COLOR_YELLOW << std::setw(5) << std::fixed << memory_increment
            << " MB" << COLOR_DEFAULT << ']';
+
+
+  // If we're not printing dots - just finish the line
+  if (!_id_to_section_info[section_increment_start._id]._print_dots)
+    _console << '\n';
 
   _last_printed_increment = &section_increment_start;
 }
