@@ -20,6 +20,26 @@ public:
   void start();
 
 protected:
+  // Print the live message
+  void printLiveMessage(PerfGraph::SectionIncrement & section_increment);
+
+  // Print the stats
+  void printStats(PerfGraph::SectionIncrement & section_increment_start, PerfGraph::SectionIncrement & section_increment_finish);
+
+  // Print everything in the stack
+  void printStack();
+
+  // Print everything underneath the current top of the stack
+  void printStackUpToLast();
+
+  // What to do if we're still in the same spot
+  void inSamePlace();
+
+  // What to do if there are new things in the execution list
+  void iterateThroughExecutionList();
+
+  const unsigned int WRAP_LENGTH = 90;
+
   PerfGraph & _perf_graph;
 
   std::array<PerfGraph::SectionIncrement, MAX_EXECUTION_LIST_SIZE> & _execution_list;
@@ -29,13 +49,14 @@ protected:
   /// This is one beyond the last thing on the stack
   unsigned int _stack_level;
 
-  /// This is one beyond the last thing printed from the stack
-  unsigned int _printed_stack_level_end;
-
   /// The current stack for what the print thread has seen
-  std::array<PerfGraph::SectionIncrement, MAX_STACK_SIZE> _print_thread_stack;
+  std::array<PerfGraph::SectionIncrement *, MAX_STACK_SIZE> _print_thread_stack;
+
+  unsigned int _current_execution_list_end;
+
+  unsigned int _current_execution_list_last;
 
   unsigned int _last_execution_list_end;
 
-  bool _printed_name_of_current_section;
+  PerfGraph::SectionIncrement * _last_printed_increment;
 };

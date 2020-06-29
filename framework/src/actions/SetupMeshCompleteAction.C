@@ -36,7 +36,7 @@ SetupMeshCompleteAction::validParams()
 }
 
 SetupMeshCompleteAction::SetupMeshCompleteAction(InputParameters params)
-  : Action(params), _uniform_refine_timer(registerTimedSection("uniformRefine", 2))
+    : Action(params), _uniform_refine_timer(registerTimedSection("uniformRefine", 2, "Uniformly Refining"))
 {
 }
 
@@ -89,9 +89,6 @@ SetupMeshCompleteAction::act()
     if (_app.setFileRestart() == false && _app.isRecovering() == false)
     {
       TIME_SECTION(_uniform_refine_timer);
-
-      auto & _communicator = *_app.getCommunicator();
-      CONSOLE_TIMED_PRINT("Uniformly refining mesh");
 
       if (_mesh->uniformRefineLevel())
       {

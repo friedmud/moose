@@ -108,7 +108,7 @@ SystemBase::SystemBase(SubProblem & subproblem,
     _computing_scaling_residual(false),
     _automatic_scaling(false),
     _verbose(false),
-    _default_solution_states(2)
+  _default_solution_states(2)
 {
 }
 

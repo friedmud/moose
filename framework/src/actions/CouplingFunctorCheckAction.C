@@ -30,7 +30,10 @@ CouplingFunctorCheckAction::validParams()
 }
 
 CouplingFunctorCheckAction::CouplingFunctorCheckAction(InputParameters parameters)
-  : Action(parameters)
+    : Action(parameters),
+      _reinitializing_vectors_because_of_algebraic_ghosting_timer(registerTimedSection("reinitVectorsAlgebraic", 5, "Reiniting Vectors Because of Algebraic Ghosting")),
+      _adding_relationship_managers_timer(registerTimedSection("addRelationshipManagers", 5, "Adding Relationship Managers")),
+      _reiniting_nonlinear_system(registerTimedSection("nlSystemReinitCoupling", 5, "Reinitializing Nonlinear System Due To Coupling Functors"))
 {
   _name = "coupling_functor_check";
 }
@@ -96,8 +99,7 @@ CouplingFunctorCheckAction::act()
         // If you didn't do the ghosting with your own actions, you're going to pay the price now.
         // We have to reinit all the DofMaps so we can be sure that we've ghosted the necessary
         // vector entries
-        CONTROLLED_CONSOLE_TIMED_PRINT(
-            0, 1, "Reinitializing vectors because of late algebraic ghosting");
+        TIME_SECTION(_reinitializing_vectors_because_of_algebraic_ghosting_timer);
 
         // Reassign the size because we're going to call addRelationshipManagers again for COUPLING
         size = _app.relationshipManagers().size();
@@ -120,8 +122,7 @@ CouplingFunctorCheckAction::act()
     addRelationshipManagers(coupling, RelationshipManager::oneLayerGhosting(coupling));
     if (size != _app.relationshipManagers().size())
     {
-      CONTROLLED_CONSOLE_TIMED_PRINT(
-          0, 1, "Reinitializing sparsity pattern because of late coupling addition");
+      TIME_SECTION(_adding_relationship_managers_timer);
 
       _app.attachRelationshipManagers(coupling);
 
@@ -133,7 +134,11 @@ CouplingFunctorCheckAction::act()
       // applies it to the ImplicitSystem's matrices. Note that does NOT make a call to
       // DofMap::reinit, hence we have to call GhostingFunctor::dofmap_reinit ourselves in the
       // call above
-      nl.system().reinit();
+      {
+        TIME_SECTION(_reiniting_nonlinear_system);
+
+        nl.system().reinit();
+      }
     }
   }
 }
