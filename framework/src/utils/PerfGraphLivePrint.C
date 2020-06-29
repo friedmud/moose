@@ -111,8 +111,6 @@ PerfGraphLivePrint::printStackUpToLast()
   {
     auto & section = *_print_thread_stack[s];
 
-//    _console << "printStackUpToLast()" << _id_to_section_info[section._id]._live_message << " " << section._state << std::endl;
-
     if (section._state == PerfGraph::IncrementState::started) // Hasn't been printed at all
       printLiveMessage(section);
 
@@ -124,61 +122,9 @@ PerfGraphLivePrint::printStackUpToLast()
 void
 PerfGraphLivePrint::inSamePlace()
 {
-  auto & last_section_increment = _execution_list[_current_execution_list_last];
-
   printStackUpToLast();
 
   printLiveMessage(*_print_thread_stack[_stack_level - 1]);
-/*
-
-  // This means nothing has been done with this section yet
-  if (last_section_increment._state == PerfGraph::IncrementState::started)
-  {
-//    printStack();
-
-    // Make sure all the parents of this have printed
-    printStackUpToLast();
-
-    _console << std::string(2 * (_stack_level -1), ' ') << _id_to_section_info[last_section_increment._id]._live_message;
-
-    last_section_increment._state = PerfGraph::IncrementState::printed;
-  }
-  else if (last_section_increment._state == PerfGraph::IncrementState::printed || last_section_increment._state == PerfGraph::IncrementState::continued) // Need to print dots
-  {
-    if (_id_to_section_info[last_section_increment._id]._print_dots)
-      _console << " .";
-  }
-  else // This means it's sitting at a "finished" state.
-  {
-    // Is there something still running?
-    if (_stack_level > 0)
-    {
-      auto & last_stack_section = *_print_thread_stack[_stack_level - 1];
-
-      // If we've never printed this increment - then let's do it.
-      if (last_stack_section._state == PerfGraph::IncrementState::started)
-      {
-//        printStack();
-
-        // Make sure all of the parents have been printed
-        printStackUpToLast();
-
-        _console << std::string(2 * (_stack_level -1), ' ') << "*" << _id_to_section_info[last_stack_section._id]._live_message;
-
-        last_stack_section._state = PerfGraph::IncrementState::printed;
-      }
-      else if(last_stack_section._state == PerfGraph::IncrementState::printed) // We have previously printed this, so we need to continue
-      {
-        _console << std::string(2 * (_stack_level -1), ' ') << "Still " << _id_to_section_info[last_stack_section._id]._live_message;
-
-        last_section_increment._state = PerfGraph::IncrementState::continued;
-      }
-      else // "continued" Need to print dots
-        if (_id_to_section_info[last_stack_section._id]._print_dots)
-          _console << " .";
-    }
-  }
-*/
 }
 
 void
@@ -187,41 +133,24 @@ PerfGraphLivePrint::iterateThroughExecutionList()
   // Current position in the execution list
   auto p = _last_execution_list_end;
 
-//      std::cout << "p: " << p << std::endl;
-
-  while (p != _current_execution_list_end /*(current_execution_list_end + 1 < MAX_EXECUTION_LIST_SIZE ? current_execution_list_end + 1 : 0)*/)
+  while (p != _current_execution_list_end)
   {
-//        std::cout << "p: " << p << std::endl;
-
-    auto last_p = p - 1 > 0 ? p - 1 : MAX_EXECUTION_LIST_SIZE;
     auto next_p = p + 1 < MAX_EXECUTION_LIST_SIZE ? p + 1 : 0;
 
-//        std::cout << "p: " << p << std::endl;
     auto & section_increment = _execution_list[p];
-
-//        std::cout << "p: " << p << " Looking at: " << id_to_section_name[section_increment._id] << " " << section_increment._state << std::endl;
 
     // New section, add to the stack
     if (section_increment._state == PerfGraph::IncrementState::started)
     {
-//      _console << "Starting " << _id_to_section_info[section_increment._id]._live_message << std::endl;
-
       section_increment._print_stack_level = _stack_level;
 
       // Store this increment in the stack
       _print_thread_stack[_stack_level] = &section_increment;
 
       _stack_level++;
-
-//      _console << "Adding... New stack level: " << _stack_level << std::endl;
-
-//      printStack();
     }
     else // This means it's finished need to see if we need to print it
     {
-
-//      _console << "Finishing " << _id_to_section_info[section_increment._id]._live_message << std::endl;
-
       // Get the beginning information for this section... it is the thing currently on the top of the stack
       auto & section_increment_start = *_print_thread_stack[_stack_level - 1];
 
@@ -251,21 +180,11 @@ PerfGraphLivePrint::start()
   {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-//    printStack();
-
-    // Where we were last time in the execution list
-    // this should point at the first _new_ thing... or at end
-//      auto current_execution_list_begin = this->_execution_list_begin.load(std::memory_order_relaxed);
-
     // The end will be one past the last
     _current_execution_list_end = _perf_graph._execution_list_end.load(std::memory_order_relaxed);
 
-
-    // The last entry in the current execution list
+    // The last entry in the current execution list for convenience
     _current_execution_list_last = _current_execution_list_end - 1 >= 0 ? _current_execution_list_end - 1 : MAX_EXECUTION_LIST_SIZE;
-
-//      std::cout << "current_execution_list_begin: " << current_execution_list_begin << std::endl;
-//      std::cout << "current_execution_list_end: " << current_execution_list_end << std::endl;
 
     // This will synchronize with the thread_fence in addToExecutionList() so that all of the below
     // reads, will be reading synchronized memory
@@ -281,9 +200,7 @@ PerfGraphLivePrint::start()
 
     // Are we still sitting in the same place as the last iteration?  If so, we need to print progress and exit
     if (_last_execution_list_end == _current_execution_list_end)
-    {
       inSamePlace();
-    }
 
     // This means that new stuff has been added to the execution list.  We need to iterate through it, modifying the stack and printing anything that needs printing
     iterateThroughExecutionList();
