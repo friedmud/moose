@@ -511,6 +511,7 @@ extern const TagID INVALID_TAG_ID;
 extern const TagTypeID INVALID_TAG_TYPE_ID;
 const std::set<SubdomainID> EMPTY_BLOCK_IDS = {};
 const std::set<BoundaryID> EMPTY_BOUNDARY_IDS = {};
+extern const PerfID INVALID_PerfID;
 
 /**
  * MaterialData types
@@ -672,12 +673,12 @@ enum SolveType
  */
 enum EigenSolveType
 {
-  EST_POWER,              ///< Power / Inverse / RQI
-  EST_ARNOLDI,            ///< Arnoldi
-  EST_KRYLOVSCHUR,        ///< Krylov-Schur
-  EST_JACOBI_DAVIDSON,    ///< Jacobi-Davidson
-  EST_NONLINEAR_POWER,    ///< Nonlinear inverse power
-  EST_NEWTON,             ///< Newton-based eigen solver
+  EST_POWER,           ///< Power / Inverse / RQI
+  EST_ARNOLDI,         ///< Arnoldi
+  EST_KRYLOVSCHUR,     ///< Krylov-Schur
+  EST_JACOBI_DAVIDSON, ///< Jacobi-Davidson
+  EST_NONLINEAR_POWER, ///< Nonlinear inverse power
+  EST_NEWTON,          ///< Newton-based eigen solver
 };
 
 /**
