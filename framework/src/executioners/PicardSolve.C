@@ -124,7 +124,6 @@ PicardSolve::PicardSolve(Executioner * ex)
     _picard_self_relaxation_factor(1.0),
     _max_xfem_update(getParam<unsigned int>("max_xfem_update")),
     _update_xfem_at_timestep_begin(getParam<bool>("update_xfem_at_timestep_begin")),
-    _picard_timer(registerTimedSection("PicardSolve", 1)),
     _picard_it(0),
     _picard_status(MoosePicardConvergenceReason::UNSOLVED),
     _xfem_update_count(0),
@@ -140,7 +139,7 @@ PicardSolve::PicardSolve(Executioner * ex)
 bool
 PicardSolve::solve()
 {
-  TIME_SECTION(_picard_timer);
+  TIME_SECTION("PicardSolve", 1);
 
   Real current_dt = _problem.dt();
 

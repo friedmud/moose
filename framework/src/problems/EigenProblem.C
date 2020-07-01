@@ -53,13 +53,7 @@ EigenProblem::EigenProblem(const InputParameters & parameters)
     _generalized_eigenvalue_problem(false),
     _nl_eigen(std::make_shared<NonlinearEigenSystem>(*this, "eigen0")),
     _negative_sign_eigen_kernel(getParam<bool>("negative_sign_eigen_kernel")),
-    _active_eigen_index(getParam<unsigned int>("active_eigen_index")),
-    _compute_jacobian_tag_timer(registerTimedSection("computeJacobianTag", 3)),
-    _compute_jacobian_ab_timer(registerTimedSection("computeJacobianAB", 3)),
-    _compute_residual_tag_timer(registerTimedSection("computeResidualTag", 3)),
-    _compute_residual_ab_timer(registerTimedSection("computeResidualAB", 3)),
-    _solve_timer(registerTimedSection("solve", 1)),
-    _compute_jacobian_blocks_timer(registerTimedSection("computeJacobianBlocks", 3))
+    _active_eigen_index(getParam<unsigned int>("active_eigen_index"))
 {
 #if LIBMESH_HAVE_SLEPC
   _nl = _nl_eigen;
@@ -127,7 +121,7 @@ EigenProblem::computeJacobianTag(const NumericVector<Number> & soln,
                                  SparseMatrix<Number> & jacobian,
                                  TagID tag)
 {
-  TIME_SECTION(_compute_jacobian_tag_timer);
+  TIME_SECTION("computeJacobianTag", 3);
 
   _fe_matrix_tags.clear();
 
@@ -150,7 +144,7 @@ EigenProblem::computeMatricesTags(
     const std::vector<std::unique_ptr<SparseMatrix<Number>>> & jacobians,
     const std::set<TagID> & tags)
 {
-  TIME_SECTION(_compute_jacobian_tag_timer);
+  TIME_SECTION("computeMatricesTags", 3);
 
   if (jacobians.size() != tags.size())
     mooseError("The number of matrices ",
@@ -178,7 +172,7 @@ EigenProblem::computeMatricesTags(
 void
 EigenProblem::computeJacobianBlocks(std::vector<JacobianBlock *> & blocks)
 {
-  TIME_SECTION(_compute_jacobian_blocks_timer);
+  TIME_SECTION("computeJacobianBlocks", 3);
 
   if (_displaced_problem)
     _aux->compute(EXEC_PRE_DISPLACE);
@@ -199,7 +193,7 @@ EigenProblem::computeJacobianAB(const NumericVector<Number> & soln,
                                 TagID tagA,
                                 TagID tagB)
 {
-  TIME_SECTION(_compute_jacobian_ab_timer);
+  TIME_SECTION("computeJacobianAB", 3);
 
   _fe_matrix_tags.clear();
 
@@ -223,7 +217,7 @@ EigenProblem::computeResidualTag(const NumericVector<Number> & soln,
                                  NumericVector<Number> & residual,
                                  TagID tag)
 {
-  TIME_SECTION(_compute_residual_tag_timer);
+  TIME_SECTION("computeResidualTag", 3);
 
   _fe_vector_tags.clear();
 
@@ -247,7 +241,7 @@ EigenProblem::computeResidualAB(const NumericVector<Number> & soln,
                                 TagID tagA,
                                 TagID tagB)
 {
-  TIME_SECTION(_compute_residual_ab_timer);
+  TIME_SECTION("computeResidualAB", 3);
 
   _fe_vector_tags.clear();
 
@@ -343,7 +337,7 @@ EigenProblem::solve()
 
   if (_solve)
   {
-    TIME_SECTION(_solve_timer);
+    TIME_SECTION("solve", 1);
     _nl->solve();
     _nl->update();
   }

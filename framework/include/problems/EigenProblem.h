@@ -121,11 +121,4 @@ protected:
   bool _negative_sign_eigen_kernel;
 
   unsigned int _active_eigen_index;
-  /// Timers
-  PerfID _compute_jacobian_tag_timer;
-  PerfID _compute_jacobian_ab_timer;
-  PerfID _compute_residual_tag_timer;
-  PerfID _compute_residual_ab_timer;
-  PerfID _solve_timer;
-  PerfID _compute_jacobian_blocks_timer;
 };

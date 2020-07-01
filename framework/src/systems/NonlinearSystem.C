@@ -97,7 +97,8 @@ NonlinearSystem::NonlinearSystem(FEProblemBase & fe_problem, const std::string &
     _fd_residual_functor(_fe_problem),
     _use_coloring_finite_difference(false),
     _auto_scaling_initd(false),
-    _initial_residual_timer(registerTimedSection("nlInitialResidual", 3, "Computing Initial Residual"))
+    _initial_residual_timer(
+        registerTimedSection("nlInitialResidual", 3, "Computing Initial Residual"))
 {
   nonlinearSolver()->residual_object = &_nl_residual_functor;
   nonlinearSolver()->jacobian = Moose::compute_jacobian;
@@ -220,7 +221,7 @@ NonlinearSystem::solve()
   solver.set_snesmf_reuse_base(_fe_problem.useSNESMFReuseBase());
 #endif
 
-//  _console << "\n\n" << std::endl;
+  //  _console << "\n\n" << std::endl;
 
   if (_time_integrator)
   {
@@ -488,7 +489,7 @@ NonlinearSystem::computeScaling()
 {
   _console << "\nPerforming automatic scaling calculation\n\n";
 
-  TIME_SECTION(_compute_scaling_timer);
+  TIME_SECTION("computeScaling", 3, "Computing Scaling");
 
   // container for repeated access of element global dof indices
   std::vector<dof_id_type> dof_indices;

@@ -158,8 +158,7 @@ Transient::Transient(const InputParameters & parameters)
     _target_time(declareRecoverableData<Real>("target_time", -1)),
     _use_multiapp_dt(getParam<bool>("use_multiapp_dt")),
     _solution_change_norm(declareRecoverableData<Real>("solution_change_norm", 0.0)),
-    _sln_diff(_nl.addVector("sln_diff", false, PARALLEL)),
-    _final_timer(registerTimedSection("final", 1))
+    _sln_diff(_nl.addVector("sln_diff", false, PARALLEL))
 {
   _picard_solve.setInnerSolve(_feproblem_solve);
 
@@ -323,7 +322,7 @@ Transient::execute()
 
   if (!_app.halfTransient())
   {
-    TIME_SECTION(_final_timer);
+    TIME_SECTION("final", 1, "Executing Final Objects");
     _problem.execMultiApps(EXEC_FINAL);
     _problem.finalizeMultiApps();
     _problem.execute(EXEC_FINAL);

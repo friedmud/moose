@@ -137,9 +137,6 @@ protected:
   bool _update_xfem_at_timestep_begin;
 
 private:
-  /// Timer for Picard iteration
-  const PerfID _picard_timer;
-
   ///@{ Variables used by the Picard iteration
   /// Picard iteration counter
   unsigned int _picard_it;

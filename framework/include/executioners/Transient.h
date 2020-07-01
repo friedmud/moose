@@ -254,6 +254,4 @@ protected:
   NumericVector<Number> & _sln_diff;
 
   void setupTimeIntegrator();
-
-  PerfID _final_timer;
 };
