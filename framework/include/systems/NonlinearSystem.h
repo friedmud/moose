@@ -119,7 +119,4 @@ private:
 
   /// The number of scaling groups
   std::size_t _num_scaling_groups;
-
-  /// Performance Timers
-  const PerfID _initial_residual_timer;
 };

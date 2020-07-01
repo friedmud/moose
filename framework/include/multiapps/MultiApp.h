@@ -440,12 +440,6 @@ protected:
 
   /// The solution from the end of the previous solve, this is cloned from the Nonlinear solution during restore
   std::vector<std::unique_ptr<NumericVector<Real>>> _end_solutions;
-
-private:
-  PerfID _perf_backup;
-  PerfID _perf_restore;
-  PerfID _perf_init;
-  PerfID _perf_reset_app;
 };
 
 template <>

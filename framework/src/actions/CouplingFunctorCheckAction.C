@@ -30,10 +30,7 @@ CouplingFunctorCheckAction::validParams()
 }
 
 CouplingFunctorCheckAction::CouplingFunctorCheckAction(InputParameters parameters)
-    : Action(parameters),
-      _reinitializing_vectors_because_of_algebraic_ghosting_timer(registerTimedSection("reinitVectorsAlgebraic", 5, "Reiniting Vectors Because of Algebraic Ghosting")),
-      _adding_relationship_managers_timer(registerTimedSection("addRelationshipManagers", 5, "Adding Relationship Managers")),
-      _reiniting_nonlinear_system(registerTimedSection("nlSystemReinitCoupling", 5, "Reinitializing Nonlinear System Due To Coupling Functors"))
+  : Action(parameters)
 {
   _name = "coupling_functor_check";
 }
@@ -99,7 +96,8 @@ CouplingFunctorCheckAction::act()
         // If you didn't do the ghosting with your own actions, you're going to pay the price now.
         // We have to reinit all the DofMaps so we can be sure that we've ghosted the necessary
         // vector entries
-        TIME_SECTION(_reinitializing_vectors_because_of_algebraic_ghosting_timer);
+        TIME_SECTION(
+            "reinitVectorsAlgebraic", 5, "Reiniting Vectors Because of Algebraic Ghosting");
 
         // Reassign the size because we're going to call addRelationshipManagers again for COUPLING
         size = _app.relationshipManagers().size();
@@ -122,7 +120,7 @@ CouplingFunctorCheckAction::act()
     addRelationshipManagers(coupling, RelationshipManager::oneLayerGhosting(coupling));
     if (size != _app.relationshipManagers().size())
     {
-      TIME_SECTION(_adding_relationship_managers_timer);
+      TIME_SECTION("addRelationshipManagers", 5, "Adding Relationship Managers"));
 
       _app.attachRelationshipManagers(coupling);
 
@@ -135,7 +133,9 @@ CouplingFunctorCheckAction::act()
       // DofMap::reinit, hence we have to call GhostingFunctor::dofmap_reinit ourselves in the
       // call above
       {
-        TIME_SECTION(_reiniting_nonlinear_system);
+        TIME_SECTION("nlSystemReinitCoupling",
+                     5,
+                     "Reinitializing Nonlinear System Due To Coupling Functors");
 
         nl.system().reinit();
       }

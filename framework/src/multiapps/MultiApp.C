@@ -213,18 +213,14 @@ MultiApp::MultiApp(const InputParameters & parameters)
     _has_an_app(true),
     _backups(declareRestartableDataWithContext<SubAppBackups>("backups", this)),
     _cli_args(getParam<std::vector<std::string>>("cli_args")),
-    _keep_solution_during_restore(getParam<bool>("keep_solution_during_restore")),
-    _perf_backup(registerTimedSection("backup", 3)),
-    _perf_restore(registerTimedSection("restore", 3)),
-    _perf_init(registerTimedSection("init", 3)),
-    _perf_reset_app(registerTimedSection("resetApp", 3))
+    _keep_solution_during_restore(getParam<bool>("keep_solution_during_restore"))
 {
 }
 
 void
 MultiApp::init(unsigned int num)
 {
-  TIME_SECTION(_perf_init);
+  TIME_SECTION("init", 3, "Initializing MultiApp");
 
   _total_num_apps = num;
   buildComm();
@@ -423,18 +419,15 @@ MultiApp::postExecute()
 void
 MultiApp::backup()
 {
-  TIME_SECTION(_perf_backup);
-
-  _console << "Beginning backing up MultiApp " << name() << std::endl;
+  TIME_SECTION("backup", 3, "Backing Up MultiApp");
   for (unsigned int i = 0; i < _my_num_apps; i++)
     _backups[i] = _apps[i]->backup();
-  _console << "Finished backing up MultiApp " << name() << std::endl;
 }
 
 void
 MultiApp::restore()
 {
-  TIME_SECTION(_perf_restore);
+  TIME_SECTION("restore", 3, "Restoring MultiApp");
 
   // Must be restarting / recovering so hold off on restoring
   // Instead - the restore will happen in createApp()
@@ -461,10 +454,8 @@ MultiApp::restore()
     }
   }
 
-  _console << "Begining restoring MultiApp " << name() << std::endl;
   for (unsigned int i = 0; i < _my_num_apps; i++)
     _apps[i]->restore(_backups[i]);
-  _console << "Finished restoring MultiApp " << name() << std::endl;
 
   // Now copy the latest solutions back for each subapp
   if (_keep_solution_during_restore)
@@ -623,7 +614,7 @@ MultiApp::localApp(unsigned int local_app)
 void
 MultiApp::resetApp(unsigned int global_app, Real time)
 {
-  TIME_SECTION(_perf_reset_app);
+  TIME_SECTION("resetApp", 3, "Resetting MultiApp");
 
   Moose::ScopedCommSwapper swapper(_my_comm);
 

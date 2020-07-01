@@ -35,10 +35,7 @@ SetupMeshCompleteAction::validParams()
   return params;
 }
 
-SetupMeshCompleteAction::SetupMeshCompleteAction(InputParameters params)
-    : Action(params), _uniform_refine_timer(registerTimedSection("uniformRefine", 2, "Uniformly Refining"))
-{
-}
+SetupMeshCompleteAction::SetupMeshCompleteAction(InputParameters params) : Action(params) {}
 
 bool
 SetupMeshCompleteAction::completeSetup(MooseMesh * mesh)
@@ -88,7 +85,7 @@ SetupMeshCompleteAction::act()
      */
     if (_app.setFileRestart() == false && _app.isRecovering() == false)
     {
-      TIME_SECTION(_uniform_refine_timer);
+      TIME_SECTION("uniformRefine", 2, "Uniformly Refining");
 
       if (_mesh->uniformRefineLevel())
       {
@@ -109,6 +106,8 @@ SetupMeshCompleteAction::act()
   }
   else if (_current_task == "delete_remote_elements_post_equation_systems_init")
   {
+    TIME_SECTION("deleteRemoteElems", 2, "Deleting Remote Elements");
+
     // We currently only trigger the needsRemoteDeletion flag if somebody has requested a late
     // geometric ghosting functor and/or we have a displaced mesh. In other words, we almost never
     // trigger this.
@@ -121,6 +120,8 @@ SetupMeshCompleteAction::act()
   }
   else
   {
+    TIME_SECTION("completeSetup", 2, "Completing Mesh Setup");
+
     // Prepare the mesh (may occur multiple times)
     completeSetup(_mesh.get());
 

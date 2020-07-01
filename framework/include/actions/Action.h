@@ -243,9 +243,6 @@ protected:
 
   /// Convenience reference to a problem this action works on
   std::shared_ptr<FEProblemBase> & _problem;
-
-  /// Timers
-  PerfID _act_timer;
 };
 
 template <typename T>

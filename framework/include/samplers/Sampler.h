@@ -271,15 +271,4 @@ private:
 
   /// Max number of entries for matrix returned by getNextLocalRow
   const dof_id_type _limit_get_next_local_row;
-
-  ///@{
-  /// PrefGraph timers
-  const PerfID _perf_get_global_samples;
-  const PerfID _perf_get_local_samples;
-  const PerfID _perf_get_next_local_row;
-  const PerfID _perf_sample_row;
-  const PerfID _perf_local_sample_matrix;
-  const PerfID _perf_sample_matrix;
-  const PerfID _perf_advance_generator;
-  ///@}
 };

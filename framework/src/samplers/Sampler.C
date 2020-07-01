@@ -67,13 +67,6 @@ Sampler::Sampler(const InputParameters & parameters)
     _limit_get_global_samples(getParam<dof_id_type>("limit_get_global_samples")),
     _limit_get_local_samples(getParam<dof_id_type>("limit_get_local_samples")),
     _limit_get_next_local_row(getParam<dof_id_type>("limit_get_next_local_row")),
-    _perf_get_global_samples(registerTimedSection("getGlobalSamples", 1)),
-    _perf_get_local_samples(registerTimedSection("getLocalSamples", 1)),
-    _perf_get_next_local_row(registerTimedSection("getNextLocalRow", 1)),
-    _perf_sample_row(registerTimedSection("computeSampleRow", 2)),
-    _perf_local_sample_matrix(registerTimedSection("computeLocalSampleMatrix", 2)),
-    _perf_sample_matrix(registerTimedSection("computeSampleMatrix", 2)),
-    _perf_advance_generator(registerTimedSection("advanceGenerators", 2))
 {
 }
 
@@ -165,7 +158,7 @@ Sampler::execute()
 DenseMatrix<Real>
 Sampler::getGlobalSamples()
 {
-  TIME_SECTION(_perf_get_global_samples);
+  TIME_SECTION("getGlobalSamples", 1, "Retrieving Global Samples");
 
   if (_n_rows * _n_cols > _limit_get_global_samples)
     paramError("limit_get_global_samples",
@@ -187,7 +180,7 @@ Sampler::getGlobalSamples()
 DenseMatrix<Real>
 Sampler::getLocalSamples()
 {
-  TIME_SECTION(_perf_get_local_samples);
+  TIME_SECTION("getLocalSamples", 1, "Retrieving Local Samples");
 
   if (_n_local_rows * _n_cols > _limit_get_local_samples)
     paramError("limit_get_local_samples",
@@ -209,7 +202,7 @@ Sampler::getLocalSamples()
 std::vector<Real>
 Sampler::getNextLocalRow()
 {
-  TIME_SECTION(_perf_get_next_local_row);
+  TIME_SECTION("getNextLocalRow", 1, "Getting Next Local Row");
 
   if (_next_local_row_requires_state_restore)
   {
@@ -246,7 +239,7 @@ Sampler::getNextLocalRow()
 void
 Sampler::computeSampleMatrix(DenseMatrix<Real> & matrix)
 {
-  TIME_SECTION(_perf_sample_matrix);
+  TIME_SECTION("computeSampleMatrix", 2, "Computing Sample Matrix");
 
   for (dof_id_type i = 0; i < _n_rows; ++i)
   {
@@ -260,7 +253,7 @@ Sampler::computeSampleMatrix(DenseMatrix<Real> & matrix)
 void
 Sampler::computeLocalSampleMatrix(DenseMatrix<Real> & matrix)
 {
-  TIME_SECTION(_perf_local_sample_matrix);
+  TIME_SECTION("computeLocalSampleMatrix", 2, "Computing Local Sample Matrix");
 
   advanceGenerators(_local_row_begin * _n_cols);
   for (dof_id_type i = _local_row_begin; i < _local_row_end; ++i)
@@ -277,16 +270,15 @@ Sampler::computeLocalSampleMatrix(DenseMatrix<Real> & matrix)
 void
 Sampler::computeSampleRow(dof_id_type i, std::vector<Real> & data)
 {
-  TIME_SECTION(_perf_sample_row);
+  TIME_SECTION("computeSampleRow", 2, "Computing Sample Row");
 
   for (dof_id_type j = 0; j < _n_cols; ++j)
     data[j] = computeSample(i, j);
 }
 
-void
-Sampler::advanceGenerators(dof_id_type count)
+void Sampler::advanceGenerators(dof_id_type)
 {
-  TIME_SECTION(_perf_advance_generator);
+  TIME_SECTION("advanceGenerators", 2, "Advancing Generators");
 
   for (dof_id_type i = 0; i < count; ++i)
     for (std::size_t j = 0; j < _generator.size(); ++j)

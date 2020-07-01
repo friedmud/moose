@@ -29,8 +29,4 @@ public:
 
 protected:
   void act() override;
-
-  const PerfID _reinitializing_vectors_because_of_algebraic_ghosting_timer;
-  const PerfID _adding_relationship_managers_timer;
-  const PerfID _reiniting_nonlinear_system;
 };
