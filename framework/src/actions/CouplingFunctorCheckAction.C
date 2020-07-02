@@ -120,7 +120,7 @@ CouplingFunctorCheckAction::act()
     addRelationshipManagers(coupling, RelationshipManager::oneLayerGhosting(coupling));
     if (size != _app.relationshipManagers().size())
     {
-      TIME_SECTION("addRelationshipManagers", 5, "Adding Relationship Managers"));
+      TIME_SECTION("addRelationshipManagers", 5, "Adding Relationship Managers");
 
       _app.attachRelationshipManagers(coupling);
 

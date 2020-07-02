@@ -1053,19 +1053,6 @@ private:
   /// Execution flags for this App
   ExecFlagEnum _execute_flags;
 
-  /// Timers
-  const PerfID _setup_timer;
-  const PerfID _setup_options_timer;
-  const PerfID _run_input_file_timer;
-  const PerfID _execute_timer;
-  const PerfID _execute_executioner_timer;
-  const PerfID _restore_timer;
-  const PerfID _run_timer;
-  const PerfID _execute_mesh_modifiers_timer;
-  const PerfID _execute_mesh_generators_timer;
-  const PerfID _restore_cached_backup_timer;
-  const PerfID _create_minimal_app_timer;
-
   /// Whether to turn on automatic scaling by default
   const bool _automatic_automatic_scaling;
 

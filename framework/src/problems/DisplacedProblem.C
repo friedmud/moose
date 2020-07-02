@@ -124,7 +124,7 @@ DisplacedProblem::init()
   _displaced_aux.init();
 
   {
-    TIME_SECTION(registerTimedSection("eq::init", 2, "Initializing Displaced Equation System"));
+    TIME_SECTION("eq::init", 2, "Initializing Displaced Equation System");
     _eq.init();
   }
 

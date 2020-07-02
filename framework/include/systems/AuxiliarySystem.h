@@ -183,13 +183,11 @@ protected:
 
   template <typename AuxKernelType>
   void computeElementalVarsHelper(const MooseObjectWarehouse<AuxKernelType> & warehouse,
-                                  const std::vector<std::vector<MooseVariableFEBase *>> & vars,
-                                  const PerfID timer);
+                                  const std::vector<std::vector<MooseVariableFEBase *>> & vars);
 
   template <typename AuxKernelType>
   void computeNodalVarsHelper(const MooseObjectWarehouse<AuxKernelType> & warehouse,
-                              const std::vector<std::vector<MooseVariableFEBase *>> & vars,
-                              const PerfID timer);
+                              const std::vector<std::vector<MooseVariableFEBase *>> & vars);
 
   FEProblemBase & _fe_problem;
 
@@ -236,13 +234,6 @@ protected:
   // Storage for VectorAuxKernel objects
   ExecuteMooseObjectWarehouse<VectorAuxKernel> _nodal_vec_aux_storage;
   ExecuteMooseObjectWarehouse<VectorAuxKernel> _elemental_vec_aux_storage;
-
-  /// Timers
-  const PerfID _compute_scalar_vars_timer;
-  const PerfID _compute_nodal_vars_timer;
-  const PerfID _compute_nodal_vec_vars_timer;
-  const PerfID _compute_elemental_vars_timer;
-  const PerfID _compute_elemental_vec_vars_timer;
 
   friend class ComputeIndicatorThread;
   friend class ComputeMarkerThread;

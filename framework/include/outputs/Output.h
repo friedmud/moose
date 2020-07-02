@@ -67,11 +67,11 @@ public:
   virtual Real time();
 
   /**
-  * Get the old output time.
-  * @return The old output time, which may be different than the simulation time
-  *
-  * @see time()
-  */
+   * Get the old output time.
+   * @return The old output time, which may be different than the simulation time
+   *
+   * @see time()
+   */
   virtual Real timeOld();
 
   /**
@@ -243,9 +243,5 @@ protected:
   // the output settings.
   OutputOnWarehouse _advanced_execute_on;
 
-  /// Timers
-  PerfID _output_step_timer;
-
   friend class OutputWarehouse;
 };
-

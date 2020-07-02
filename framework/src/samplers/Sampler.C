@@ -66,7 +66,7 @@ Sampler::Sampler(const InputParameters & parameters)
     _has_executed(false),
     _limit_get_global_samples(getParam<dof_id_type>("limit_get_global_samples")),
     _limit_get_local_samples(getParam<dof_id_type>("limit_get_local_samples")),
-    _limit_get_next_local_row(getParam<dof_id_type>("limit_get_next_local_row")),
+    _limit_get_next_local_row(getParam<dof_id_type>("limit_get_next_local_row"))
 {
 }
 
@@ -276,7 +276,8 @@ Sampler::computeSampleRow(dof_id_type i, std::vector<Real> & data)
     data[j] = computeSample(i, j);
 }
 
-void Sampler::advanceGenerators(dof_id_type)
+void
+Sampler::advanceGenerators(dof_id_type count)
 {
   TIME_SECTION("advanceGenerators", 2, "Advancing Generators");
 

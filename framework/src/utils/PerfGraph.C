@@ -38,6 +38,8 @@ PerfGraph::PerfGraph(const std::string & /*root_name*/, MooseApp & app)
     _section_name_to_id(_perf_graph_registry._section_name_to_id),
     _id_to_section_info(_perf_graph_registry._id_to_section_info),
     _active(true),
+    _live_print_active(true),
+    _live_print_all(false),
     _live_print(std::make_unique<PerfGraphLivePrint>(*this, app))
 {
   if (_pid == 0)
@@ -149,7 +151,7 @@ PerfGraph::getTime(const TimeType type, const std::string & section_name)
 void
 PerfGraph::push(const PerfID id)
 {
-  if (!_active)
+  if (!_active && !_live_print_active)
     return;
 
   auto new_node = _stack[_current_position]->getChild(id);
@@ -175,14 +177,15 @@ PerfGraph::push(const PerfID id)
   _stack[_current_position] = new_node;
 
   // Add this to the exection list
-  if (_pid == 0 && !_id_to_section_info[id]._live_message.empty())
+  if ((_live_print_active || _live_print_all) && _pid == 0 &&
+      (!_id_to_section_info[id]._live_message.empty() || _live_print_all))
     addToExecutionList(id, IncrementState::started, current_time, start_memory);
 }
 
 void
 PerfGraph::pop()
 {
-  if (!_active)
+  if (!_active && !_live_print_active)
     return;
 
   MemoryUtils::Stats stats;
@@ -199,7 +202,8 @@ PerfGraph::pop()
   _current_position--;
 
   // Add this to the exection list
-  if (_pid == 0 && !_id_to_section_info[current_node->id()]._live_message.empty())
+  if ((_live_print_active || _live_print_all) && _pid == 0 &&
+      (!_id_to_section_info[current_node->id()]._live_message.empty() || _live_print_all))
   {
     addToExecutionList(current_node->id(), IncrementState::finished, current_time, current_memory);
 
