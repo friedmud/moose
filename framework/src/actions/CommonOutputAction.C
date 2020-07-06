@@ -120,8 +120,6 @@ CommonOutputAction::validParams()
 
   params.addParam<bool>("perf_graph_live", true, "Enables printing of live progress messages");
 
-  params.addParam<bool>("perf_graph_live_all", false, "Forces printing of ALL progress messages.");
-
   params.addParam<bool>("print_mesh_changed_info",
                         false,
                         "When true, each time the mesh is changed the mesh information is printed");
@@ -232,11 +230,6 @@ CommonOutputAction::act()
       _perf_graph.setLivePrintActive(true);
     else
       _perf_graph.setLivePrintActive(false);
-
-    if (!_app.getParam<bool>("no_timing") && getParam<bool>("perf_graph_live_all"))
-      _perf_graph.setLivePrintAll(true);
-    else
-      _perf_graph.setLivePrintAll(false);
 
     if (!getParam<bool>("color"))
       Moose::setColorConsole(false);

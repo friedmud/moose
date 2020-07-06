@@ -96,8 +96,10 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
       (_last_printed_increment &&
        _last_printed_increment != &section_increment_start)) // Print Finished
   {
-    _console << '\n'
-             << std::string(2 * section_increment_start._print_stack_level, ' ') << "Finished "
+    if ((_last_printed_increment->_state == PerfGraph::IncrementState::printed && _id_to_section_info[_last_printed_increment->_id]._print_dots))
+      _console << '\n';
+
+    _console << std::string(2 * section_increment_start._print_stack_level, ' ') << "Finished "
              << message;
 
     num_horizontal_chars += std::string("Finished ").size();
@@ -111,10 +113,9 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
            << memory_increment << " MB" << COLOR_DEFAULT << ']';
 
   // If we're not printing dots - just finish the line
-  if (!_id_to_section_info[section_increment_start._id]._print_dots)
-    _console << '\n';
+  _console << '\n';
 
-  _last_printed_increment = &section_increment_start;
+  _last_printed_increment = &section_increment_finish;
 
   _printed = true;
 }
@@ -183,6 +184,7 @@ PerfGraphLivePrint::iterateThroughExecutionList()
   while (p != _current_execution_list_end)
   {
     auto next_p = p + 1 < MAX_EXECUTION_LIST_SIZE ? p + 1 : 0;
+    auto previous_p = p - 1 < 0 ? MAX_EXECUTION_LIST_SIZE : 0;
 
     auto & section_increment = _execution_list[p];
 
