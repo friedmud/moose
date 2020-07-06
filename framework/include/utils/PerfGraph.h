@@ -68,7 +68,7 @@ public:
   /**
    * Create a new PerfGraph
    */
-  PerfGraph(const std::string & root_name, MooseApp & app);
+  PerfGraph(const std::string & root_name, MooseApp & app, const bool live_all);
 
   /**
    * Destructor
@@ -346,6 +346,9 @@ protected:
    */
   void printHeaviestSections(const ConsoleStream & console);
 
+  /// Whether or not to put everything in the perf graph
+  bool _live_print_all;
+
   /// The PerfGraphRegistry
   PerfGraphRegistry & _perf_graph_registry;
 
@@ -361,8 +364,11 @@ protected:
   /// The root node of the graph
   std::unique_ptr<PerfNode> _root_node;
 
+  /// The id for the root node
+  PerfID _root_node_id;
+
   /// The current node position in the stack
-  unsigned int _current_position;
+  int _current_position;
 
   /// The full callstack.  Currently capped at a depth of 100
   std::array<PerfNode *, MAX_STACK_SIZE> _stack;
@@ -404,9 +410,6 @@ protected:
 
   /// Whether or not live printing is active
   bool _live_print_active;
-
-  /// Whether or not to put everything in the perf graph
-  bool _live_print_all;
 
   /// The promise to the print thread that will signal when to stop
   std::promise<bool> _done;

@@ -250,6 +250,9 @@ MooseApp::validParams()
                                            30,
                                            "Pauses the application during startup for the "
                                            "specified time to allow for connection of debuggers.");
+
+  params.addCommandLineParam<bool>("perf_graph_live_all", "--perf-graph-live-all", false, "Forces printing of ALL progress messages.");
+
   params.addParam<bool>(
       "automatic_automatic_scaling", false, "Whether to turn on automatic scaling by default.");
 
@@ -287,7 +290,6 @@ MooseApp::MooseApp(InputParameters parameters)
     _pars(parameters),
     _type(getParam<std::string>("_type")),
     _comm(getParam<std::shared_ptr<Parallel::Communicator>>("_comm")),
-    _perf_graph(type() + " (" + name() + ')', *this),
     _rank_map(*_comm, _perf_graph),
     _file_base_set_by_user(false),
     _output_position_set(false),
@@ -295,6 +297,7 @@ MooseApp::MooseApp(InputParameters parameters)
     _start_time(0.0),
     _global_time_offset(0.0),
     _output_warehouse(*this),
+    _perf_graph(type() + " (" + name() + ')', *this, getParam<bool>("perf_graph_live_all")),
     _input_parameter_warehouse(new InputParameterWarehouse()),
     _action_factory(*this),
     _action_warehouse(*this, _syntax, _action_factory),

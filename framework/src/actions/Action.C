@@ -81,14 +81,15 @@ Action::Action(InputParameters parameters)
     _current_task(_awh.getCurrentTaskName()),
     _mesh(_awh.mesh()),
     _displaced_mesh(_awh.displacedMesh()),
-    _problem(_awh.problemBase())
+    _problem(_awh.problemBase()),
+    _act_timer(registerTimedSection("act", 4))
 {
 }
 
 void
 Action::timedAct()
 {
-  TIME_SECTION("act", 4);
+  TIME_SECTION(_act_timer);
   act();
 }
 

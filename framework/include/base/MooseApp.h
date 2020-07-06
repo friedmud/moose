@@ -844,9 +844,6 @@ protected:
   /// The MPI communicator this App is going to use
   const std::shared_ptr<Parallel::Communicator> _comm;
 
-  /// The PerfGraph object for this applciation
-  PerfGraph _perf_graph;
-
   /// The RankMap is a useful object for determining how
   const RankMap _rank_map;
 
@@ -882,6 +879,9 @@ protected:
 
   /// OutputWarehouse object for this App
   OutputWarehouse _output_warehouse;
+
+  /// The PerfGraph object for this applciation
+  PerfGraph _perf_graph;
 
   /// Input parameter storage structure (this is a raw pointer so the destruction time can be explicitly controlled)
   InputParameterWarehouse * _input_parameter_warehouse;
