@@ -94,6 +94,8 @@ AuxiliarySystem::addExtraVectors()
 void
 AuxiliarySystem::initialSetup()
 {
+  TIME_SECTION("initialSetup", 3, "Initializing Auxiliary System");
+
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
   {
     _aux_scalar_storage.sort(tid);
