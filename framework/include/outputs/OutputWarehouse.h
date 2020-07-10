@@ -175,6 +175,11 @@ public:
   void mooseConsole();
 
   /**
+   * Send a buffer to Console output objects
+   */
+  void mooseConsole(std::ostringstream & buffer);
+
+  /**
    * The buffered messages stream for Console objects
    * @return Reference to the stream storing cached messages from calls to _console
    */

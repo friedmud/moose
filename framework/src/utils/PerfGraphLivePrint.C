@@ -12,9 +12,9 @@
 PerfGraphLivePrint::PerfGraphLivePrint(PerfGraph & perf_graph, MooseApp & app)
   : ConsoleStreamInterface(app),
     _perf_graph(perf_graph),
-
     _execution_list(perf_graph._execution_list),
     _done_future(perf_graph._done.get_future()),
+    _destructing(perf_graph._destructing),
     _id_to_section_info(perf_graph._id_to_section_info),
     _time_limit(perf_graph._live_print_time_limit),
     _mem_limit(perf_graph._live_print_mem_limit),
@@ -27,6 +27,15 @@ PerfGraphLivePrint::PerfGraphLivePrint(PerfGraph & perf_graph, MooseApp & app)
 void
 PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_increment)
 {
+  // If we're not allowed to print right now - just mark this as printed and move on
+  if (_last_num_printed != _console.numPrinted())
+  {
+    section_increment._state = PerfGraph::IncrementState::printed;
+    _last_printed_increment = &section_increment;
+    _last_num_printed = _console.numPrinted();
+    return;
+  }
+
   auto message = !_id_to_section_info[section_increment._id]._live_message.empty()
                      ? _id_to_section_info[section_increment._id]._live_message
                      : _id_to_section_info[section_increment._id]._name;
@@ -45,7 +54,7 @@ PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_incre
   {
     if (_id_to_section_info[section_increment._id]._print_dots)
     {
-      _console << " .";
+      _console << ".";
       section_increment._num_dots++;
     }
   }
@@ -107,7 +116,7 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
     num_horizontal_chars += std::string("Finished ").size();
   }
   else
-    num_horizontal_chars += 2 * section_increment_start._num_dots;
+    num_horizontal_chars += section_increment_start._num_dots;
 
   _console << std::setw(WRAP_LENGTH - num_horizontal_chars) << ' ' << " [" << COLOR_YELLOW
            << std::setw(6) << std::fixed << std::setprecision(2) << time_increment << " s"
@@ -168,8 +177,8 @@ PerfGraphLivePrint::printStackUpToLast()
 void
 PerfGraphLivePrint::inSamePlace()
 {
-  // Only print if nothing else has been printed in the meantime
-  if (_last_num_printed == _console.numPrinted())
+  // Only print if there is something to print!
+  if (_stack_level > 0)
   {
     printStackUpToLast();
 
@@ -244,8 +253,15 @@ PerfGraphLivePrint::start()
       this->_current_execution_list_end =
           _perf_graph._execution_list_end.load(std::memory_order_relaxed);
 
-      return this->_last_execution_list_end != this->_current_execution_list_end;
+      // If we are destructing or there is new work to do... allow moving on
+      return _destructing || this->_last_execution_list_end != this->_current_execution_list_end;
     });
+
+    // If the PerfGraph is destructing and we don't have anything left to print - we need to quit
+    // Otherwise, if there are still things to print - do it... afterwards, the loop above
+    // will end because _done_future has been set in PerfGraph.
+    if (_destructing && this->_last_execution_list_end == this->_current_execution_list_end)
+      return;
 
     // The last entry in the current execution list for convenience
     _current_execution_list_last = _current_execution_list_end - 1 >= 0
