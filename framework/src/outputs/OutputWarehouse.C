@@ -181,6 +181,12 @@ static std::mutex moose_console_mutex;
 void
 OutputWarehouse::mooseConsole()
 {
+  mooseConsole(_console_buffer);
+}
+
+void
+OutputWarehouse::mooseConsole(std::ostringstream & buffer)
+{
   std::lock_guard<std::mutex> lock(moose_console_mutex);
 
   // Loop through all Console Output objects and pass the current output buffer
@@ -188,11 +194,11 @@ OutputWarehouse::mooseConsole()
   if (!objects.empty())
   {
     for (const auto & obj : objects)
-      obj->mooseConsole(_console_buffer.str());
+      obj->mooseConsole(buffer.str());
 
     // Reset
-    _console_buffer.clear();
-    _console_buffer.str("");
+    buffer.clear();
+    buffer.str("");
   }
   else
   {
@@ -200,7 +206,7 @@ OutputWarehouse::mooseConsole()
     {
       // this will cause messages to console before its construction immediately flushed and
       // cleared.
-      std::string message = _console_buffer.str();
+      std::string message = buffer.str();
 
       bool this_message_ends_in_newline = message.empty() ? true : message.back() == '\n';
 
@@ -210,8 +216,8 @@ OutputWarehouse::mooseConsole()
         MooseUtils::indentMessage(_app.name(), message);
 
       Moose::out << message << std::flush;
-      _console_buffer.clear();
-      _console_buffer.str("");
+      buffer.clear();
+      buffer.str("");
 
       _last_message_ended_in_newline = this_message_ends_in_newline;
     }
