@@ -189,12 +189,21 @@ OutputWarehouse::mooseConsole(std::ostringstream & buffer)
 {
   std::lock_guard<std::mutex> lock(moose_console_mutex);
 
+  std::string message = buffer.str();
+
+  // If someone else is writing - then we may need a newline
+  if (&buffer != _last_buffer && !_last_message_ended_in_newline)
+  {
+    std::cerr << "Adding newline" << std::endl;
+    message = '\n' + message;
+  }
+
   // Loop through all Console Output objects and pass the current output buffer
   std::vector<Console *> objects = getOutputs<Console>();
   if (!objects.empty())
   {
     for (const auto & obj : objects)
-      obj->mooseConsole(buffer.str());
+      obj->mooseConsole(message);
 
     // Reset
     buffer.clear();
@@ -206,8 +215,6 @@ OutputWarehouse::mooseConsole(std::ostringstream & buffer)
     {
       // this will cause messages to console before its construction immediately flushed and
       // cleared.
-      std::string message = buffer.str();
-
       bool this_message_ends_in_newline = message.empty() ? true : message.back() == '\n';
 
       // If that last message ended in newline then this one may need
@@ -222,6 +229,8 @@ OutputWarehouse::mooseConsole(std::ostringstream & buffer)
       _last_message_ended_in_newline = this_message_ends_in_newline;
     }
   }
+
+  _last_buffer = &buffer;
 
   _num_printed++;
 }

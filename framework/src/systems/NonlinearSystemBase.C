@@ -637,7 +637,7 @@ NonlinearSystemBase::computeResidual(NumericVector<Number> & residual, TagID tag
 void
 NonlinearSystemBase::computeResidualTags(const std::set<TagID> & tags)
 {
-  TIME_SECTION("computeResidualTags", 5);
+  TIME_SECTION("nl::computeResidualTags", 5);
 
   bool required_residual = tags.find(residualVectorTag()) == tags.end() ? false : true;
 
@@ -1350,7 +1350,7 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
   // residual contributions from the domain
   PARALLEL_TRY
   {
-    TIME_SECTION("Kernels", 3 /*, "Computing Kernels"*/);
+    TIME_SECTION("Kernels", 3/*, "Computing Kernels"*/);
 
     ConstElemRange & elem_range = *_mesh.getActiveLocalElementRange();
 
@@ -1378,7 +1378,7 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
     // do scalar kernels (not sure how to thread this)
     if (_scalar_kernels.hasActiveObjects())
     {
-      TIME_SECTION("ScalarKernels", 3 /*, "Computing ScalarKernels"*/);
+      TIME_SECTION("ScalarKernels", 3/*, "Computing ScalarKernels"*/);
 
       MooseObjectWarehouse<ScalarKernel> * scalar_kernel_warehouse;
       // This code should be refactored once we can do tags for scalar
@@ -1423,7 +1423,7 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
   {
     if (_nodal_kernels.hasActiveBlockObjects())
     {
-      TIME_SECTION("NodalKernels", 3 /*, "Computing NodalKernels"*/);
+      TIME_SECTION("NodalKernels", 3/*, "Computing NodalKernels"*/);
 
       ComputeNodalKernelsThread cnk(_fe_problem, _nodal_kernels, tags);
 
@@ -1455,7 +1455,7 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
   {
     if (_nodal_kernels.hasActiveBoundaryObjects())
     {
-      TIME_SECTION("NodalKernelBCs", 3 /*, "Computing NodalKernelBCs"*/);
+      TIME_SECTION("NodalKernelBCs", 3/*, "Computing NodalKernelBCs"*/);
 
       ComputeNodalKernelBcsThread cnk(_fe_problem, _nodal_kernels, tags);
 
@@ -1552,7 +1552,7 @@ NonlinearSystemBase::computeNodalBCs(const std::set<TagID> & tags)
 
     if (!bnd_nodes.empty())
     {
-      TIME_SECTION("NodalBCs", 3 /*, "Computing NodalBCs"*/);
+      TIME_SECTION("NodalBCs", 3/*, "Computing NodalBCs"*/);
 
       MooseObjectWarehouse<NodalBCBase> * nbc_warehouse;
 
