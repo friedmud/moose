@@ -27,15 +27,6 @@ PerfGraphLivePrint::PerfGraphLivePrint(PerfGraph & perf_graph, MooseApp & app)
 void
 PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_increment)
 {
-  // If we're not allowed to print right now - just mark this as printed and move on
-  if (_last_num_printed != _console.numPrinted())
-  {
-    section_increment._state = PerfGraph::IncrementState::printed;
-    _last_printed_increment = &section_increment;
-    _last_num_printed = _console.numPrinted();
-    return;
-  }
-
   auto message = !_id_to_section_info[section_increment._id]._live_message.empty()
                      ? _id_to_section_info[section_increment._id]._live_message
                      : _id_to_section_info[section_increment._id]._name;
@@ -177,6 +168,10 @@ PerfGraphLivePrint::printStackUpToLast()
 void
 PerfGraphLivePrint::inSamePlace()
 {
+  // If someone else printed since, then we need to start over
+  if (_last_num_printed != _console.numPrinted())
+    _last_printed_increment = nullptr;
+
   // Only print if there is something to print!
   if (_stack_level > 0)
   {
