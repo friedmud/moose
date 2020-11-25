@@ -345,9 +345,6 @@ protected:
   /// This processor id
   processor_id_type _pid;
 
-  /// The name (handle) of the root node
-  static const std::string ROOT_NAME;
-
   /// The name to display for the root of the graph when printing the entire graph
   const std::string _root_name;
 
@@ -399,7 +396,7 @@ protected:
   bool _active;
 
   /// Whether or not live printing is active
-  bool _live_print_active;
+  std::atomic<bool> _live_print_active;
 
   /// The promise to the print thread that will signal when to stop
   std::promise<bool> _done;

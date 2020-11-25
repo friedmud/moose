@@ -26,9 +26,7 @@
 // System Includes
 #include <chrono>
 
-const std::string PerfGraph::ROOT_NAME = "Root";
-
-PerfGraph::PerfGraph(const std::string & /*root_name*/, MooseApp & app, const bool live_all)
+PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app, const bool live_all)
   : ConsoleStreamInterface(app),
     _live_print_all(live_all),
     _perf_graph_registry(moose::internal::getPerfGraphRegistry()),
@@ -54,7 +52,7 @@ PerfGraph::PerfGraph(const std::string & /*root_name*/, MooseApp & app, const bo
     });
   }
 
-  _root_node_id = _perf_graph_registry.registerSection(ROOT_NAME, 0);
+  _root_node_id = _perf_graph_registry.registerSection(root_name, 0);
 
   push(_root_node_id);
 }
