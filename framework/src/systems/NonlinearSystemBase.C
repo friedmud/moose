@@ -3405,9 +3405,9 @@ NonlinearSystemBase::setupScalingGrouping()
 void
 NonlinearSystemBase::computeScaling()
 {
-  _console << "\nPerforming automatic scaling calculation\n\n";
+  _console << "\nPerforming automatic scaling calculation\n" << std::endl;
 
-  TIME_SECTION(_compute_scaling_timer);
+  TIME_SECTION("computeScaling", 3, "Computing Automatic Scaling");
 
 #ifdef MOOSE_GLOBAL_AD_INDEXING
   // It's funny but we need to assemble our vector of scaling factors here otherwise we will be
