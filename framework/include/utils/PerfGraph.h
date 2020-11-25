@@ -345,11 +345,11 @@ protected:
   /// This processor id
   processor_id_type _pid;
 
-  /// The name to display for the root of the graph when printing the entire graph
-  const std::string _root_name;
-
   /// The root node of the graph
   std::unique_ptr<PerfNode> _root_node;
+
+  /// Name of the root node
+  std::string _root_name;
 
   /// The id for the root node
   PerfID _root_node_id;
