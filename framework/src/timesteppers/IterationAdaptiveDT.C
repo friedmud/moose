@@ -289,7 +289,8 @@ IterationAdaptiveDT::computeFailedDT()
   if (_verbose)
   {
     _console << "\nSolve failed with dt: " << std::setw(9) << _dt
-             << "\nRetrying with reduced dt: " << std::setw(9) << _dt * _cutback_factor << std::endl;
+             << "\nRetrying with reduced dt: " << std::setw(9) << _dt * _cutback_factor
+             << std::endl;
   }
   else
     _console << "\nSolve failed, cutting timestep." << std::endl;

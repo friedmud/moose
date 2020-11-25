@@ -692,8 +692,7 @@ void
 AuxiliarySystem::computeElementalArrayVars(ExecFlagType type)
 {
   const MooseObjectWarehouse<ArrayAuxKernel> & elemental = _elemental_array_aux_storage[type];
-  computeElementalVarsHelper<ArrayAuxKernel>(
-      elemental, _elem_array_vars);
+  computeElementalVarsHelper<ArrayAuxKernel>(elemental, _elem_array_vars);
 }
 
 void

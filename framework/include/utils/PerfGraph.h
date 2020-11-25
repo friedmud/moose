@@ -127,7 +127,7 @@ public:
   /**
    * Set the time limit before a message prints
    */
-  void setLiveTimeLimit(Real time_limit){ _live_print_time_limit = time_limit; }
+  void setLiveTimeLimit(Real time_limit) { _live_print_time_limit = time_limit; }
 
   /**
    * Sert the memory limit before a message prints

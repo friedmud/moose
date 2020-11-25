@@ -47,9 +47,7 @@ PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app, const bool l
   if (_pid == 0)
   {
     // Start the printing thread
-    _print_thread = std::thread([this] {
-        this->_live_print->start();
-    });
+    _print_thread = std::thread([this] { this->_live_print->start(); });
   }
 
   _root_name = root_name;
@@ -195,7 +193,6 @@ PerfGraph::addToExecutionList(const PerfID id,
   if (next_execution_list_end >= MAX_EXECUTION_LIST_SIZE)
     _execution_list_end.store(0, std::memory_order_relaxed);
 }
-
 
 void
 PerfGraph::push(const PerfID id)

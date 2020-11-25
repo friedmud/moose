@@ -692,7 +692,6 @@ FEProblemBase::initialSetup()
     }
   }
 
-
   if (_app.isRecovering() && (_app.isUltimateMaster() || _force_restart))
   {
     if (_app.getRestartRecoverFileSuffix() == "cpa")
@@ -797,8 +796,8 @@ FEProblemBase::initialSetup()
     // Call the initialSetup methods for functions
     for (THREAD_ID tid = 0; tid < n_threads; tid++)
     {
-      reinitScalars(
-        tid); // initialize scalars so they are properly sized for use as input into ParsedFunctions
+      reinitScalars(tid); // initialize scalars so they are properly sized for use as input into
+                          // ParsedFunctions
       _functions.initialSetup(tid);
     }
   }

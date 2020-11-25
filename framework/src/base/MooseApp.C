@@ -262,7 +262,10 @@ MooseApp::validParams()
                                            "Pauses the application during startup for the "
                                            "specified time to allow for connection of debuggers.");
 
-  params.addCommandLineParam<bool>("perf_graph_live_all", "--perf-graph-live-all", false, "Forces printing of ALL progress messages.");
+  params.addCommandLineParam<bool>("perf_graph_live_all",
+                                   "--perf-graph-live-all",
+                                   false,
+                                   "Forces printing of ALL progress messages.");
 
   params.addParam<bool>(
       "automatic_automatic_scaling", false, "Whether to turn on automatic scaling by default.");
