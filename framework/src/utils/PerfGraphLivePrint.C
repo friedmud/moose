@@ -99,7 +99,7 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
       (_last_printed_increment &&
        _last_printed_increment != &section_increment_start)) // Print Finished
   {
-    if ((_last_printed_increment->_state == PerfGraph::IncrementState::printed &&
+    if ((_last_printed_increment && _last_printed_increment->_state == PerfGraph::IncrementState::printed &&
          _id_to_section_info[_last_printed_increment->_id]._print_dots))
       _console << '\n';
 

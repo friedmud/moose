@@ -700,6 +700,8 @@ Console::write(std::string message, bool indent /*=true*/)
 void
 Console::mooseConsole(const std::string & message)
 {
+//  std::cout << "Console::mooseConsole: " << message << std::endl;
+
   // Write the messages
   write(message);
 
