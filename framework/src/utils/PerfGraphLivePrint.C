@@ -269,7 +269,7 @@ PerfGraphLivePrint::start()
       continue;
 
     // The last entry in the current execution list for convenience
-    _current_execution_list_last = _current_execution_list_end - 1 >= 0
+    _current_execution_list_last = static_cast<long int>(_current_execution_list_end) - 1 >= 0
                                        ? _current_execution_list_end - 1
                                        : MAX_EXECUTION_LIST_SIZE;
 
