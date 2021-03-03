@@ -589,8 +589,10 @@ void MaterialPropertyStorageDump(
  * Not indenting the first line is useful in the case where the first line is actually finishing
  * the line before it.
  */
-void
-indentMessage(const std::string & prefix, std::string & message, const char * color = COLOR_CYAN, bool dont_indent_first_line = true);
+void indentMessage(const std::string & prefix,
+                   std::string & message,
+                   const char * color = COLOR_CYAN,
+                   bool dont_indent_first_line = true);
 
 /**
  * remove ANSI escape sequences for teminal color from msg
