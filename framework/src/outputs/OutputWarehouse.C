@@ -156,8 +156,8 @@ OutputWarehouse::outputStep(ExecFlagType type)
   /**
    * This is one of three locations where we explicitly flush the output buffers during a
    * simulation:
-   * Petsc Output::petscNonlinearOutput()
-   * Petsc Output::petscLinearOutput()
+   * PetscOutput::petscNonlinearOutput()
+   * PetscOutput::petscLinearOutput()
    * OutputWarehouse::outputStep()
    *
    * All other Console output _should_ be using newlines to avoid covering buffer errors
