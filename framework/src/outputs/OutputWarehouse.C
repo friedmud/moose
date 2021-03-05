@@ -26,11 +26,13 @@ OutputWarehouse::OutputWarehouse(MooseApp & app)
   : PerfGraphInterface(app.perfGraph(), "OutputWarehouse"),
     _app(app),
     _buffer_action_console_outputs(false),
+    _common_params_ptr(NULL),
     _output_exec_flag(EXEC_CUSTOM),
     _force_output(false),
     _logging_requested(false),
     _last_message_ended_in_newline(true),
-    _last_buffer(NULL)
+    _last_buffer(NULL),
+    _num_printed(0)
 {
   // Set the reserved names
   _reserved.insert("none"); // allows 'none' to be used as a keyword in 'outputs' parameter
