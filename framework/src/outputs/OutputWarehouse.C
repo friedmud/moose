@@ -29,7 +29,8 @@ OutputWarehouse::OutputWarehouse(MooseApp & app)
     _output_exec_flag(EXEC_CUSTOM),
     _force_output(false),
     _logging_requested(false),
-    _last_message_ended_in_newline(true)
+    _last_message_ended_in_newline(true),
+    _last_buffer(NULL)
 {
   // Set the reserved names
   _reserved.insert("none"); // allows 'none' to be used as a keyword in 'outputs' parameter

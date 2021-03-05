@@ -20,8 +20,12 @@ PerfGraphLivePrint::PerfGraphLivePrint(PerfGraph & perf_graph, MooseApp & app)
     _time_limit(perf_graph._live_print_time_limit),
     _mem_limit(perf_graph._live_print_mem_limit),
     _stack_level(0),
+    _current_execution_list_end(0),
+    _current_execution_list_last(0),
     _last_execution_list_end(0),
-    _last_printed_increment(NULL)
+    _last_printed_increment(NULL),
+    _last_num_printed(0),
+    _printed(false)
 {
 }
 
