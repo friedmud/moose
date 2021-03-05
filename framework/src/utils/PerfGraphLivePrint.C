@@ -106,8 +106,7 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
   // Do we need to print "Finished"?
   // This happens after something else printed in-between when this increment started and finished
   if (!_id_to_section_info[section_increment_start._id]._print_dots ||
-      (_last_printed_increment &&
-       _last_printed_increment != &section_increment_start))
+      (_last_printed_increment && _last_printed_increment != &section_increment_start))
   {
     if ((_last_printed_increment &&
          _last_printed_increment->_state == PerfGraph::IncrementState::printed &&

@@ -49,7 +49,10 @@ public:
    * Get the currnet start time
    * Only makes sense if this node is running.
    */
-  const std::chrono::time_point<std::chrono::steady_clock> & startTime() const { return _start_time; }
+  const std::chrono::time_point<std::chrono::steady_clock> & startTime() const
+  {
+    return _start_time;
+  }
 
   /**
    * Get the current start memory
