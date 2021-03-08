@@ -30,8 +30,7 @@ CSVSampler::validParams()
   return params;
 }
 
-CSVSampler::CSVSampler(const InputParameters & parameters)
-  : Sampler(parameters)
+CSVSampler::CSVSampler(const InputParameters & parameters) : Sampler(parameters)
 {
   // If indices or names are not provided, all of the data will be read and the
   // matrix will be the same as the contents of the data file

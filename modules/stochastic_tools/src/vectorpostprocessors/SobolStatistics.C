@@ -35,8 +35,7 @@ SobolStatistics::validParams()
 }
 
 SobolStatistics::SobolStatistics(const InputParameters & parameters)
-  : GeneralVectorPostprocessor(parameters),
-    _sobol_sampler(getSampler<SobolSampler>("sampler"))
+  : GeneralVectorPostprocessor(parameters), _sobol_sampler(getSampler<SobolSampler>("sampler"))
 {
 }
 
