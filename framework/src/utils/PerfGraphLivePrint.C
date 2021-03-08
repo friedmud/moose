@@ -123,10 +123,17 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
 
   // Actually do the printing
   _console << std::setw(WRAP_LENGTH - num_horizontal_chars);
-  _console << ' ' << " [" << COLOR_YELLOW;
+  _console << ' ';
+  _console << " [";
+  _console << COLOR_YELLOW;
   _console << std::setw(6) << std::fixed << std::setprecision(2) << time_increment << " s";
-  _console << COLOR_DEFAULT << ']' << " [" << COLOR_YELLOW << std::setw(5) << std::fixed;
-  _console << memory_increment << " MB" << COLOR_DEFAULT << ']';
+  _console << COLOR_DEFAULT;
+  _console << ']' << " [";
+  _console << COLOR_YELLOW << std::setw(5) << std::fixed;
+  _console << memory_increment;
+  _console << " MB";
+  _console << COLOR_DEFAULT;
+  _console << ']';
 
   // If we're not printing dots - just finish the line
   _console << std::endl;
