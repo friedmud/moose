@@ -26,7 +26,10 @@
 // System Includes
 #include <chrono>
 
-PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app, const bool live_all, const bool perf_graph_live)
+PerfGraph::PerfGraph(const std::string & root_name,
+                     MooseApp & app,
+                     const bool live_all,
+                     const bool perf_graph_live)
   : ConsoleStreamInterface(app),
     _live_print_all(live_all),
     _disable_live_print(!perf_graph_live),
@@ -57,10 +60,7 @@ PerfGraph::PerfGraph(const std::string & root_name, MooseApp & app, const bool l
   push(_root_node_id);
 }
 
-PerfGraph::~PerfGraph()
-{
-  disableLivePrint();
-}
+PerfGraph::~PerfGraph() { disableLivePrint(); }
 
 const std::string &
 PerfGraph::sectionName(const PerfID id) const

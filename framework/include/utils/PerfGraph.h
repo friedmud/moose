@@ -73,7 +73,10 @@ public:
    * @param live_all Whether every message should be printed
    * @param perf_graph_live Enable/disable PerfGraphLive (permanently)
    */
-  PerfGraph(const std::string & root_name, MooseApp & app, const bool live_all, const bool perf_graph_live);
+  PerfGraph(const std::string & root_name,
+            MooseApp & app,
+            const bool live_all,
+            const bool perf_graph_live);
 
   /**
    * Destructor
