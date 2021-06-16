@@ -226,8 +226,9 @@ PerfGraph::push(const PerfID id)
 
   if (memory_success)
     start_memory =
-      MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
-  else if (_current_position != -1)  // If we weren't able to get the memory stats, let's just use the parent's
+        MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
+  else if (_current_position !=
+           -1) // If we weren't able to get the memory stats, let's just use the parent's
     start_memory = _stack[_current_position]->startMemory();
 
   // Set the start time
@@ -270,8 +271,9 @@ PerfGraph::pop()
 
   if (memory_success)
     current_memory =
-      MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
-  else if (_current_position != -1)  // If we weren't able to get the memory stats, let's just use the start memory
+        MemoryUtils::convertBytes(stats._physical_memory, MemoryUtils::MemUnits::Megabytes);
+  else if (_current_position !=
+           -1) // If we weren't able to get the memory stats, let's just use the start memory
     current_memory = _stack[_current_position]->startMemory();
 
   current_node->addTimeAndMemory(current_time, current_memory);
