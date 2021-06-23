@@ -122,12 +122,7 @@ PerfGraph::getTime(const TimeType type, const std::string & section_name)
 {
   updateTiming();
 
-  std::string real_section_name = section_name;
-
-  if (section_name == "Root")
-    real_section_name = _root_name;
-
-  auto section_it = _section_time.find(real_section_name);
+  auto section_it = _section_time.find(section_name == "Root" ? _root_name : section_name);
 
   if (section_it == _section_time.end())
   {
