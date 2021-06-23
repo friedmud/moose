@@ -116,11 +116,11 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
          _last_printed_increment->_state == PerfGraph::IncrementState::printed &&
          _id_to_section_info[_last_printed_increment->_id]._print_dots))
       _console << '\n';
-
-    _console << std::string(2 * section_increment_start._print_stack_level, ' ') << "Finished "
+    const std::string finished("Finished ");
+    _console << std::string(2 * section_increment_start._print_stack_level, ' ') << finished
              << message;
 
-    num_horizontal_chars += std::string("Finished ").size();
+    num_horizontal_chars += finished.size();
   }
   else
     num_horizontal_chars += section_increment_start._num_dots;
