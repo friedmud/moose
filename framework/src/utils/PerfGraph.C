@@ -244,9 +244,7 @@ PerfGraph::push(const PerfID id)
   // Add this to the execution list
   if ((_live_print_active || _live_print_all) && (_pid == 0 && !_disable_live_print) &&
       (!_id_to_section_info[id]._live_message.empty() || _live_print_all))
-  {
     addToExecutionList(id, IncrementState::started, current_time, start_memory);
-  }
 }
 
 void
