@@ -33,7 +33,7 @@ void
 PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_increment)
 {
   // If the live_message is empty - just print the name
-  auto message = !_id_to_section_info[section_increment._id]._live_message.empty()
+  const auto message = !_id_to_section_info[section_increment._id]._live_message.empty()
                      ? _id_to_section_info[section_increment._id]._live_message
                      : _id_to_section_info[section_increment._id]._name;
 
