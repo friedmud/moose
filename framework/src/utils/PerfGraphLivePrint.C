@@ -90,6 +90,9 @@ void
 PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_start,
                                PerfGraph::SectionIncrement & section_increment_finish)
 {
+  if (_stack_level < 1)
+    return;
+
   // If the live_message is empty - just print the name
   auto message = !_id_to_section_info[section_increment_start._id]._live_message.empty()
                      ? _id_to_section_info[section_increment_start._id]._live_message
