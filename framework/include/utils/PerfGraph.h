@@ -297,14 +297,14 @@ protected:
   class SectionIncrement
   {
   public:
-    SectionIncrement():
-      _state(IncrementState::finished),
-      _print_stack_level(0),
-      _num_dots(0),
-      _time(std::chrono::seconds(0)),
-      _memory(0)
-      {
-      }
+    SectionIncrement()
+      : _state(IncrementState::finished),
+        _print_stack_level(0),
+        _num_dots(0),
+        _time(std::chrono::seconds(0)),
+        _memory(0)
+    {
+    }
 
     PerfID _id;
 
