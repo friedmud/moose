@@ -239,7 +239,7 @@ PerfGraph::push(const PerfID id)
   // Add this to the execution list
   if ((_live_print_active || _live_print_all) && (_pid == 0 && !_disable_live_print) &&
       (!_id_to_section_info[id]._live_message.empty() || _live_print_all))
-    addToExecutionList(id, IncrementState::started, current_time, start_memory);
+    addToExecutionList(id, IncrementState::STARTED, current_time, start_memory);
 }
 
 void
@@ -272,7 +272,7 @@ PerfGraph::pop()
   if ((_live_print_active || _live_print_all) && (_pid == 0 && !_disable_live_print) &&
       (!_id_to_section_info[current_node->id()]._live_message.empty() || _live_print_all))
   {
-    addToExecutionList(current_node->id(), IncrementState::finished, current_time, current_memory);
+    addToExecutionList(current_node->id(), IncrementState::FINISHED, current_time, current_memory);
 
     // Tell the printing thread that a section has finished
     //
