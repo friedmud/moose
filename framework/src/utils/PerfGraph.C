@@ -371,11 +371,10 @@ PerfGraph::recursivelyPrintGraph(PerfNode * current_node,
   mooseAssert(_id_to_section_info.find(current_node->id()) != _id_to_section_info.end(),
               "Unable to find section name!");
 
-  auto & name = _id_to_section_info[current_node->id()]._name;
+  auto & current_section_info = _id_to_section_info[current_node->id()];
 
-  mooseAssert(_id_to_section_info.find(current_node->id()) != _id_to_section_info.end(),
-              "Unable to find level!");
-  auto & node_level = _id_to_section_info[current_node->id()]._level;
+  auto & name = current_section_info._name;
+  auto & node_level = current_section_info._level;
 
   if (node_level <= level)
   {
@@ -424,6 +423,8 @@ PerfGraph::recursivelyPrintHeaviestGraph(PerfNode * current_node,
 {
   mooseAssert(!_section_time_ptrs.empty(),
               "updateTiming() must be run before recursivelyPrintGraph!");
+
+  mooseAssert(_id_to_section_info.count(current_node->id), "Could not find section info!");
 
   auto & name = _id_to_section_info[current_node->id()]._name;
 

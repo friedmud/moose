@@ -40,13 +40,13 @@ public:
    */
   struct SectionInfo
   {
-    /// It's unique ID
+    /// Unique ID
     PerfID _id;
 
     /// The name
     std::string _name;
 
-    /// It's print level (verbosity level)
+    /// Print level (verbosity level)
     unsigned int _level;
 
     /// Message to print while the section is running
@@ -81,7 +81,6 @@ public:
 
 protected:
   PerfGraphRegistry(){};
-  ~PerfGraphRegistry(){};
 
   /// Map of section names to IDs
   std::unordered_map<std::string, PerfID> _section_name_to_id;

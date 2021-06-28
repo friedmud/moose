@@ -265,7 +265,7 @@ protected:
     /// Amount of memory gained within this section (without children)
     long int _self_memory = 0;
 
-    /// Amanout of memory gained by children
+    /// Amount of memory gained by children
     long int _children_memory = 0;
 
     /// Total memory gain for this section
