@@ -424,7 +424,7 @@ PerfGraph::recursivelyPrintHeaviestGraph(PerfNode * current_node,
   mooseAssert(!_section_time_ptrs.empty(),
               "updateTiming() must be run before recursivelyPrintGraph!");
 
-  mooseAssert(_id_to_section_info.count(current_node->id), "Could not find section info!");
+  mooseAssert(_id_to_section_info.count(current_node->id()), "Could not find section info!");
 
   auto & name = _id_to_section_info[current_node->id()]._name;
 

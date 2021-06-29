@@ -32,7 +32,7 @@ PerfGraphLivePrint::PerfGraphLivePrint(PerfGraph & perf_graph, MooseApp & app)
 void
 PerfGraphLivePrint::printLiveMessage(PerfGraph::SectionIncrement & section_increment)
 {
-  mooseAssert(_id_to_section_info.count(section_increment.id), "Not found in map");
+  mooseAssert(_id_to_section_info.count(section_increment._id), "Not found in map");
 
   // If the live_message is empty - just print the name
   const auto message = !_id_to_section_info[section_increment._id]._live_message.empty()
@@ -95,7 +95,7 @@ PerfGraphLivePrint::printStats(PerfGraph::SectionIncrement & section_increment_s
   if (_stack_level < 1)
     return;
 
-  mooseAssert(_id_to_section_info.count(section_increment_start.id), "Not found in map");
+  mooseAssert(_id_to_section_info.count(section_increment_start._id), "Not found in map");
 
   // If the live_message is empty - just print the name
   auto message = !_id_to_section_info[section_increment_start._id]._live_message.empty()
