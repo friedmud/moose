@@ -37,9 +37,9 @@ PerfGraphRegistry::registerSection(const std::string & section_name,
 
 PerfID
 PerfGraphRegistry::actuallyRegisterSection(const std::string & section_name,
-                                   unsigned int level,
-                                   const std::string & live_message,
-                                   const bool print_dots)
+                                           unsigned int level,
+                                           const std::string & live_message,
+                                           const bool print_dots)
 {
   auto it = _section_name_to_id.find(section_name);
 
@@ -51,6 +51,9 @@ PerfGraphRegistry::actuallyRegisterSection(const std::string & section_name,
   auto id = _section_name_to_id.size();
   _section_name_to_id.emplace(section_name, id);
 
+  if (id == 4)
+    libMesh::out << "ID4: " << section_name << std::endl;
+
   auto & section_info = _id_to_section_info[id];
 
   section_info._id = id;
@@ -61,7 +64,6 @@ PerfGraphRegistry::actuallyRegisterSection(const std::string & section_name,
 
   return id;
 }
-
 
 }
 }
