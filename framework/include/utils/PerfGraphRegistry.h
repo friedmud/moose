@@ -82,6 +82,14 @@ public:
 protected:
   PerfGraphRegistry(){};
 
+  /**
+   * The internal function that actually carries out the registration
+   */
+  PerfID actuallyRegisterSection(const std::string & section_name,
+                                 const unsigned int level,
+                                 const std::string & live_message,
+                                 const bool print_dots = true);
+
   /// Map of section names to IDs
   std::unordered_map<std::string, PerfID> _section_name_to_id;
 
